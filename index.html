@@ -1527,9 +1527,9 @@
       <p class="league-msg" id="leagueMsg"></p>
 
       <div class="league-card ornate" id="leagueOfflinePanel" hidden>
-        <p class="league-card-title">Esta parte solo funciona en Claude</p>
-        <p class="league-card-sub">La Liga de Amigos usa la base de datos en vivo de Claude, así que aquí no está disponible. Ábrela desde el enlace de Claude para crear o unirte a una liga.</p>
-        <a class="btn btn-primary btn-block" id="leagueOfflineLink" target="_blank" rel="noopener">Abrir en Claude</a>
+        <p class="league-card-title">No se pudo conectar</p>
+        <p class="league-card-sub">No logramos conectar con el servidor de la liga. Revisa tu conexión a internet e intenta de nuevo.</p>
+        <button class="btn btn-primary btn-block" id="leagueOfflineRetryBtn">Reintentar</button>
       </div>
 
       <div class="league-card ornate" id="leagueNamePanel" hidden>
@@ -1588,9 +1588,9 @@
       <p class="league-msg" id="pokerMsgBar"></p>
 
       <div class="league-card ornate" id="pokerOfflinePanel" hidden>
-        <p class="league-card-title">Esta parte solo funciona en Claude</p>
-        <p class="league-card-sub">El Poker en línea usa la base de datos en vivo de Claude, así que aquí no está disponible. Ábrelo desde el enlace de Claude para jugar con tu liga.</p>
-        <a class="btn btn-primary btn-block" id="pokerOfflineLink" target="_blank" rel="noopener">Abrir en Claude</a>
+        <p class="league-card-title">No se pudo conectar</p>
+        <p class="league-card-sub">No logramos conectar con el servidor del poker. Revisa tu conexión a internet e intenta de nuevo.</p>
+        <button class="btn btn-primary btn-block" id="pokerOfflineRetryBtn">Reintentar</button>
       </div>
 
       <div id="pokerNoLeague" hidden>
@@ -1644,6 +1644,8 @@
   </nav>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 (function(){
   "use strict";
@@ -3473,25 +3475,73 @@
     });
   }
 
-  /* ================= MULTIJUGADOR: BASE DE DATOS ================= */
+  /* ================= MULTIJUGADOR: BASE DE DATOS (Firebase) ================= */
   var db = null;
   var dbReady = false;
-  var CLAUDE_ARTIFACT_URL = 'https://claude.ai/code/artifact/d375a857-eebc-46c8-99dc-ce084a142a5d';
-  (function initDb(){
-    var leagueLink = document.getElementById('leagueOfflineLink');
-    var pokerLink = document.getElementById('pokerOfflineLink');
-    if(leagueLink) leagueLink.href = CLAUDE_ARTIFACT_URL;
-    if(pokerLink) pokerLink.href = CLAUDE_ARTIFACT_URL;
-    if(!window.claude || typeof window.claude.use !== 'function'){ dbReady = true; db = null; return; }
-    window.claude.use('db').then(function(ns){
-      db = ns;
+  var FIREBASE_CONFIG = {
+    projectId: "lucky-chips-23b65",
+    appId: "1:707151061278:web:a58f53e40145791371a90f",
+    storageBucket: "lucky-chips-23b65.firebasestorage.app",
+    apiKey: "AIzaSyB8h_Sjfe0i7tBAaGC6Oc0Zgmv07iJPST4",
+    authDomain: "lucky-chips-23b65.firebaseapp.com",
+    messagingSenderId: "707151061278"
+  };
+
+  function initDb(){
+    dbReady = false;
+    db = null;
+    try{
+      if(typeof firebase === 'undefined'){ dbReady = true; db = null; renderCurrentMultiplayerView(); return; }
+      var app = firebase.apps && firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(FIREBASE_CONFIG);
+      var firestore = firebase.firestore(app);
+      if(!firebase.firestore.DocumentReference.prototype._acquirePatched){
+        firebase.firestore.DocumentReference.prototype._acquirePatched = true;
+        firebase.firestore.DocumentReference.prototype.acquire = function(opts){
+          var ref = this;
+          var holder = opts.holder;
+          var ttlMs = opts.ttlMs || 8000;
+          var extra = opts.data || null;
+          return firestore.runTransaction(function(tx){
+            return tx.get(ref).then(function(snap){
+              var data = snap.exists ? snap.data() : {};
+              var lock = data._lock;
+              var now = Date.now();
+              if(lock && lock.holder !== holder && lock.expiresAt > now){
+                return { acquired: false };
+              }
+              var patch = extra ? JSON.parse(JSON.stringify(extra)) : {};
+              patch._lock = { holder: holder, expiresAt: now + ttlMs };
+              tx.set(ref, patch, { merge: true });
+              return { acquired: true };
+            });
+          });
+        };
+      }
+      db = firestore;
       dbReady = true;
-      var activeView = document.querySelector('.view:not([hidden])');
-      var activeName = activeView ? activeView.getAttribute('data-view') : null;
-      if(activeName === 'league') renderLeague();
-      if(activeName === 'poker') renderPokerEntry();
-    }).catch(function(){ db = null; dbReady = true; });
+      renderCurrentMultiplayerView();
+    }catch(e){
+      db = null;
+      dbReady = true;
+      renderCurrentMultiplayerView();
+    }
+  }
+
+  function renderCurrentMultiplayerView(){
+    var activeView = document.querySelector('.view:not([hidden])');
+    var activeName = activeView ? activeView.getAttribute('data-view') : null;
+    if(activeName === 'league') renderLeague();
+    if(activeName === 'poker') renderPokerEntry();
+  }
+
+  (function(){
+    var leagueRetry = document.getElementById('leagueOfflineRetryBtn');
+    var pokerRetry = document.getElementById('pokerOfflineRetryBtn');
+    if(leagueRetry) leagueRetry.addEventListener('click', initDb);
+    if(pokerRetry) pokerRetry.addEventListener('click', initDb);
   })();
+
+  initDb();
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
