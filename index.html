@@ -9,41 +9,41 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
-<meta name="theme-color" content="#0a0714">
+<meta name="theme-color" content="#0b0707">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Lucky Chips">
 <style>
   :root{
-    --bg:#0a0714;
-    --bg-elevated:#180f2c;
-    --bg-panel:#120b22;
-    --bg-panel-2:#1d1236;
-    --line:#3d2568;
-    --line-soft:#2a1c48;
-    --text:#f6f1ff;
-    --text-muted:#b9a9d9;
-    --text-faint:#7d6a9e;
-    --accent:#ffcf2e;
-    --accent-bright:#fff176;
-    --accent-dim:#a67f10;
-    --accent-ink:#231800;
-    --ruby:#ff2d6b;
-    --ruby-bright:#ff6f9c;
-    --neon-cyan:#22d3ee;
-    --neon-cyan-bright:#7ff0ff;
-    --neon-purple:#a855f7;
-    --neon-purple-bright:#d0a3ff;
-    --neon-green:#1fe89a;
-    --neon-green-bright:#7dffce;
-    --neon-orange:#ff8a3d;
-    --neon-orange-bright:#ffb877;
-    --neon-pink:#ff3ec8;
-    --felt-a: rgba(168,85,247,0.14);
-    --felt-b: rgba(34,211,238,0.14);
-    --shadow: 0 12px 32px rgba(0,0,0,.45);
-    --shadow-sm: 0 4px 14px rgba(0,0,0,.35);
+    --bg:#0b0707;
+    --bg-elevated:#1a0f0f;
+    --bg-panel:#140b0b;
+    --bg-panel-2:#211313;
+    --line:#4a3216;
+    --line-soft:#2e1f10;
+    --text:#f3ead9;
+    --text-muted:#c9b791;
+    --text-faint:#8d7a5c;
+    --accent:#d4af37;
+    --accent-bright:#f3d675;
+    --accent-dim:#8a6a1f;
+    --accent-ink:#201700;
+    --ruby:#b3122a;
+    --ruby-bright:#ff3b52;
+    --neon-cyan:#d4af37;
+    --neon-cyan-bright:#f3d675;
+    --neon-purple:#7a0f1e;
+    --neon-purple-bright:#ff3b52;
+    --neon-green:#c9a227;
+    --neon-green-bright:#ffe08a;
+    --neon-orange:#8a4a1f;
+    --neon-orange-bright:#d98a4a;
+    --neon-pink:#b3122a;
+    --felt-a: rgba(179,18,42,0.16);
+    --felt-b: rgba(212,175,55,0.12);
+    --shadow: 0 12px 32px rgba(0,0,0,.55);
+    --shadow-sm: 0 4px 14px rgba(0,0,0,.45);
     --radius-lg:22px;
     --radius-md:15px;
     --radius-sm:10px;
@@ -244,8 +244,8 @@
   .btn:active{ transform:scale(.97); }
   .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; }
   .btn-gold{ background:linear-gradient(155deg, var(--accent-bright), var(--accent)); color:var(--accent-ink); box-shadow:var(--shadow-sm), 0 0 18px -4px var(--accent); }
-  .btn-primary{ background:linear-gradient(120deg, var(--neon-pink), var(--neon-purple) 55%, var(--neon-cyan)); color:#160021; box-shadow:var(--shadow), 0 0 22px -4px var(--neon-purple); }
-  .btn-ruby{ background:linear-gradient(155deg, var(--ruby-bright), var(--ruby)); color:#2a0611; box-shadow:var(--shadow-sm), 0 0 18px -4px var(--ruby); }
+  .btn-primary{ background:linear-gradient(120deg, var(--neon-pink), var(--neon-purple) 55%, var(--neon-cyan)); color:var(--accent-ink); box-shadow:var(--shadow), 0 0 22px -4px var(--neon-purple); }
+  .btn-ruby{ background:linear-gradient(155deg, var(--ruby-bright), var(--ruby)); color:var(--accent-ink); box-shadow:var(--shadow-sm), 0 0 18px -4px var(--ruby); }
   .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--text); }
   .btn-block{ width:100%; }
   .btn-sm{ padding:9px 16px; font-size:.85rem; }
@@ -268,7 +268,7 @@
     border-style:solid;
     border-color:var(--neon-cyan-bright);
     background:radial-gradient(circle at 35% 30%, var(--neon-cyan-bright), var(--neon-purple));
-    color:#0d0018;
+    color:var(--accent-ink);
     box-shadow:0 0 16px -2px var(--neon-cyan);
   }
   .chip-btn:disabled{ opacity:.35; cursor:not-allowed; }
@@ -597,7 +597,7 @@
 
   .store-tab-btn.active{
     background:linear-gradient(120deg, var(--neon-cyan-bright), var(--neon-purple));
-    color:#0d0018; border-color:transparent; box-shadow:0 0 14px -3px var(--neon-purple);
+    color:var(--accent-ink); border-color:transparent; box-shadow:0 0 14px -3px var(--neon-purple);
   }
   .store-tab-panel{ display:flex; flex-direction:column; gap:18px; }
 
@@ -850,7 +850,7 @@
   .icon-badge.icon-pink{
     background:
       radial-gradient(circle at 32% 26%, rgba(255,255,255,.28), transparent 55%),
-      linear-gradient(160deg, #ff8ce0, var(--neon-pink));
+      linear-gradient(160deg, var(--ruby-bright), var(--neon-pink));
     box-shadow:
       inset 0 1px 2px rgba(255,255,255,.4),
       inset 0 -4px 8px rgba(0,0,0,.35),
@@ -867,7 +867,7 @@
   }
   .game-tile.wide .tile-arrow{ position:static; margin-left:8px; }
 
-  .btn-success{ background:linear-gradient(155deg, var(--neon-green-bright), var(--neon-green)); color:#062615; box-shadow:var(--shadow-sm), 0 0 16px -4px var(--neon-green); }
+  .btn-success{ background:linear-gradient(155deg, var(--neon-green-bright), var(--neon-green)); color:var(--accent-ink); box-shadow:var(--shadow-sm), 0 0 16px -4px var(--neon-green); }
   .btn-success:disabled{ opacity:1; cursor:default; }
 
   .btn-primary{ position:relative; overflow:hidden; }
@@ -1587,31 +1587,55 @@
 
       <p class="league-msg" id="pokerMsgBar"></p>
 
-      <div class="league-card ornate" id="pokerOfflinePanel" hidden>
-        <p class="league-card-title">No se pudo conectar</p>
-        <p class="league-card-sub">No logramos conectar con el servidor del poker. Revisa tu conexión a internet e intenta de nuevo.</p>
-        <button class="btn btn-primary btn-block" id="pokerOfflineRetryBtn">Reintentar</button>
+      <div class="league-card ornate" id="pokerCpuPanel" style="margin-bottom:12px;">
+        <p class="league-card-title">🤖 Jugar contra la CPU</p>
+        <p class="league-card-sub">Practica en cualquier momento, sin conexión ni liga, contra jugadores robot.</p>
+        <p class="bet-label" style="margin-top:10px;">Fichas para la mesa</p>
+        <div class="chip-select" id="pokerCpuBuyInChips">
+          <button class="chip-btn" data-amount="200">200</button>
+          <button class="chip-btn active" data-amount="500">500</button>
+          <button class="chip-btn" data-amount="1000">1000</button>
+        </div>
+        <p class="bet-label" style="margin-top:10px;">Rivales CPU</p>
+        <div class="chip-select" id="pokerCpuCountChips">
+          <button class="chip-btn" data-amount="1">1</button>
+          <button class="chip-btn" data-amount="2">2</button>
+          <button class="chip-btn active" data-amount="3">3</button>
+          <button class="chip-btn" data-amount="4">4</button>
+          <button class="chip-btn" data-amount="5">5</button>
+        </div>
+        <button class="btn btn-gold btn-block" id="createCpuPokerTableBtn" style="margin-top:10px;">Jugar contra la CPU</button>
       </div>
 
-      <div id="pokerNoLeague" hidden>
-        <p class="poker-empty-hint">Únete a una liga de amigos primero: el poker en línea se juega entre los miembros de tu liga.</p>
-        <button class="btn btn-primary btn-block" data-goto="league">Ir a Liga de Amigos</button>
-      </div>
+      <div id="pokerOnlineSection">
+        <p class="paytable-title">Jugar en línea con tu liga</p>
 
-      <div id="pokerLobby" hidden>
-        <div class="league-card ornate" style="margin-bottom:12px;">
-          <p class="league-card-title">Crear una mesa</p>
-          <p class="league-card-sub">Elige cuántas fichas llevas a la mesa.</p>
-          <div class="chip-select" id="pokerBuyInChips">
-            <button class="chip-btn" data-amount="200">200</button>
-            <button class="chip-btn active" data-amount="500">500</button>
-            <button class="chip-btn" data-amount="1000">1000</button>
-          </div>
-          <button class="btn btn-primary btn-block" id="createPokerTableBtn" style="margin-top:10px;">Crear mesa</button>
+        <div class="league-card ornate" id="pokerOfflinePanel" hidden>
+          <p class="league-card-title">No se pudo conectar</p>
+          <p class="league-card-sub">No logramos conectar con el servidor del poker. Revisa tu conexión a internet e intenta de nuevo.</p>
+          <button class="btn btn-primary btn-block" id="pokerOfflineRetryBtn">Reintentar</button>
         </div>
 
-        <p class="paytable-title">Mesas de tu liga</p>
-        <div class="poker-lobby-list" id="pokerLobbyList"></div>
+        <div id="pokerNoLeague" hidden>
+          <p class="poker-empty-hint">Únete a una liga de amigos primero: el poker en línea se juega entre los miembros de tu liga.</p>
+          <button class="btn btn-primary btn-block" data-goto="league">Ir a Liga de Amigos</button>
+        </div>
+
+        <div id="pokerLobby" hidden>
+          <div class="league-card ornate" style="margin-bottom:12px;">
+            <p class="league-card-title">Crear una mesa</p>
+            <p class="league-card-sub">Elige cuántas fichas llevas a la mesa.</p>
+            <div class="chip-select" id="pokerBuyInChips">
+              <button class="chip-btn" data-amount="200">200</button>
+              <button class="chip-btn active" data-amount="500">500</button>
+              <button class="chip-btn" data-amount="1000">1000</button>
+            </div>
+            <button class="btn btn-primary btn-block" id="createPokerTableBtn" style="margin-top:10px;">Crear mesa</button>
+          </div>
+
+          <p class="paytable-title">Mesas de tu liga</p>
+          <div class="poker-lobby-list" id="pokerLobbyList"></div>
+        </div>
       </div>
 
       <div id="pokerTableView" hidden>
@@ -1703,10 +1727,10 @@
   /* ================= THEMES ================= */
   var THEMES = {
     escarlata: {
-      name:'Arcade Neón', price:0,
-      vars:{ '--bg':'#0a0714','--bg-elevated':'#180f2c','--bg-panel':'#120b22','--bg-panel-2':'#1d1236',
-             '--line':'#3d2568','--line-soft':'#2a1c48','--accent':'#ffcf2e','--accent-bright':'#fff176',
-             '--accent-dim':'#a67f10','--accent-ink':'#231800' }
+      name:'Clásico Negro y Oro', price:0,
+      vars:{ '--bg':'#0b0707','--bg-elevated':'#1a0f0f','--bg-panel':'#140b0b','--bg-panel-2':'#211313',
+             '--line':'#4a3216','--line-soft':'#2e1f10','--accent':'#d4af37','--accent-bright':'#f3d675',
+             '--accent-dim':'#8a6a1f','--accent-ink':'#201700' }
     },
     esmeralda: {
       name:'Esmeralda', price:800,
@@ -2195,7 +2219,7 @@
       var label = document.createElement('span');
       label.className = 'wheel-num';
       label.textContent = n;
-      label.style.transform = 'rotate(' + center + 'deg) translateY(-' + radius + 'px)';
+      label.style.transform = 'rotate(' + center + 'deg) translate(0, -' + radius + 'px) rotate(-' + center + 'deg) translate(-50%, -50%)';
       wheel.appendChild(label);
     }
   }
@@ -4121,6 +4145,111 @@
     }).catch(function(){ addBalance(buyIn); pokerMsg('No se pudo crear la mesa'); });
   }
 
+  /* ---- Poker vs CPU (local, sin conexión) ---- */
+  var pokerMode = null; // null | 'online' | 'cpu'
+  var localPokerTable = null;
+  var cpuTurnTimer = null;
+  var CPU_NAMES = ['CPU Ana','CPU Beto','CPU Coco','CPU Dana','CPU Estro'];
+
+  function isCpuSeat(s){ return !!s && typeof s.playerId === 'string' && s.playerId.indexOf('cpu') === 0; }
+
+  function createCpuPokerTable(buyIn, numCpus){
+    if(state.balance < buyIn){ pokerMsg('Fichas insuficientes para ese buy-in'); return; }
+    ensurePlayerId();
+    var myName = state.playerName || 'Tú';
+    var total = Math.min(6, Math.max(2, numCpus + 1));
+    var seats = new Array(6).fill(null);
+    seats[0] = makeSeat(state.playerId, myName, buyIn);
+    for(var i = 1; i < total; i++){ seats[i] = makeSeat('cpu' + i, CPU_NAMES[i - 1] || ('CPU ' + i), buyIn); }
+    addBalance(-buyIn);
+    var sb = Math.max(5, Math.round(buyIn / 100 / 5) * 5);
+    var bb = sb * 2;
+    localPokerTable = {
+      isLocal: true, createdAt: Date.now(), buyIn: buyIn, smallBlind: sb, bigBlind: bb, maxSeats: 6,
+      status: 'waiting', seats: seats, deck: [], community: [], pot: 0, currentBet: 0,
+      stage: 'waiting', dealerSeat: 0, turnSeat: -1, minRaise: bb,
+      log: ['Mesa contra la CPU creada'], turnDeadline: 0, updatedAt: Date.now(),
+      handNumber: 0, lastProcessedTs: {}, handStartAt: Date.now() + 1200, showdownReveal: null
+    };
+    pokerMode = 'cpu';
+    renderPokerEntry();
+  }
+
+  function bestHandN(cards){
+    if(cards.length === 7) return bestHand7(cards);
+    if(cards.length <= 5) return { score: evaluate5(cards) };
+    var best = null;
+    for(var i = 0; i < cards.length; i++){
+      var combo = cards.slice(0, i).concat(cards.slice(i + 1));
+      var score = evaluate5(combo);
+      if(!best || compareScores(score, best.score) > 0) best = { score: score, cards: combo };
+    }
+    return best;
+  }
+
+  function cpuChooseAction(t, seatIdx){
+    var seat = t.seats[seatIdx];
+    var toCall = t.currentBet - seat.bet;
+    var strength;
+    if(t.community && t.community.length >= 3){
+      strength = bestHandN(seat.cards.concat(t.community)).score[0];
+    } else {
+      var r1 = pokerRankValue(pokerCardRank(seat.cards[0]));
+      var r2 = pokerRankValue(pokerCardRank(seat.cards[1]));
+      strength = (r1 === r2) ? 3 : (Math.max(r1, r2) >= 12 ? 1 : 0);
+    }
+    var rnd = Math.random();
+    var raiseTo = Math.min(seat.bet + seat.stack, t.currentBet + t.minRaise * (1 + Math.floor(Math.random() * 2)));
+    if(toCall <= 0){
+      if(strength >= 3 && rnd < 0.5) return { type: 'raise', amount: raiseTo };
+      if(strength >= 1 && rnd < 0.15) return { type: 'raise', amount: raiseTo };
+      return { type: 'check', amount: 0 };
+    }
+    if(toCall >= seat.stack) return { type: rnd < 0.75 || strength >= 1 ? 'call' : 'fold', amount: 0 };
+    var potOdds = toCall / Math.max(1, t.pot + toCall);
+    if(strength <= 0 && potOdds > 0.25 && rnd < 0.6) return { type: 'fold', amount: 0 };
+    if(strength >= 4 && rnd < 0.35) return { type: 'raise', amount: raiseTo };
+    return { type: 'call', amount: 0 };
+  }
+
+  function scheduleCpuTurn(){
+    clearTimeout(cpuTurnTimer);
+    cpuTurnTimer = setTimeout(function(){
+      var t = localPokerTable;
+      if(!t || t.status !== 'playing' || t.turnSeat === -1) return;
+      var seat = t.seats[t.turnSeat];
+      if(!seat || !isCpuSeat(seat)) return;
+      var decision;
+      try{ decision = cpuChooseAction(t, t.turnSeat); }
+      catch(e){ decision = { type: (t.currentBet - seat.bet > 0) ? 'fold' : 'check', amount: 0 }; }
+      localPokerTable = applySeatAction(t, t.turnSeat, decision.type, decision.amount);
+      localAdvance();
+    }, 900 + Math.random() * 700);
+  }
+
+  function localAdvance(){
+    var t = localPokerTable;
+    if(!t) return;
+    t = maybeAdvanceStage(t);
+    localPokerTable = t;
+    renderPokerTable(t);
+    if(t.status === 'playing' && t.turnSeat !== -1){
+      var seat = t.seats[t.turnSeat];
+      if(isCpuSeat(seat)) scheduleCpuTurn();
+    }
+  }
+
+  function endCpuSession(t){
+    var idx = tableSeatIndex(t, state.playerId);
+    var cashOut = idx !== -1 ? t.seats[idx].stack : 0;
+    if(cashOut > 0) addBalance(cashOut);
+    pokerMsg(idx !== -1 ? '¡Ganaste toda la mesa! +' + cashOut.toLocaleString('es-CO') + ' fichas' : 'Te quedaste sin fichas en la mesa');
+    clearTimeout(cpuTurnTimer);
+    localPokerTable = null;
+    pokerMode = null;
+    renderPokerEntry();
+  }
+
   function joinPokerTable(tableId, buyIn){
     if(!db || !state.leagueCode) return;
     ensurePlayerId();
@@ -4158,6 +4287,19 @@
   }
 
   function leavePokerTable(){
+    if(pokerMode === 'cpu'){
+      var lt = localPokerTable;
+      if(!lt) return;
+      if(lt.status === 'playing'){ pokerMsg('Espera a que termine la mano actual'); return; }
+      var lidx = tableSeatIndex(lt, state.playerId);
+      var lcashOut = lidx !== -1 ? lt.seats[lidx].stack : 0;
+      if(lcashOut > 0) addBalance(lcashOut);
+      clearTimeout(cpuTurnTimer);
+      localPokerTable = null;
+      pokerMode = null;
+      renderPokerEntry();
+      return;
+    }
     if(!currentPokerTableRef) return;
     var ref = currentPokerTableRef;
     var cashOutAmt = 0;
@@ -4248,6 +4390,15 @@
   }
 
   function postPokerAction(type, amount){
+    if(pokerMode === 'cpu'){
+      var lt = localPokerTable;
+      if(!lt) return;
+      var lidx = tableSeatIndex(lt, state.playerId);
+      if(lidx === -1 || lidx !== lt.turnSeat) return;
+      localPokerTable = applySeatAction(lt, lidx, type, amount || 0);
+      localAdvance();
+      return;
+    }
     if(!currentPokerTableRef || !currentPokerTableData) return;
     var t = currentPokerTableData;
     var idx = tableSeatIndex(t, state.playerId);
@@ -4327,11 +4478,13 @@
 
   document.getElementById('pokerRaiseMinus').addEventListener('click', function(){
     pokerRaiseAmt = Math.max(pokerRaiseMin, pokerRaiseAmt - pokerRaiseStep);
-    if(currentPokerTableData) renderPokerActions(currentPokerTableData, tableSeatIndex(currentPokerTableData, state.playerId));
+    var t = pokerMode === 'cpu' ? localPokerTable : currentPokerTableData;
+    if(t) renderPokerActions(t, tableSeatIndex(t, state.playerId));
   });
   document.getElementById('pokerRaisePlus').addEventListener('click', function(){
     pokerRaiseAmt = Math.min(pokerRaiseMax, pokerRaiseAmt + pokerRaiseStep);
-    if(currentPokerTableData) renderPokerActions(currentPokerTableData, tableSeatIndex(currentPokerTableData, state.playerId));
+    var t = pokerMode === 'cpu' ? localPokerTable : currentPokerTableData;
+    if(t) renderPokerActions(t, tableSeatIndex(t, state.playerId));
   });
   document.getElementById('leavePokerTableBtn').addEventListener('click', leavePokerTable);
 
@@ -4389,14 +4542,26 @@
 
   function renderPokerEntry(){
     document.getElementById('pokerMsgBar').textContent = '';
+    var cpuPanel = document.getElementById('pokerCpuPanel');
+    var onlineSection = document.getElementById('pokerOnlineSection');
     var noLeague = document.getElementById('pokerNoLeague');
     var lobby = document.getElementById('pokerLobby');
     var tableView = document.getElementById('pokerTableView');
     var offlinePanel = document.getElementById('pokerOfflinePanel');
+
+    if(pokerMode === 'cpu' && localPokerTable){
+      cpuPanel.hidden = true; onlineSection.hidden = true;
+      lobby.hidden = true; tableView.hidden = false;
+      renderPokerTable(localPokerTable);
+      return;
+    }
+    cpuPanel.hidden = false;
+    onlineSection.hidden = false;
+
     if(!db){
       noLeague.hidden = true; lobby.hidden = true; tableView.hidden = true;
       if(dbReady){ offlinePanel.hidden = false; }
-      else { offlinePanel.hidden = true; pokerMsg('Conectando…'); }
+      else { offlinePanel.hidden = true; }
       return;
     }
     offlinePanel.hidden = true;
@@ -4417,6 +4582,22 @@
   }
 
   function pokerTick(){
+    if(pokerMode === 'cpu'){
+      var lt = localPokerTable;
+      if(!lt) return;
+      if(lt.status === 'waiting'){
+        var seated = lt.seats.filter(Boolean).length;
+        if(seated >= 2 && Date.now() >= (lt.handStartAt || 0)){
+          lt = startNewHand(lt);
+          localPokerTable = lt;
+          renderPokerTable(lt);
+          if(lt.turnSeat !== -1 && isCpuSeat(lt.seats[lt.turnSeat])) scheduleCpuTurn();
+        } else if(seated < 2 && lt.handNumber > 0){
+          endCpuSession(lt);
+        }
+      }
+      return;
+    }
     if(currentPokerTableData && currentPokerTableRef && currentPokerTableData.hostId === state.playerId){
       processHostTick(currentPokerTableRef);
     }
@@ -4433,6 +4614,12 @@
   var pokerBuyIn = wireChipSelect('pokerBuyInChips', 500);
   document.getElementById('createPokerTableBtn').addEventListener('click', function(){
     createPokerTable(pokerBuyIn.get());
+  });
+
+  var pokerCpuBuyIn = wireChipSelect('pokerCpuBuyInChips', 500);
+  var pokerCpuCount = wireChipSelect('pokerCpuCountChips', 3);
+  document.getElementById('createCpuPokerTableBtn').addEventListener('click', function(){
+    createCpuPokerTable(pokerCpuBuyIn.get(), pokerCpuCount.get());
   });
 
   /* ================= INIT ================= */
