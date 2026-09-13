@@ -1069,6 +1069,9 @@
   }
   .career-wallet-row b{ color:var(--accent-bright); font-family:'Space Mono', monospace; }
   .career-club-label b{ color:var(--text); font-family:'Fraunces', serif; }
+  .mgr-bar-track{ width:100%; height:10px; border-radius:6px; background:var(--bg-elevated); border:1px solid var(--line); overflow:hidden; margin-top:6px; }
+  .mgr-bar-fill{ height:100%; background:linear-gradient(90deg, var(--neon-cyan-bright), var(--neon-purple)); border-radius:6px; }
+  .mgr-tab-panel{ display:flex; flex-direction:column; gap:8px; }
   .career-pitch{
     position:relative; width:100%; aspect-ratio:3/4; border-radius:var(--radius-lg);
     background:
@@ -1268,6 +1271,16 @@
             <span>
               <span class="game-name" style="display:block;">Ultimate Team</span>
               <span class="game-meta">Sobres, plantilla y partidos vs CPU o tu liga</span>
+            </span>
+          </span>
+          <span class="tile-arrow">→</span>
+        </button>
+        <button class="game-tile wide ornate" data-goto="manager">
+          <span style="display:flex; align-items:center; gap:12px;">
+            <span class="icon-badge icon-green">📋</span>
+            <span>
+              <span class="game-name" style="display:block;">Director Técnico</span>
+              <span class="game-meta">Modo carrera offline: liga, fichajes y temporadas</span>
             </span>
           </span>
           <span class="tile-arrow">→</span>
@@ -2063,6 +2076,102 @@
       </div>
     </section>
 
+    <!-- DIRECTOR TECNICO (modo carrera offline) -->
+    <section class="view" data-view="manager" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Director Técnico</h2>
+        <button class="btn-info" data-toggle="mgrRulesPanel">i</button>
+      </div>
+
+      <p class="league-msg" id="mgrMsgBar"></p>
+
+      <div class="paytable" id="mgrRulesPanel" hidden>
+        <p class="paytable-title">Cómo funciona</p>
+        <p class="rules-text">Modo carrera 100% offline: diriges un club contra 7 clubes de la CPU, con calendario de ida y vuelta (14 jornadas).</p>
+        <ul class="rules-list">
+          <li><b>Oficina:</b> presupuesto, confianza de la directiva y buzón de mensajes (ofertas, lesiones, informes, noticias, renovaciones, resultados).</li>
+          <li><b>Plantilla:</b> alineación titular en 1-3-2-1, resto de la plantilla y entrenamiento enfocado por posición.</li>
+          <li><b>Fichajes:</b> filtra jugadores de otros clubes, ofrece comprarlos o pedirlos prestados, y responde ofertas por los tuyos (aceptar, rechazar o contraofertar).</li>
+          <li><b>Calendario:</b> juega en vivo o simula cada jornada; se actualizan la tabla, goleadores, moral, forma física y lesiones.</li>
+          <li>Al terminar la temporada hay premios según tu posición, evolución de jugadores (más rápida en los jóvenes) y arranca una temporada nueva.</li>
+        </ul>
+      </div>
+
+      <div class="league-card ornate" id="mgrSetup" hidden>
+        <p class="league-card-title">🏟️ Funda tu club</p>
+        <p class="league-card-sub">Este modo es offline: no necesitas liga ni conexión a internet.</p>
+        <div class="field-row">
+          <input class="text-input" id="mgrClubNameInput" type="text" maxlength="24" placeholder="Nombre del club">
+        </div>
+        <div class="field-row" style="margin-top:8px;">
+          <input class="text-input" id="mgrCoachNameInput" type="text" maxlength="24" placeholder="Nombre del entrenador">
+        </div>
+        <button class="btn btn-gold btn-block" id="mgrStartBtn" style="margin-top:10px;">Fundar club y empezar</button>
+      </div>
+
+      <div id="mgrMain" hidden>
+        <div class="career-wallet-row">
+          <span class="career-club-label">🏟️ <b id="mgrClubLabel">Mi club</b></span>
+          <span class="career-wallet-amt">💰 <b id="mgrBudgetLabel">0</b></span>
+        </div>
+        <div class="match-toolbar">
+          <button class="btn btn-ghost btn-sm mgr-tab-btn active" data-mgr-tab="oficina">🏢 Oficina</button>
+          <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="plantilla">🧑 Plantilla</button>
+          <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="fichajes">📝 Fichajes</button>
+          <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="calendario">📅 Calendario</button>
+        </div>
+
+        <div class="mgr-tab-panel" data-mgr-panel="oficina">
+          <div class="league-card ornate">
+            <p class="league-card-title" id="mgrOfficeSeason">Temporada 1 · Jornada 0/14</p>
+            <p class="league-card-sub" id="mgrOfficePosition">Posición: —</p>
+            <p class="bet-label" style="margin-top:10px;">Confianza de la directiva</p>
+            <div class="mgr-bar-track"><div class="mgr-bar-fill" id="mgrConfidenceFill" style="width:60%;"></div></div>
+          </div>
+          <p class="paytable-title" style="margin-top:16px;">Bandeja de entrada</p>
+          <div class="career-player-list" id="mgrInboxList"></div>
+        </div>
+
+        <div class="mgr-tab-panel" data-mgr-panel="plantilla" hidden>
+          <p class="paytable-title">Alineación (1-3-2-1)</p>
+          <div class="career-pitch" id="mgrPitch"></div>
+          <p class="bet-label" style="margin-top:10px;">Entrenamiento enfocado en</p>
+          <div class="choice-row" id="mgrTrainingChips">
+            <button class="choice-btn active" data-amount="GK">Porteros</button>
+            <button class="choice-btn" data-amount="DEF">Defensas</button>
+            <button class="choice-btn" data-amount="MID">Medios</button>
+            <button class="choice-btn" data-amount="FWD">Delanteros</button>
+          </div>
+          <p class="paytable-title" style="margin-top:16px;">Plantilla completa</p>
+          <div class="career-player-list" id="mgrSquadList"></div>
+        </div>
+
+        <div class="mgr-tab-panel" data-mgr-panel="fichajes" hidden>
+          <p class="paytable-title">Centro de transferencias</p>
+          <div class="chip-select" id="mgrPosFilter">
+            <button class="chip-btn active" data-amount="ALL" style="width:auto; border-radius:999px; padding:0 12px;">Todos</button>
+            <button class="chip-btn" data-amount="GK" style="width:auto; border-radius:999px; padding:0 12px;">GK</button>
+            <button class="chip-btn" data-amount="DEF" style="width:auto; border-radius:999px; padding:0 12px;">DEF</button>
+            <button class="chip-btn" data-amount="MID" style="width:auto; border-radius:999px; padding:0 12px;">MID</button>
+            <button class="chip-btn" data-amount="FWD" style="width:auto; border-radius:999px; padding:0 12px;">FWD</button>
+          </div>
+          <div class="career-player-list" id="mgrTransferList" style="margin-top:10px;"></div>
+          <p class="paytable-title" style="margin-top:16px;">Buzón de ofertas por mis jugadores</p>
+          <div class="career-player-list" id="mgrOffersInList"></div>
+        </div>
+
+        <div class="mgr-tab-panel" data-mgr-panel="calendario" hidden>
+          <div class="league-card ornate" id="mgrNextMatchCard"></div>
+          <div id="mgrLiveMatch" style="margin-top:12px;" hidden></div>
+          <p class="paytable-title" style="margin-top:16px;">Tabla de posiciones</p>
+          <div class="career-player-list" id="mgrStandingsList"></div>
+          <p class="paytable-title" style="margin-top:16px;">Goleadores</p>
+          <div class="career-player-list" id="mgrTopScorersList"></div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <nav class="bottomnav">
@@ -2164,7 +2273,8 @@
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1, ownedBorders:['none'], activeBorder:'none', sobreHistory:[],
       playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, chessElo:1200,
-      ut: { squad:{}, owned:[], packHistory:[] } };
+      ut: { squad:{}, owned:[], packHistory:[] },
+      manager: null };
   }
   var state = loadState();
 
@@ -2234,6 +2344,7 @@
     if(name === 'poker'){ renderPokerEntry(); pokerTimerId = setInterval(pokerTick, 1000); }
     if(name === 'chess'){ renderChessEntry(); }
     if(name === 'career'){ renderCareerEntry(); }
+    if(name === 'manager'){ renderManagerEntry(); }
   }
 
   function selectStoreTab(tab){
@@ -6899,6 +7010,790 @@
   document.getElementById('careerPlayMatchBtn').addEventListener('click', function(){
     careerOpponentPickerOpen = !careerOpponentPickerOpen;
     careerRenderMatchesTab();
+  });
+
+  /* ================= DIRECTOR TECNICO (MODO CARRERA OFFLINE) ================= */
+  // Reutiliza CAREER_SLOT_DEFS/CAREER_PITCH_LAYOUT (formacion 1-3-2-1), careerSimulateFullMatch
+  // (motor de partidos), poissonSample/lambdaFor (partidos CPU vs CPU) y UT_PLAYER_POOL (nombres)
+  // ya definidos arriba para Ultimate Team y Apuestas Deportivas.
+  var MGR_START_BUDGET = 500000;
+  var MGR_TOTAL_MATCHDAYS_HINT = 14; // 7 rivales CPU x ida y vuelta
+
+  function mgrGeneratePlayer(position, minOvr, maxOvr){
+    var ovr = Math.max(35, Math.min(90, minOvr + Math.floor(Math.random() * (maxOvr - minOvr + 1))));
+    var age = 17 + Math.floor(Math.random() * 20);
+    var potential = Math.min(94, ovr + Math.floor(Math.random() * (age < 23 ? 16 : 4)));
+    return {
+      id: 'mp' + Date.now() + Math.floor(Math.random() * 1000000),
+      name: UT_PLAYER_POOL[Math.floor(Math.random() * UT_PLAYER_POOL.length)],
+      age: age, position: position, ovr: ovr, potential: Math.max(ovr, potential),
+      physical: 60 + Math.floor(Math.random() * 35), morale: 65 + Math.floor(Math.random() * 30),
+      form: 55 + Math.floor(Math.random() * 35),
+      wage: Math.round((ovr * ovr * 2) / 10) * 10,
+      value: Math.round((ovr * ovr * 40) / 100) * 100,
+      contractYears: 1 + Math.floor(Math.random() * 4),
+      seasonApps: 0, seasonGoals: 0, seasonAssists: 0, seasonRatingSum: 0,
+      injuredUntil: 0, onLoan: false
+    };
+  }
+  function mgrGenerateSquad(strength){
+    var positions = ['GK', 'GK', 'DEF', 'DEF', 'DEF', 'DEF', 'DEF', 'MID', 'MID', 'MID', 'MID', 'FWD', 'FWD', 'FWD'];
+    var base = 45 + strength * 6;
+    return positions.map(function(pos){ return mgrGeneratePlayer(pos, base - 8, base + 8); });
+  }
+  function mgrGenerateCpuClubs(){
+    return LEAGUE_TEAMS.slice(0, 7).map(function(team){
+      return { name: team.name, strength: team.strength, squad: mgrGenerateSquad(team.strength), pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
+    });
+  }
+
+  function mgrPlayerById(id){
+    var list = state.manager.squad;
+    for(var i = 0; i < list.length; i++){ if(list[i].id === id) return list[i]; }
+    return null;
+  }
+  function mgrPlayerByName(name){
+    var list = state.manager.squad;
+    for(var i = 0; i < list.length; i++){ if(list[i].name === name) return list[i]; }
+    return null;
+  }
+  function mgrFindCpuPlayerById(id){
+    for(var i = 0; i < state.manager.cpuClubs.length; i++){
+      var squad = state.manager.cpuClubs[i].squad;
+      for(var j = 0; j < squad.length; j++){ if(squad[j].id === id) return squad[j]; }
+    }
+    return null;
+  }
+  function mgrClubName(idx){ return idx === 0 ? state.manager.club.name : state.manager.cpuClubs[idx - 1].name; }
+  function mgrStatsRowFor(idx){ return idx === 0 ? state.manager.myStats : state.manager.cpuClubs[idx - 1]; }
+  function mgrClubAvgOvr(club){
+    if(!club.squad.length) return 50;
+    var sum = 0; club.squad.forEach(function(p){ sum += p.ovr; });
+    return sum / club.squad.length;
+  }
+  function mgrClubNeedsPosition(club, position){
+    var count = club.squad.filter(function(p){ return p.position === position; }).length;
+    var minNeeded = { GK: 2, DEF: 5, MID: 4, FWD: 3 }[position] || 3;
+    return count <= minNeeded - 1;
+  }
+  function mgrLineupList(){
+    var list = [];
+    CAREER_SLOT_DEFS.forEach(function(def){
+      var p = state.manager.lineup[def.key] ? mgrPlayerById(state.manager.lineup[def.key]) : null;
+      if(p) list.push({ id: p.id, name: p.name, position: p.position, grl: p.ovr });
+    });
+    return list;
+  }
+  function mgrBestLineupList(squad){
+    var list = [];
+    CAREER_SLOT_DEFS.forEach(function(def){
+      var candidates = squad.filter(function(p){ return p.position === def.pos; }).sort(function(a, b){ return b.ovr - a.ovr; });
+      if(candidates[0]) list.push({ id: candidates[0].id, name: candidates[0].name, position: candidates[0].position, grl: candidates[0].ovr });
+    });
+    return list;
+  }
+  function mgrMySquadAvgOvr(){
+    var list = mgrLineupList();
+    if(!list.length) return 60;
+    var sum = 0; list.forEach(function(p){ sum += p.grl; });
+    return sum / list.length;
+  }
+  function mgrClubStrength(idx){
+    if(idx === 0) return Math.max(0.3, (mgrMySquadAvgOvr() - 50) / 10);
+    return Math.max(0.3, (mgrClubAvgOvr(state.manager.cpuClubs[idx - 1]) - 50) / 10);
+  }
+  function mgrAssignInitialLineup(){
+    var lineup = {}, used = {};
+    CAREER_SLOT_DEFS.forEach(function(def){
+      var candidates = state.manager.squad.filter(function(p){ return p.position === def.pos && !used[p.id]; })
+        .sort(function(a, b){ return b.ovr - a.ovr; });
+      if(candidates.length){ lineup[def.key] = candidates[0].id; used[candidates[0].id] = true; }
+    });
+    state.manager.lineup = lineup;
+  }
+  function mgrAutoFixLineup(){
+    if(!state.manager.lineup) state.manager.lineup = {};
+    CAREER_SLOT_DEFS.forEach(function(def){
+      var cur = state.manager.lineup[def.key] ? mgrPlayerById(state.manager.lineup[def.key]) : null;
+      var curBad = !cur || (cur.injuredUntil && cur.injuredUntil > state.manager.matchday);
+      if(curBad){
+        var usedIds = {};
+        Object.keys(state.manager.lineup).forEach(function(k){ if(state.manager.lineup[k]) usedIds[state.manager.lineup[k]] = true; });
+        var candidates = state.manager.squad.filter(function(p){
+          return p.position === def.pos && !usedIds[p.id] && !(p.injuredUntil && p.injuredUntil > state.manager.matchday);
+        }).sort(function(a, b){ return b.ovr - a.ovr; });
+        state.manager.lineup[def.key] = candidates.length ? candidates[0].id : null;
+      }
+    });
+  }
+  function mgrSetStarter(playerId){
+    var player = mgrPlayerById(playerId);
+    if(!player) return;
+    var slotsForPos = CAREER_SLOT_DEFS.filter(function(d){ return d.pos === player.position; });
+    var already = slotsForPos.some(function(d){ return state.manager.lineup[d.key] === playerId; });
+    if(already) return;
+    var targetKey = null;
+    slotsForPos.forEach(function(d){ if(!targetKey && !state.manager.lineup[d.key]) targetKey = d.key; });
+    if(!targetKey){
+      var worst = null;
+      slotsForPos.forEach(function(d){
+        var cur = mgrPlayerById(state.manager.lineup[d.key]);
+        if(cur && (!worst || cur.ovr < worst.ovr)){ worst = cur; targetKey = d.key; }
+      });
+    }
+    if(targetKey) state.manager.lineup[targetKey] = playerId;
+    saveState();
+    mgrRenderActiveTab();
+  }
+
+  function mgrStandingsTable(){
+    var rows = [{ idx: 0, name: state.manager.club.name, stats: state.manager.myStats }];
+    state.manager.cpuClubs.forEach(function(c, i){ rows.push({ idx: i + 1, name: c.name, stats: c }); });
+    rows.sort(function(a, b){
+      if(b.stats.pts !== a.stats.pts) return b.stats.pts - a.stats.pts;
+      return (b.stats.gf - b.stats.gc) - (a.stats.gf - a.stats.gc);
+    });
+    return rows;
+  }
+  function mgrApplyStandings(homeIdx, awayIdx, sh, sa){
+    var homeRow = mgrStatsRowFor(homeIdx), awayRow = mgrStatsRowFor(awayIdx);
+    homeRow.pj++; awayRow.pj++;
+    homeRow.gf += sh; homeRow.gc += sa;
+    awayRow.gf += sa; awayRow.gc += sh;
+    if(sh > sa){ homeRow.pg++; homeRow.pts += 3; awayRow.pp++; }
+    else if(sh < sa){ awayRow.pg++; awayRow.pts += 3; homeRow.pp++; }
+    else { homeRow.pe++; awayRow.pe++; homeRow.pts++; awayRow.pts++; }
+  }
+  function mgrSimQuickResult(homeIdx, awayIdx){
+    var lh = lambdaFor(mgrClubStrength(homeIdx), true), la = lambdaFor(mgrClubStrength(awayIdx), false);
+    return { scoreHome: poissonSample(lh), scoreAway: poissonSample(la) };
+  }
+
+  function mgrGenerateSeasonCalendar(){
+    var n = state.manager.cpuClubs.length + 1; // 8 (yo + 7 CPU)
+    var half = n / 2;
+    var arr = []; for(var i = 0; i < n; i++) arr.push(i);
+    var rounds = [];
+    for(var r = 0; r < n - 1; r++){
+      var round = [];
+      for(var k = 0; k < half; k++) round.push([arr[k], arr[n - 1 - k]]);
+      rounds.push(round);
+      arr.splice(1, 0, arr.pop());
+    }
+    var calendar = [];
+    rounds.forEach(function(round, ri){
+      round.forEach(function(pair){
+        var home = ri % 2 === 0 ? pair[0] : pair[1];
+        var away = ri % 2 === 0 ? pair[1] : pair[0];
+        calendar.push({ matchday: ri + 1, home: home, away: away, played: false, scoreHome: null, scoreAway: null });
+      });
+    });
+    var n1 = rounds.length;
+    rounds.forEach(function(round, ri){
+      round.forEach(function(pair){
+        var home = ri % 2 === 0 ? pair[1] : pair[0];
+        var away = ri % 2 === 0 ? pair[0] : pair[1];
+        calendar.push({ matchday: n1 + ri + 1, home: home, away: away, played: false, scoreHome: null, scoreAway: null });
+      });
+    });
+    state.manager.calendar = calendar;
+  }
+
+  function mgrPushInbox(type, title, body){
+    if(!state.manager.inbox) state.manager.inbox = [];
+    state.manager.inbox.unshift({ id: 'inb' + Date.now() + Math.floor(Math.random() * 1000), type: type, title: title, body: body, ts: Date.now() });
+    if(state.manager.inbox.length > 30) state.manager.inbox.length = 30;
+  }
+
+  var mgrMsgTimer = null;
+  function mgrMsg(text){
+    var el = document.getElementById('mgrMsgBar');
+    if(!el) return;
+    el.textContent = text;
+    clearTimeout(mgrMsgTimer);
+    mgrMsgTimer = setTimeout(function(){ el.textContent = ''; }, 3500);
+  }
+
+  function mgrEvaluatePlayerForCpu(club, player){
+    var need = mgrClubNeedsPosition(club, player.position) ? 20 : 0;
+    var fit = (player.ovr - mgrClubAvgOvr(club)) * 1.5;
+    var ageBonus = player.age < 26 ? 10 : (player.age > 32 ? -15 : 0);
+    var potBonus = (player.potential - player.ovr) * 0.5;
+    return 40 + need + fit + ageBonus + potBonus;
+  }
+  function mgrAiRespondToOffer(club, player, offerAmount){
+    var needsPosition = mgrClubNeedsPosition(club, player.position);
+    var importance = player.ovr - mgrClubAvgOvr(club);
+    var ratio = offerAmount / Math.max(1, player.value);
+    var threshold = 0.85 + (needsPosition ? 0.25 : 0) + Math.max(0, importance) * 0.01 - (player.age > 30 ? 0.15 : 0);
+    if(ratio >= threshold) return { action: 'accept' };
+    if(ratio >= threshold - 0.3) return { action: 'counter', amount: Math.round(player.value * threshold / 10) * 10 };
+    return { action: 'reject' };
+  }
+  function mgrMakeOfferForPlayer(clubIdx, playerId, amount){
+    var club = state.manager.cpuClubs[clubIdx];
+    var player = club.squad.filter(function(p){ return p.id === playerId; })[0];
+    if(!player) return;
+    if(state.manager.club.budget < amount){ mgrMsg('Presupuesto insuficiente'); return; }
+    var decision = mgrAiRespondToOffer(club, player, amount);
+    if(decision.action === 'accept'){
+      club.squad = club.squad.filter(function(p){ return p.id !== playerId; });
+      state.manager.club.budget -= amount;
+      player.contractYears = 3; player.morale = Math.min(100, player.morale + 15);
+      state.manager.squad.push(player);
+      mgrPushInbox('fichaje', '¡Fichaje completado!', 'Fichaste a ' + player.name + ' por ' + amount.toLocaleString('es-CO') + '.');
+      mgrMsg('¡Fichaje completado! Bienvenido ' + player.name);
+    } else if(decision.action === 'counter'){
+      mgrMsg(club.name + ' pide ' + decision.amount.toLocaleString('es-CO') + ' por ' + player.name + ' (vuelve a ofertar con ese monto)');
+    } else {
+      mgrMsg(club.name + ' rechazó tu oferta por ' + player.name);
+    }
+    saveState();
+    mgrRenderActiveTab();
+  }
+  function mgrMakeLoanOffer(clubIdx, playerId){
+    var club = state.manager.cpuClubs[clubIdx];
+    var player = club.squad.filter(function(p){ return p.id === playerId; })[0];
+    if(!player) return;
+    if(mgrClubNeedsPosition(club, player.position)){ mgrMsg(club.name + ' rechazó el préstamo: necesitan a ' + player.name); return; }
+    club.squad = club.squad.filter(function(p){ return p.id !== playerId; });
+    player.onLoan = true; player.loanClubIdx = clubIdx; player.loanReturnAt = state.manager.season + 1;
+    state.manager.squad.push(player);
+    mgrPushInbox('fichaje', 'Préstamo acordado', player.name + ' llega cedido desde ' + club.name + ' hasta fin de temporada.');
+    mgrMsg('¡Préstamo acordado! ' + player.name + ' se une a tu plantilla.');
+    saveState();
+    mgrRenderActiveTab();
+  }
+  function mgrMaybeGenerateIncomingOffer(){
+    if(Math.random() > 0.3 || !state.manager.squad.length) return;
+    var club = state.manager.cpuClubs[Math.floor(Math.random() * state.manager.cpuClubs.length)];
+    var candidates = state.manager.squad.filter(function(p){ return !p.onLoan && mgrEvaluatePlayerForCpu(club, p) > 55; });
+    if(!candidates.length) return;
+    var player = candidates[Math.floor(Math.random() * candidates.length)];
+    var amount = Math.round(player.value * (0.8 + Math.random() * 0.5) / 10) * 10;
+    if(!state.manager.transferOffersIn) state.manager.transferOffersIn = [];
+    state.manager.transferOffersIn.push({ id: 'off' + Date.now(), clubName: club.name, playerId: player.id, playerName: player.name, amount: amount, status: 'pending', ts: Date.now() });
+    mgrPushInbox('oferta', 'Oferta por ' + player.name, club.name + ' ofrece ' + amount.toLocaleString('es-CO') + ' por ' + player.name + '.');
+  }
+  function mgrRespondIncomingOffer(offerId, action){
+    var offer = (state.manager.transferOffersIn || []).filter(function(o){ return o.id === offerId; })[0];
+    if(!offer || offer.status !== 'pending') return;
+    if(action === 'accept'){
+      var player = mgrPlayerById(offer.playerId);
+      state.manager.squad = state.manager.squad.filter(function(p){ return p.id !== offer.playerId; });
+      Object.keys(state.manager.lineup).forEach(function(k){ if(state.manager.lineup[k] === offer.playerId) state.manager.lineup[k] = null; });
+      state.manager.club.budget += offer.amount;
+      offer.status = 'accepted';
+      mgrMsg('Vendiste a ' + offer.playerName + ' por ' + offer.amount.toLocaleString('es-CO'));
+    } else if(action === 'counter'){
+      offer.amount = Math.round(offer.amount * 1.25 / 10) * 10;
+      mgrMsg('Pediste ' + offer.amount.toLocaleString('es-CO') + ' por ' + offer.playerName + '. Esperando respuesta…');
+    } else {
+      offer.status = 'rejected';
+      mgrMsg('Rechazaste la oferta por ' + offer.playerName);
+    }
+    saveState();
+    mgrRenderActiveTab();
+  }
+  function mgrWageDemand(player){
+    var importance = player.ovr - mgrMySquadAvgOvr();
+    var mult = 1 + Math.max(0, importance) * 0.03 + (player.potential - player.ovr) * 0.01 + (player.age < 24 ? 0.1 : 0);
+    return Math.max(player.wage, Math.round(player.wage * mult / 10) * 10);
+  }
+  function mgrProposeRenewal(playerId, years){
+    var player = mgrPlayerById(playerId);
+    if(!player) return;
+    var demand = mgrWageDemand(player);
+    player.wage = demand;
+    player.contractYears = years;
+    player.morale = Math.min(100, player.morale + 10);
+    mgrPushInbox('renovacion', 'Renovación firmada', player.name + ' firmó ' + years + ' año(s) más por ' + demand.toLocaleString('es-CO') + '/temporada.');
+    mgrMsg('Renovación firmada con ' + player.name);
+    saveState();
+    mgrRenderActiveTab();
+  }
+
+  function mgrApplyTraining(){
+    var focus = state.manager.trainingFocus || 'GK';
+    state.manager.squad.forEach(function(p){
+      if(p.position === focus && p.age <= 26 && p.ovr < p.potential && Math.random() < 0.2) p.ovr += 1;
+    });
+  }
+  function mgrApplyPlayerImpact(ratings, isMine){
+    (ratings || []).forEach(function(r){
+      var p = isMine ? mgrPlayerById(r.id) : mgrFindCpuPlayerById(r.id);
+      if(!p) return;
+      p.ovr = r.newGrl;
+      if(isMine){
+        p.seasonApps = (p.seasonApps || 0) + 1;
+        p.seasonRatingSum = (p.seasonRatingSum || 0) + r.rating;
+        p.morale = Math.max(0, Math.min(100, p.morale + (r.rating >= 7 ? 4 : (r.rating < 5 ? -6 : 0))));
+        p.form = Math.max(0, Math.min(100, p.form + (r.rating - 6) * 3));
+        if(Math.random() < 0.035){
+          p.injuredUntil = state.manager.matchday + 1 + Math.floor(Math.random() * 3);
+          mgrPushInbox('lesion', 'Lesión', p.name + ' se lesionó y estará fuera unas jornadas.');
+        }
+      }
+    });
+  }
+  function mgrApplyGoalStats(timeline, iAmHome){
+    (timeline || []).forEach(function(e){
+      if(e.type !== 'goal') return;
+      state.manager.topScorers[e.player] = (state.manager.topScorers[e.player] || 0) + 1;
+      if(e.assist) state.manager.topAssists[e.assist] = (state.manager.topAssists[e.assist] || 0) + 1;
+      var scoredByMe = (e.team === 'A' && iAmHome) || (e.team === 'B' && !iAmHome);
+      if(scoredByMe){
+        var p = mgrPlayerByName(e.player);
+        if(p) p.seasonGoals = (p.seasonGoals || 0) + 1;
+        if(e.assist){ var a = mgrPlayerByName(e.assist); if(a) a.seasonAssists = (a.seasonAssists || 0) + 1; }
+      }
+    });
+  }
+
+  function mgrCloseSeason(){
+    var table = mgrStandingsTable();
+    var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
+    var prize = Math.max(5000, Math.round((table.length - myPos + 1) * 15000));
+    state.manager.club.budget += prize;
+    state.manager.club.boardConfidence = Math.max(0, Math.min(100,
+      state.manager.club.boardConfidence + (myPos <= Math.ceil(table.length / 2) ? 8 : -10)));
+    mgrPushInbox('resultado', 'Fin de temporada', 'Terminaste ' + myPos + 'º de ' + table.length + '. Premio: ' + prize.toLocaleString('es-CO') + ' fichas.');
+
+    state.manager.squad.forEach(function(p){
+      var avgRating = p.seasonApps ? (p.seasonRatingSum / p.seasonApps) : 6.0;
+      var growth;
+      if(p.age <= 23) growth = (avgRating - 6) * 1.5 + (p.potential - p.ovr) * 0.08;
+      else if(p.age <= 29) growth = (avgRating - 6) * 0.6;
+      else growth = (avgRating - 6) * 0.3 - (p.age - 29) * 0.6;
+      p.ovr = Math.max(35, Math.min(p.potential, Math.round(p.ovr + growth)));
+      p.age += 1;
+      p.value = Math.round((p.ovr * p.ovr * 40) / 100) * 100;
+      p.contractYears = Math.max(0, p.contractYears - 1);
+      p.seasonApps = 0; p.seasonGoals = 0; p.seasonAssists = 0; p.seasonRatingSum = 0;
+      if(p.contractYears === 0) mgrPushInbox('contrato', 'Contrato por vencer', p.name + ' se quedó sin contrato. Renuévalo o podría irse gratis.');
+    });
+    state.manager.squad = state.manager.squad.filter(function(p){
+      if(p.onLoan && p.loanReturnAt <= state.manager.season + 1){
+        var club = state.manager.cpuClubs[p.loanClubIdx];
+        if(club) club.squad.push(p);
+        return false;
+      }
+      return true;
+    });
+
+    state.manager.season += 1;
+    state.manager.matchday = 0;
+    state.manager.myStats = { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
+    state.manager.cpuClubs.forEach(function(c){
+      c.pj = 0; c.pg = 0; c.pe = 0; c.pp = 0; c.gf = 0; c.gc = 0; c.pts = 0;
+      c.squad.forEach(function(p){ p.age += 1; p.contractYears = Math.max(0, p.contractYears - 1); });
+    });
+    state.manager.topScorers = {}; state.manager.topAssists = {};
+    mgrAutoFixLineup();
+    mgrGenerateSeasonCalendar();
+  }
+  function mgrCheckSeasonEnd(){
+    var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
+    if(state.manager.matchday >= total) mgrCloseSeason();
+  }
+
+  function mgrFinalizeMyMatch(fixture, sim, iAmHome){
+    fixture.played = true;
+    fixture.scoreHome = iAmHome ? sim.scoreA : sim.scoreB;
+    fixture.scoreAway = iAmHome ? sim.scoreB : sim.scoreA;
+    mgrApplyStandings(fixture.home, fixture.away, fixture.scoreHome, fixture.scoreAway);
+    mgrApplyPlayerImpact(iAmHome ? sim.ratingsA : sim.ratingsB, true);
+    mgrApplyPlayerImpact(iAmHome ? sim.ratingsB : sim.ratingsA, false);
+    mgrApplyGoalStats(sim.timeline, iAmHome);
+    state.manager.matchday = fixture.matchday;
+    var myScore = iAmHome ? sim.scoreA : sim.scoreB, oppScore = iAmHome ? sim.scoreB : sim.scoreA;
+    var oppName = mgrClubName(iAmHome ? fixture.away : fixture.home);
+    mgrPushInbox('resultado', myScore > oppScore ? '¡Victoria!' : (myScore < oppScore ? 'Derrota' : 'Empate'),
+      'Terminaste ' + myScore + '-' + oppScore + ' vs ' + oppName + '.');
+    mgrAutoFixLineup();
+    mgrMaybeGenerateIncomingOffer();
+    mgrCheckSeasonEnd();
+  }
+
+  var mgrLiveMatch = null, mgrLiveTimer = null;
+  function mgrRenderLiveMatch(){
+    var m = mgrLiveMatch;
+    var el = document.getElementById('mgrLiveMatch');
+    if(!m || !el) return;
+    var elapsed = Date.now() - m.liveStartAt;
+    var finished = elapsed >= CAREER_MATCH_MS;
+    var elapsedMinute = Math.min(90, Math.round((Math.min(elapsed, CAREER_MATCH_MS) / CAREER_MATCH_MS) * 90));
+    var visibleEvents = (m.sim.timeline || []).filter(function(e){ return e.minute <= elapsedMinute; });
+    var scoreA = 0, scoreB = 0;
+    visibleEvents.forEach(function(e){ if(e.type === 'goal'){ if(e.team === 'A') scoreA++; else scoreB++; } });
+    var homeName = mgrClubName(m.fixture.home), awayName = mgrClubName(m.fixture.away);
+    var scoreHome = m.iAmHome ? scoreA : scoreB, scoreAway = m.iAmHome ? scoreB : scoreA;
+
+    el.innerHTML = '';
+    var card = document.createElement('div');
+    card.className = 'career-live-card';
+    card.innerHTML =
+      '<div class="career-live-score">' +
+        '<span class="team">' + escapeHtml(homeName) + '</span>' +
+        '<span class="score">' + scoreHome + ' - ' + scoreAway + '</span>' +
+        '<span class="team">' + escapeHtml(awayName) + '</span>' +
+      '</div>' +
+      '<p class="career-live-clock">' + (finished ? 'Partido terminado' : ('Minuto ' + elapsedMinute + "'")) + '</p>';
+    var eventsWrap = document.createElement('div');
+    eventsWrap.className = 'career-live-events';
+    visibleEvents.slice().reverse().forEach(function(e){
+      var row = document.createElement('div');
+      row.className = 'career-event-row';
+      row.innerHTML = '<span class="career-event-min">' + e.minute + "'</span><span class=\"career-event-icon\">" + careerEventIcon(e.type) + '</span><span>' + escapeHtml(careerEventText(e)) + '</span>';
+      eventsWrap.appendChild(row);
+    });
+    card.appendChild(eventsWrap);
+
+    if(finished){
+      if(!m.finalized){
+        m.finalized = true;
+        if(mgrLiveTimer){ clearInterval(mgrLiveTimer); mgrLiveTimer = null; }
+        mgrFinalizeMyMatch(m.fixture, m.sim, m.iAmHome);
+        saveState();
+      }
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'btn btn-ghost btn-block';
+      closeBtn.style.marginTop = '10px';
+      closeBtn.textContent = 'Cerrar';
+      closeBtn.addEventListener('click', function(){ mgrLiveMatch = null; el.hidden = true; mgrRenderActiveTab(); });
+      card.appendChild(closeBtn);
+    }
+    el.appendChild(card);
+  }
+
+  function mgrPlayMatchday(mode){
+    if(!state.manager) return;
+    mgrApplyTraining();
+    var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
+    var md = state.manager.matchday + 1;
+    if(md > total){ mgrMsg('La temporada ya terminó'); return; }
+    var fixtures = state.manager.calendar.filter(function(f){ return f.matchday === md; });
+    var myFixture = fixtures.filter(function(f){ return f.home === 0 || f.away === 0; })[0];
+
+    fixtures.forEach(function(f){
+      if(f === myFixture) return;
+      var res = mgrSimQuickResult(f.home, f.away);
+      f.played = true; f.scoreHome = res.scoreHome; f.scoreAway = res.scoreAway;
+      mgrApplyStandings(f.home, f.away, res.scoreHome, res.scoreAway);
+    });
+
+    if(!myFixture){
+      state.manager.matchday = md;
+      mgrMaybeGenerateIncomingOffer();
+      mgrCheckSeasonEnd();
+      saveState();
+      mgrRenderActiveTab();
+      return;
+    }
+
+    var myList = mgrLineupList();
+    if(myList.length < 7){ mgrMsg('Completa tu alineación titular (7 jugadores) antes de jugar'); return; }
+    var oppIdx = myFixture.home === 0 ? myFixture.away : myFixture.home;
+    var oppClub = state.manager.cpuClubs[oppIdx - 1];
+    var oppList = mgrBestLineupList(oppClub.squad);
+    var iAmHome = myFixture.home === 0;
+    var sim = careerSimulateFullMatch(iAmHome ? myList : oppList, iAmHome ? oppList : myList);
+
+    if(mode === 'sim'){
+      mgrFinalizeMyMatch(myFixture, sim, iAmHome);
+      saveState();
+      mgrRenderActiveTab();
+    } else {
+      mgrLiveMatch = { fixture: myFixture, iAmHome: iAmHome, sim: sim, liveStartAt: Date.now(), finalized: false };
+      document.getElementById('mgrLiveMatch').hidden = false;
+      mgrRenderLiveMatch();
+      if(mgrLiveTimer) clearInterval(mgrLiveTimer);
+      mgrLiveTimer = setInterval(mgrRenderLiveMatch, 1000);
+    }
+  }
+
+  function mgrStartCareer(clubName, coachName){
+    state.manager = {
+      active: true,
+      club: { name: clubName, coachName: coachName, budget: MGR_START_BUDGET, boardConfidence: 60 },
+      season: 1,
+      squad: mgrGenerateSquad(3),
+      lineup: {},
+      cpuClubs: mgrGenerateCpuClubs(),
+      myStats: { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 },
+      calendar: [], matchday: 0,
+      topScorers: {}, topAssists: {},
+      inbox: [], transferOffersIn: [],
+      trainingFocus: 'GK'
+    };
+    mgrAssignInitialLineup();
+    mgrGenerateSeasonCalendar();
+    mgrPushInbox('news', 'Bienvenido a ' + clubName, 'La directiva te da la bienvenida y espera un buen torneo. Objetivo: terminar en la mitad superior de la tabla.');
+    saveState();
+  }
+
+  function mgrRenderOficina(){
+    var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
+    document.getElementById('mgrOfficeSeason').textContent = 'Temporada ' + state.manager.season + ' · Jornada ' + state.manager.matchday + '/' + total;
+    var table = mgrStandingsTable();
+    var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
+    document.getElementById('mgrOfficePosition').textContent = 'Posición: ' + myPos + 'º de ' + table.length;
+    document.getElementById('mgrConfidenceFill').style.width = Math.max(0, Math.min(100, state.manager.club.boardConfidence)) + '%';
+    var inboxEl = document.getElementById('mgrInboxList');
+    var inbox = state.manager.inbox || [];
+    if(!inbox.length){ inboxEl.innerHTML = '<p class="league-empty">Sin mensajes por ahora.</p>'; return; }
+    var icons = { oferta: '📩', lesion: '🚑', informe: '📊', news: '📰', directiva: '🏛️', renovacion: '✍️', resultado: '⚽', fichaje: '🤝', contrato: '📄' };
+    inboxEl.innerHTML = '';
+    inbox.forEach(function(m){
+      var row = document.createElement('div');
+      row.className = 'career-player-row';
+      row.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + (icons[m.type] || '📌') + ' ' + escapeHtml(m.title) + '</span></div><p class="career-player-meta">' + escapeHtml(m.body) + '</p>';
+      inboxEl.appendChild(row);
+    });
+  }
+
+  function mgrRenderPlantilla(){
+    var pitchEl = document.getElementById('mgrPitch');
+    pitchEl.innerHTML = '';
+    var startersIds = {};
+    CAREER_SLOT_DEFS.forEach(function(def){
+      var p = state.manager.lineup[def.key] ? mgrPlayerById(state.manager.lineup[def.key]) : null;
+      var pos = CAREER_PITCH_LAYOUT[def.key];
+      var chip = document.createElement('div');
+      chip.className = 'career-chip' + (p ? '' : ' empty');
+      chip.style.left = pos.x + '%'; chip.style.top = pos.y + '%';
+      if(p){
+        startersIds[p.id] = true;
+        var shortName = p.name.split(' ').slice(-1)[0];
+        chip.innerHTML = '<span class="career-chip-badge">' + p.ovr + '</span><span class="career-chip-name">' + escapeHtml(shortName) + '</span><span class="career-chip-grl">' + def.label + '</span>';
+      } else {
+        chip.innerHTML = '<span class="career-chip-badge">+</span><span class="career-chip-name">' + def.label + '</span>';
+      }
+      chip.addEventListener('click', function(){
+        if(p){ state.manager.lineup[def.key] = null; saveState(); mgrRenderPlantilla(); }
+      });
+      pitchEl.appendChild(chip);
+    });
+
+    var listEl = document.getElementById('mgrSquadList');
+    listEl.innerHTML = '';
+    var squad = state.manager.squad.slice().sort(function(a, b){ return b.ovr - a.ovr; });
+    squad.forEach(function(p){
+      var row = document.createElement('div');
+      row.className = 'career-player-row';
+      var isStarter = !!startersIds[p.id];
+      var injured = p.injuredUntil && p.injuredUntil > state.manager.matchday;
+      row.innerHTML =
+        '<div class="career-player-top"><span class="career-player-name"><span class="career-pos-badge ' + p.position + '">' + p.position + '</span> ' + escapeHtml(p.name) + (isStarter ? ' ⭐' : '') + (injured ? ' 🚑' : '') + (p.onLoan ? ' (cedido)' : '') + '</span><span class="career-slot-grl">OVR ' + p.ovr + '</span></div>' +
+        '<p class="career-player-meta">Edad ' + p.age + ' · Potencial ' + p.potential + ' · Física ' + p.physical + ' · Moral ' + p.morale + ' · Forma ' + p.form + '</p>' +
+        '<p class="career-player-meta">Contrato ' + p.contractYears + ' año(s) · Salario ' + p.wage.toLocaleString('es-CO') + ' · Valor ' + p.value.toLocaleString('es-CO') + '</p>';
+      var actions = document.createElement('div');
+      actions.className = 'career-player-actions';
+      if(!isStarter && !injured){
+        var starterBtn = document.createElement('button');
+        starterBtn.className = 'btn btn-gold btn-sm';
+        starterBtn.textContent = 'Poner de titular';
+        starterBtn.addEventListener('click', function(){ mgrSetStarter(p.id); });
+        actions.appendChild(starterBtn);
+      }
+      var renewBtn = document.createElement('button');
+      renewBtn.className = 'btn btn-primary btn-sm';
+      renewBtn.textContent = 'Renovar (+2 años)';
+      renewBtn.addEventListener('click', function(){ mgrProposeRenewal(p.id, 2); });
+      actions.appendChild(renewBtn);
+      row.appendChild(actions);
+      listEl.appendChild(row);
+    });
+  }
+
+  var mgrTransferFilter = 'ALL';
+  var mgrExpandedTransferKey = null;
+  function mgrRenderFichajes(){
+    var el = document.getElementById('mgrTransferList');
+    el.innerHTML = '';
+    var list = [];
+    state.manager.cpuClubs.forEach(function(club, idx){
+      club.squad.forEach(function(p){ if(mgrTransferFilter === 'ALL' || p.position === mgrTransferFilter) list.push({ p: p, clubIdx: idx, clubName: club.name }); });
+    });
+    list.sort(function(a, b){ return b.p.ovr - a.p.ovr; });
+    if(!list.length) el.innerHTML = '<p class="league-empty">No hay jugadores en esta posición.</p>';
+    list.slice(0, 40).forEach(function(entry){
+      var p = entry.p;
+      var row = document.createElement('div');
+      row.className = 'career-player-row';
+      row.innerHTML =
+        '<div class="career-player-top"><span class="career-player-name"><span class="career-pos-badge ' + p.position + '">' + p.position + '</span> ' + escapeHtml(p.name) + '</span><span class="career-slot-grl">OVR ' + p.ovr + '</span></div>' +
+        '<p class="career-player-meta">' + escapeHtml(entry.clubName) + ' · Edad ' + p.age + ' · Potencial ' + p.potential + ' · Valor ' + p.value.toLocaleString('es-CO') + '</p>';
+      var actions = document.createElement('div');
+      actions.className = 'career-player-actions';
+      var key = entry.clubIdx + ':' + p.id;
+      var offerBtn = document.createElement('button');
+      offerBtn.className = 'btn btn-gold btn-sm';
+      offerBtn.textContent = 'Ofertar';
+      offerBtn.addEventListener('click', function(){ mgrExpandedTransferKey = mgrExpandedTransferKey === key ? null : key; mgrRenderFichajes(); });
+      actions.appendChild(offerBtn);
+      var loanBtn = document.createElement('button');
+      loanBtn.className = 'btn btn-ghost btn-sm';
+      loanBtn.textContent = 'Pedir préstamo';
+      loanBtn.addEventListener('click', function(){ mgrMakeLoanOffer(entry.clubIdx, p.id); });
+      actions.appendChild(loanBtn);
+      row.appendChild(actions);
+      if(mgrExpandedTransferKey === key){
+        var wrap = document.createElement('div');
+        wrap.className = 'career-bid-row';
+        var input = document.createElement('input');
+        input.type = 'number'; input.min = '10'; input.step = '10'; input.value = String(p.value);
+        var sendBtn = document.createElement('button');
+        sendBtn.className = 'btn btn-primary btn-sm';
+        sendBtn.textContent = 'Enviar oferta';
+        sendBtn.addEventListener('click', function(){
+          var amt = parseInt(input.value, 10);
+          if(!amt || amt <= 0){ mgrMsg('Ingresa un monto válido'); return; }
+          mgrExpandedTransferKey = null;
+          mgrMakeOfferForPlayer(entry.clubIdx, p.id, amt);
+        });
+        wrap.appendChild(input); wrap.appendChild(sendBtn);
+        row.appendChild(wrap);
+      }
+      el.appendChild(row);
+    });
+
+    var offersEl = document.getElementById('mgrOffersInList');
+    var pending = (state.manager.transferOffersIn || []).filter(function(o){ return o.status === 'pending'; });
+    offersEl.innerHTML = '';
+    if(!pending.length){ offersEl.innerHTML = '<p class="league-empty">No tienes ofertas por tus jugadores.</p>'; return; }
+    pending.forEach(function(o){
+      var row = document.createElement('div');
+      row.className = 'career-player-row';
+      row.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(o.playerName) + '</span><span class="career-slot-grl">' + o.amount.toLocaleString('es-CO') + '</span></div><p class="career-player-meta">Oferta de ' + escapeHtml(o.clubName) + '</p>';
+      var actions = document.createElement('div');
+      actions.className = 'career-player-actions';
+      var acceptBtn = document.createElement('button'); acceptBtn.className = 'btn btn-gold btn-sm'; acceptBtn.textContent = 'Aceptar';
+      acceptBtn.addEventListener('click', function(){ mgrRespondIncomingOffer(o.id, 'accept'); });
+      var counterBtn = document.createElement('button'); counterBtn.className = 'btn btn-primary btn-sm'; counterBtn.textContent = 'Contraofertar (+25%)';
+      counterBtn.addEventListener('click', function(){ mgrRespondIncomingOffer(o.id, 'counter'); });
+      var rejectBtn = document.createElement('button'); rejectBtn.className = 'btn btn-ghost btn-sm'; rejectBtn.textContent = 'Rechazar';
+      rejectBtn.addEventListener('click', function(){ mgrRespondIncomingOffer(o.id, 'reject'); });
+      actions.appendChild(acceptBtn); actions.appendChild(counterBtn); actions.appendChild(rejectBtn);
+      row.appendChild(actions);
+      offersEl.appendChild(row);
+    });
+  }
+
+  function mgrRenderCalendario(){
+    var card = document.getElementById('mgrNextMatchCard');
+    var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
+    var nextMd = state.manager.matchday + 1;
+    var myFixture = state.manager.calendar.filter(function(f){ return f.matchday === nextMd && (f.home === 0 || f.away === 0); })[0];
+    card.innerHTML = '';
+    if(nextMd > total){
+      card.innerHTML = '<p class="league-card-title">Cerrando temporada…</p><p class="league-card-sub">Vuelve a entrar para ver la nueva temporada.</p>';
+    } else if(myFixture){
+      var iAmHome = myFixture.home === 0;
+      var oppName = mgrClubName(iAmHome ? myFixture.away : myFixture.home);
+      card.innerHTML =
+        '<p class="league-card-title">Jornada ' + nextMd + ' de ' + total + '</p>' +
+        '<p class="league-card-sub">' + (iAmHome ? 'Local' : 'Visitante') + ' vs ' + escapeHtml(oppName) + '</p>';
+      var playBtn = document.createElement('button');
+      playBtn.className = 'btn btn-primary btn-block'; playBtn.style.marginTop = '10px';
+      playBtn.textContent = '▶️ Jugar partido';
+      playBtn.addEventListener('click', function(){ mgrPlayMatchday('play'); });
+      var simBtn = document.createElement('button');
+      simBtn.className = 'btn btn-ghost btn-block'; simBtn.style.marginTop = '8px';
+      simBtn.textContent = '⏭️ Simular partido';
+      simBtn.addEventListener('click', function(){ mgrPlayMatchday('sim'); });
+      card.appendChild(playBtn); card.appendChild(simBtn);
+    } else {
+      card.innerHTML = '<p class="league-card-title">Jornada ' + nextMd + ' de ' + total + '</p><p class="league-card-sub">No juegas esta jornada. Los demás resultados se resuelven solos.</p>';
+      var simBtn2 = document.createElement('button');
+      simBtn2.className = 'btn btn-primary btn-block'; simBtn2.style.marginTop = '10px';
+      simBtn2.textContent = 'Avanzar jornada';
+      simBtn2.addEventListener('click', function(){ mgrPlayMatchday('sim'); });
+      card.appendChild(simBtn2);
+    }
+
+    var standingsEl = document.getElementById('mgrStandingsList');
+    var table = mgrStandingsTable();
+    standingsEl.innerHTML = '';
+    table.forEach(function(row, i){
+      var rowEl = document.createElement('div');
+      rowEl.className = 'career-player-row';
+      rowEl.innerHTML =
+        '<div class="career-player-top"><span class="career-player-name">' + (i + 1) + '. ' + escapeHtml(row.name) + (row.idx === 0 ? ' (tú)' : '') + '</span><span class="career-slot-grl">' + row.stats.pts + ' pts</span></div>' +
+        '<p class="career-player-meta">PJ ' + row.stats.pj + ' · G ' + row.stats.pg + ' · E ' + row.stats.pe + ' · P ' + row.stats.pp + ' · GF ' + row.stats.gf + ' · GC ' + row.stats.gc + ' · DIF ' + (row.stats.gf - row.stats.gc) + '</p>';
+      standingsEl.appendChild(rowEl);
+    });
+
+    var scorersEl = document.getElementById('mgrTopScorersList');
+    var scorers = Object.keys(state.manager.topScorers || {}).map(function(name){ return { name: name, goals: state.manager.topScorers[name] }; })
+      .sort(function(a, b){ return b.goals - a.goals; }).slice(0, 10);
+    scorersEl.innerHTML = '';
+    if(!scorers.length){ scorersEl.innerHTML = '<p class="league-empty">Aún no hay goleadores.</p>'; return; }
+    scorers.forEach(function(s, i){
+      var rowEl2 = document.createElement('div');
+      rowEl2.className = 'career-player-row';
+      rowEl2.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + (i + 1) + '. ' + escapeHtml(s.name) + '</span><span class="career-slot-grl">' + s.goals + ' goles</span></div>';
+      scorersEl.appendChild(rowEl2);
+    });
+  }
+
+  var mgrActiveTab = 'oficina';
+  function mgrRenderActiveTab(){
+    if(!state.manager || !state.manager.active) return;
+    document.getElementById('mgrClubLabel').textContent = state.manager.club.name;
+    document.getElementById('mgrBudgetLabel').textContent = Math.round(state.manager.club.budget).toLocaleString('es-CO');
+    if(mgrActiveTab === 'oficina') mgrRenderOficina();
+    else if(mgrActiveTab === 'plantilla') mgrRenderPlantilla();
+    else if(mgrActiveTab === 'fichajes') mgrRenderFichajes();
+    else if(mgrActiveTab === 'calendario') mgrRenderCalendario();
+  }
+  Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-btn')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      mgrActiveTab = btn.getAttribute('data-mgr-tab');
+      Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-btn')).forEach(function(b){ b.classList.toggle('active', b === btn); });
+      Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-panel')).forEach(function(pnl){ pnl.hidden = pnl.getAttribute('data-mgr-panel') !== mgrActiveTab; });
+      mgrRenderActiveTab();
+    });
+  });
+  Array.prototype.slice.call(document.querySelectorAll('#mgrPosFilter .chip-btn')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      Array.prototype.slice.call(document.querySelectorAll('#mgrPosFilter .chip-btn')).forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      mgrTransferFilter = btn.getAttribute('data-amount');
+      mgrRenderFichajes();
+    });
+  });
+  Array.prototype.slice.call(document.querySelectorAll('#mgrTrainingChips .choice-btn')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      Array.prototype.slice.call(document.querySelectorAll('#mgrTrainingChips .choice-btn')).forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      if(state.manager){ state.manager.trainingFocus = btn.getAttribute('data-amount'); saveState(); }
+    });
+  });
+
+  function renderManagerEntry(){
+    document.getElementById('mgrMsgBar').textContent = '';
+    var setup = document.getElementById('mgrSetup');
+    var main = document.getElementById('mgrMain');
+    if(!state.manager || !state.manager.active){
+      setup.hidden = false; main.hidden = true;
+      var coachInput = document.getElementById('mgrCoachNameInput');
+      if(coachInput && !coachInput.value) coachInput.value = state.playerName || '';
+      return;
+    }
+    setup.hidden = true; main.hidden = false;
+    mgrAutoFixLineup();
+    mgrActiveTab = 'oficina';
+    Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-btn')).forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgr-tab') === 'oficina'); });
+    Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-panel')).forEach(function(pnl){ pnl.hidden = pnl.getAttribute('data-mgr-panel') !== 'oficina'; });
+    mgrRenderActiveTab();
+  }
+  document.getElementById('mgrStartBtn').addEventListener('click', function(){
+    var clubName = document.getElementById('mgrClubNameInput').value.trim().slice(0, 24);
+    var coachName = document.getElementById('mgrCoachNameInput').value.trim().slice(0, 24) || state.playerName || 'Entrenador';
+    if(!clubName){ mgrMsg('Ponle un nombre a tu club'); return; }
+    mgrStartCareer(clubName, coachName);
+    renderManagerEntry();
   });
 
   /* ================= INIT ================= */
