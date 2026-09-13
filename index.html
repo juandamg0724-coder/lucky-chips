@@ -1266,8 +1266,8 @@
           <span style="display:flex; align-items:center; gap:12px;">
             <span class="icon-badge icon-green">⚽</span>
             <span>
-              <span class="game-name" style="display:block;">Modo Carrera</span>
-              <span class="game-meta">Arma tu plantilla y compite en tu liga</span>
+              <span class="game-name" style="display:block;">Ultimate Team</span>
+              <span class="game-meta">Sobres, plantilla y partidos vs CPU o tu liga</span>
             </span>
           </span>
           <span class="tile-arrow">→</span>
@@ -1951,7 +1951,7 @@
     <section class="view" data-view="career" hidden>
       <div class="view-header">
         <button class="btn-back" data-back>←</button>
-        <h2 class="gold-text">Modo Carrera</h2>
+        <h2 class="gold-text">Ultimate Team</h2>
         <button class="btn-info" data-toggle="careerRulesPanel">i</button>
       </div>
 
@@ -1961,12 +1961,11 @@
         <p class="paytable-title">Cómo funciona</p>
         <p class="rules-text">Arma una plantilla de 7 jugadores en formación 1-3-2-1: 1 portero, 3 defensas, 2 mediocampistas y 1 delantero. Al empezar tu plantilla está vacía.</p>
         <ul class="rules-list">
-          <li>El Modo Carrera usa una <b>moneda propia</b> (fichas de carrera), separada de tus fichas del casino, con un presupuesto inicial de 25.000.</li>
-          <li>En el <b>Mercado</b> aparecen los mismos jugadores de Apuestas Deportivas, cada uno con una calificación <b>GRL</b> (máximo 85) que define su valor.</li>
-          <li>Si un jugador es <b>libre</b>, puedes pujar por él. La puja más alta después de <b>24 horas</b> se lo lleva. Si te superan la puja, recuperas tus fichas.</li>
-          <li>Si un jugador ya tiene dueño, debes <b>negociar</b> directamente con él.</li>
-          <li>En <b>Partidos</b> le pides un partido a otro miembro, acuerdan un monto y cuando los dos confirman arranca un partido en vivo de 1 minuto con goles, tarjetas y faltas.</li>
-          <li>Después de cada partido, cada jugador recibe una <b>calificación de 1.0 a 10.0</b> según su rendimiento (goles, asistencias, tarjetas), que sube o baja su GRL para el resto de la liga.</li>
+          <li>Consigue jugadores abriendo <b>sobres</b> con tus fichas del casino. Cada sobre entrega una carta con una rareza (⚪ Común, 🔵 Rara, 🟣 Especial o 🟡 Leyenda) que define su rango de GRL.</li>
+          <li>Las cartas se suman automáticamente a tu colección y, si hay un puesto libre de su posición, también a tu plantilla titular.</li>
+          <li>En <b>CPU</b> juegas contra un rival generado por la máquina: a mayor dificultad, mejor el rival y mejor la recompensa en fichas.</li>
+          <li>En <b>Retos de Liga</b> le pides un partido a otro miembro de tu liga; acuerdan un monto y cuando ambos confirman arranca un partido en vivo de 1 minuto con goles, tarjetas y faltas.</li>
+          <li>Después de cada partido, cada jugador de tu plantilla recibe una <b>calificación de 1.0 a 10.0</b> según su rendimiento (goles, asistencias, tarjetas), que sube o baja su GRL.</li>
         </ul>
       </div>
 
@@ -1977,7 +1976,7 @@
       </div>
 
       <div id="careerNoLeague" hidden>
-        <p class="poker-empty-hint">El Modo Carrera se juega entre los miembros de tu liga. Únete a una liga de amigos primero.</p>
+        <p class="poker-empty-hint">Ultimate Team se juega dentro de tu liga de amigos. Únete a una liga primero.</p>
         <button class="btn btn-primary btn-block" data-goto="league">Ir a Liga de Amigos</button>
       </div>
 
@@ -2000,46 +1999,65 @@
         </div>
         <div class="match-toolbar">
           <button class="btn btn-ghost btn-sm career-tab-btn active" data-career-tab="squad">🧑 Plantilla</button>
-          <button class="btn btn-ghost btn-sm career-tab-btn" data-career-tab="market">🛒 Mercado</button>
-          <button class="btn btn-ghost btn-sm career-tab-btn" data-career-tab="offers">🤝 Ofertas</button>
-          <button class="btn btn-ghost btn-sm career-tab-btn" data-career-tab="matches">⚽ Partidos</button>
+          <button class="btn btn-ghost btn-sm career-tab-btn" data-career-tab="packs">🎁 Sobres</button>
+          <button class="btn btn-ghost btn-sm career-tab-btn" data-career-tab="cpu">🤖 CPU</button>
+          <button class="btn btn-ghost btn-sm career-tab-btn" data-career-tab="matches">⚽ Retos de Liga</button>
         </div>
 
         <div class="career-tab-panel" data-career-panel="squad">
           <p class="paytable-title">Mi plantilla (1-3-2-1)</p>
           <div class="career-pitch" id="careerPitch"></div>
-          <p class="paytable-title" style="margin-top:16px;">Jugadores en mi plantel</p>
+          <p class="paytable-title" style="margin-top:16px;">Mi colección</p>
           <div class="career-player-list" id="careerOwnedList"></div>
         </div>
 
-        <div class="career-tab-panel" data-career-panel="market" hidden>
-          <div class="chip-select" id="careerPosFilter">
-            <button class="chip-btn active" data-amount="ALL" style="width:auto; border-radius:999px; padding:0 12px;">Todos</button>
-            <button class="chip-btn" data-amount="GK" style="width:auto; border-radius:999px; padding:0 12px;">GK</button>
-            <button class="chip-btn" data-amount="DEF" style="width:auto; border-radius:999px; padding:0 12px;">DEF</button>
-            <button class="chip-btn" data-amount="MID" style="width:auto; border-radius:999px; padding:0 12px;">MID</button>
-            <button class="chip-btn" data-amount="FWD" style="width:auto; border-radius:999px; padding:0 12px;">FWD</button>
+        <div class="career-tab-panel" data-career-panel="packs" hidden>
+          <div class="league-card ornate" style="margin-bottom:12px;">
+            <p class="league-card-title">🥉 Sobre Bronce</p>
+            <p class="league-card-sub">200 fichas · sobre todo cartas Comunes y Raras.</p>
+            <button class="btn btn-gold btn-block ut-pack-btn" data-tier="bronce">Abrir sobre</button>
           </div>
-          <div class="career-player-list" id="careerMarketList" style="margin-top:10px;"></div>
+          <div class="league-card ornate" style="margin-bottom:12px;">
+            <p class="league-card-title">🥈 Sobre Plata</p>
+            <p class="league-card-sub">500 fichas · más probabilidad de Especiales.</p>
+            <button class="btn btn-gold btn-block ut-pack-btn" data-tier="plata">Abrir sobre</button>
+          </div>
+          <div class="league-card ornate">
+            <p class="league-card-title">🥇 Sobre Oro</p>
+            <p class="league-card-sub">1.200 fichas · la mejor probabilidad de Leyendas.</p>
+            <button class="btn btn-gold btn-block ut-pack-btn" data-tier="oro">Abrir sobre</button>
+          </div>
+          <div class="league-card ornate" id="utPackReveal" style="margin-top:12px;" hidden>
+            <p class="league-card-title" id="utPackRevealTitle"></p>
+            <p class="league-card-sub" id="utPackRevealSub"></p>
+          </div>
+          <p class="paytable-title" style="margin-top:16px;">Historial de sobres</p>
+          <div class="career-player-list" id="utPackHistory"></div>
         </div>
 
-        <div class="career-tab-panel" data-career-panel="offers" hidden>
-          <p class="paytable-title">Mis pujas activas</p>
-          <div class="career-player-list" id="careerMyBidsList"></div>
-          <p class="paytable-title" style="margin-top:16px;">Ofertas recibidas</p>
-          <div class="career-player-list" id="careerOffersReceivedList"></div>
-          <p class="paytable-title" style="margin-top:16px;">Ofertas enviadas</p>
-          <div class="career-player-list" id="careerOffersSentList"></div>
+        <div class="career-tab-panel" data-career-panel="cpu" hidden>
+          <div class="league-card ornate">
+            <p class="league-card-title">🤖 Partido contra la CPU</p>
+            <p class="league-card-sub">A mayor dificultad, mejor rival y mejor recompensa.</p>
+            <div class="choice-row" id="utCpuDifficultyChips">
+              <button class="choice-btn active" data-amount="easy">Fácil</button>
+              <button class="choice-btn" data-amount="medium">Medio</button>
+              <button class="choice-btn" data-amount="hard">Difícil</button>
+              <button class="choice-btn" data-amount="elite">Élite</button>
+            </div>
+            <button class="btn btn-primary btn-block" id="utPlayCpuBtn" style="margin-top:10px;">Jugar partido</button>
+          </div>
+          <div id="utCpuLiveMatch" style="margin-top:12px;" hidden></div>
         </div>
 
         <div class="career-tab-panel" data-career-panel="matches" hidden>
           <div id="careerMatchIdle">
-            <button class="btn btn-primary btn-block" id="careerPlayMatchBtn">⚽ Jugar partido</button>
+            <button class="btn btn-primary btn-block" id="careerPlayMatchBtn">⚽ Retar a un rival de tu liga</button>
             <div id="careerOpponentPicker" style="margin-top:10px;" hidden></div>
           </div>
           <div id="careerNegotiation" hidden></div>
           <div id="careerLiveMatch" hidden></div>
-          <p class="paytable-title" style="margin-top:16px;">Historial de partidos</p>
+          <p class="paytable-title" style="margin-top:16px;">Historial de retos</p>
           <div class="career-player-list" id="careerMatchesList"></div>
         </div>
       </div>
@@ -2145,7 +2163,8 @@
   function defaultState(){
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1, ownedBorders:['none'], activeBorder:'none', sobreHistory:[],
-      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, chessElo:1200 };
+      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, chessElo:1200,
+      ut: { squad:{}, owned:[], packHistory:[] } };
   }
   var state = loadState();
 
@@ -5962,8 +5981,6 @@
     { key:'MID2', pos:'MID', label:'Mediocampista' },
     { key:'FWD', pos:'FWD', label:'Delantero' }
   ];
-  var CAREER_POS_BY_IDX = ['FWD', 'DEF', 'DEF', 'MID', 'GK'];
-  var CAREER_START_BALANCE = 25000;
   var CAREER_GRL_MIN = 40, CAREER_GRL_MAX = 85;
   var CAREER_PITCH_LAYOUT = {
     FWD:  { x:50, y:12 },
@@ -5972,37 +5989,39 @@
     GK:   { x:50, y:90 }
   };
 
-  function careerGrlFor(strength, idxInTeam){
-    var base = 54 + strength * 7;
-    var posBonus = [10, 4, 4, 0, -3][idxInTeam] || 0;
-    return Math.max(52, Math.min(CAREER_GRL_MAX, base + posBonus));
-  }
-  function careerValueFor(grl){
-    return Math.max(100, Math.round((grl - 45) * (grl - 45) * 3 / 10) * 10);
-  }
-  function careerBuildPlayerPool(){
-    var list = [];
-    LEAGUE_TEAMS.forEach(function(team, tIdx){
-      team.players.forEach(function(name, idx){
-        var grl = careerGrlFor(team.strength, idx);
-        list.push({
-          id: 'cp' + tIdx + '_' + idx, name: name, team: team.name, position: CAREER_POS_BY_IDX[idx],
-          grl: grl, value: careerValueFor(grl), ownerId: null, ownerName: null,
-          auction: null, lastOutbid: null, updatedAt: Date.now()
-        });
-      });
-    });
-    return list;
-  }
+  /* ---- Ultimate Team: sobres, colección local y partidos CPU ---- */
+  var UT_PLAYER_POOL = LEAGUE_TEAMS.reduce(function(acc, team){ return acc.concat(team.players); }, []);
+  var UT_POSITIONS = ['GK', 'DEF', 'MID', 'FWD'];
+  var UT_RARITY_INFO = {
+    common:  { label:'Común',    icon:'⚪', grlMin:52, grlMax:64 },
+    rare:    { label:'Rara',     icon:'🔵', grlMin:65, grlMax:73 },
+    special: { label:'Especial', icon:'🟣', grlMin:74, grlMax:80 },
+    legend:  { label:'Leyenda',  icon:'🟡', grlMin:81, grlMax:85 }
+  };
+  var UT_PACK_TIERS = {
+    bronce: { name:'Sobre Bronce', price:200, rarities:[
+      { rarity:'common', weight:60 }, { rarity:'rare', weight:30 }, { rarity:'special', weight:9 }, { rarity:'legend', weight:1 }
+    ]},
+    plata: { name:'Sobre Plata', price:500, rarities:[
+      { rarity:'common', weight:40 }, { rarity:'rare', weight:38 }, { rarity:'special', weight:18 }, { rarity:'legend', weight:4 }
+    ]},
+    oro: { name:'Sobre Oro', price:1200, rarities:[
+      { rarity:'common', weight:15 }, { rarity:'rare', weight:35 }, { rarity:'special', weight:35 }, { rarity:'legend', weight:15 }
+    ]}
+  };
+  var UT_CPU_DIFFICULTIES = {
+    easy:   { label:'Fácil',   grlMin:50, grlMax:62, reward:150 },
+    medium: { label:'Medio',   grlMin:60, grlMax:72, reward:300 },
+    hard:   { label:'Difícil', grlMin:70, grlMax:80, reward:550 },
+    elite:  { label:'Élite',   grlMin:78, grlMax:85, reward:900 }
+  };
 
-  var careerPlayersUnsub = null, careerSquadsUnsub = null, careerOffersUnsub = null, careerMatchesUnsub = null, careerWalletUnsub = null;
-  var careerPlayersCache = [], careerPlayersById = {}, careerSquadsCache = {}, careerOffersCache = [], careerMatchesCache = [];
-  var careerWalletCache = null;
+  var careerSquadsUnsub = null, careerMatchesUnsub = null;
+  var careerSquadsCache = {}, careerMatchesCache = [];
   var careerMyProfile = null;
   var careerClaimsHandled = {};
-  var careerTickTimer = null, careerLiveTicker = null;
+  var careerLiveTicker = null;
   var careerActiveTab = 'squad';
-  var careerMarketFilter = 'ALL';
   var careerMsgTimer = null;
   var careerExpandedChipKey = null;
   var careerOpponentPickerOpen = false;
@@ -6019,18 +6038,6 @@
     careerMsgTimer = setTimeout(function(){ el.textContent = ''; }, 3500);
   }
 
-  function careerEnsurePool(){
-    if(!db || !state.leagueCode) return Promise.resolve();
-    var colRef = db.collection('leagues/' + state.leagueCode + '/careerPlayers');
-    return colRef.limit(1).get().then(function(snap){
-      if(!snap.empty) return null;
-      var pool = careerBuildPlayerPool();
-      var batch = db.batch();
-      pool.forEach(function(p){ batch.set(colRef.doc(p.id), p); });
-      return batch.commit();
-    }).catch(function(){});
-  }
-
   function careerSquadIsFull(squadDoc){
     if(!squadDoc || !squadDoc.slots) return false;
     for(var i = 0; i < CAREER_SLOT_DEFS.length; i++){ if(!squadDoc.slots[CAREER_SLOT_DEFS[i].key]) return false; }
@@ -6039,40 +6046,11 @@
   function careerSquadPlayerList(squadDoc){
     var list = [];
     CAREER_SLOT_DEFS.forEach(function(def){
-      var pid = squadDoc && squadDoc.slots ? squadDoc.slots[def.key] : null;
-      var p = pid ? careerPlayersById[pid] : null;
+      var p = squadDoc && squadDoc.slots ? squadDoc.slots[def.key] : null;
       if(p) list.push({ id: p.id, name: p.name, position: p.position, grl: p.grl });
     });
     return list;
   }
-
-  function careerWalletRef(){ return db.doc('leagues/' + state.leagueCode + '/careerWallets/' + state.playerId); }
-  function careerEnsureWallet(){
-    if(!db || !state.leagueCode) return Promise.resolve();
-    return careerWalletRef().get().then(function(snap){
-      if(snap.exists) return null;
-      return careerWalletRef().set({
-        balance: CAREER_START_BALANCE, userId: state.playerId, userName: state.playerName, updatedAt: Date.now()
-      });
-    }).catch(function(){});
-  }
-  function careerAddBalance(delta){
-    if(!db || !state.leagueCode) return Promise.resolve();
-    return careerWalletRef().set({
-      balance: firebase.firestore.FieldValue.increment(delta), updatedAt: Date.now()
-    }, { merge: true });
-  }
-  function careerSubscribeWallet(){
-    if(careerWalletUnsub){ careerWalletUnsub(); careerWalletUnsub = null; }
-    if(!db || !state.leagueCode) return;
-    careerWalletUnsub = careerWalletRef().onSnapshot(function(snap){
-      careerWalletCache = snap.exists ? snap.data() : { balance: 0 };
-      var amtEl = document.getElementById('careerWalletAmt');
-      if(amtEl) amtEl.textContent = Math.round(careerWalletCache.balance || 0).toLocaleString('es-CO');
-      careerRenderActiveTab();
-    });
-  }
-  function careerWalletBalance(){ return careerWalletCache ? (careerWalletCache.balance || 0) : 0; }
 
   function careerProfileRef(){ return db.doc('leagues/' + state.leagueCode + '/careerProfiles/' + state.playerId); }
   function careerEnsureProfile(){
@@ -6094,126 +6072,78 @@
     }).catch(function(){ careerMsg('No se pudo guardar tu club'); });
   }
 
-  function careerMaybeClaimOutbid(p){
-    if(!p.lastOutbid || p.lastOutbid.claimed || p.lastOutbid.userId !== state.playerId) return;
-    var key = 'outbid:' + p.id + ':' + p.lastOutbid.ts;
-    if(careerClaimsHandled[key]) return;
-    careerClaimsHandled[key] = true;
-    var patch = {}; patch['lastOutbid.claimed'] = true;
-    db.doc('leagues/' + state.leagueCode + '/careerPlayers/' + p.id).update(patch).then(function(){
-      careerAddBalance(p.lastOutbid.amount);
-      careerMsg('Te superaron la puja por ' + p.name + '. Recuperas ' + p.lastOutbid.amount.toLocaleString('es-CO'));
-    }).catch(function(){ careerClaimsHandled[key] = false; });
+  function utCardById(id){
+    var owned = state.ut.owned || [];
+    for(var i = 0; i < owned.length; i++){ if(owned[i].id === id) return owned[i]; }
+    return null;
   }
-
-  function careerResolveExpiredAuctions(){
-    if(!db || !state.leagueCode) return;
-    var now = Date.now();
-    careerPlayersCache.forEach(function(p){
-      if(p.auction && !p.ownerId && p.auction.endsAt <= now){
-        var key = 'resolve:' + p.id + ':' + p.auction.endsAt;
-        if(careerClaimsHandled[key]) return;
-        careerClaimsHandled[key] = true;
-        db.doc('leagues/' + state.leagueCode + '/careerPlayers/' + p.id).update({
-          ownerId: p.auction.bidderId, ownerName: p.auction.bidderName, auction: null, updatedAt: Date.now()
-        }).catch(function(){ careerClaimsHandled[key] = false; });
-      }
+  function utSquadIsFull(){
+    for(var i = 0; i < CAREER_SLOT_DEFS.length; i++){ if(!state.ut.squad[CAREER_SLOT_DEFS[i].key]) return false; }
+    return true;
+  }
+  function utSquadPlayerList(){
+    var list = [];
+    CAREER_SLOT_DEFS.forEach(function(def){
+      var card = state.ut.squad[def.key] ? utCardById(state.ut.squad[def.key]) : null;
+      if(card) list.push({ id: card.id, name: card.name, position: card.position, grl: card.grl });
     });
+    return list;
   }
-
-  function careerPlaceBid(p, amount){
+  function utSyncSquad(){
     if(!db || !state.leagueCode) return;
-    if(p.ownerId){ careerMsg('Ese jugador ya tiene dueño'); return; }
-    ensurePlayerId();
-    var minBid = p.auction ? p.auction.amount + 10 : Math.max(50, Math.round(p.value * 0.5 / 10) * 10);
-    if(amount < minBid){ careerMsg('La puja mínima es ' + minBid.toLocaleString('es-CO')); return; }
-    if(careerWalletBalance() < amount){ careerMsg('Fichas de carrera insuficientes'); return; }
-    var prevBid = p.auction;
-    careerAddBalance(-amount);
-    if(prevBid && prevBid.bidderId === state.playerId) careerAddBalance(prevBid.amount);
-    var patch = {
-      auction: { bidderId: state.playerId, bidderName: careerCoachName(), amount: amount, endsAt: Date.now() + 24 * 60 * 60 * 1000 },
-      updatedAt: Date.now()
-    };
-    if(prevBid && prevBid.bidderId !== state.playerId){
-      patch.lastOutbid = { userId: prevBid.bidderId, userName: prevBid.bidderName, amount: prevBid.amount, claimed: false, ts: Date.now() };
-    }
-    db.doc('leagues/' + state.leagueCode + '/careerPlayers/' + p.id).set(patch, { merge: true }).then(function(){
-      careerMsg('Puja registrada: ' + amount.toLocaleString('es-CO'));
-    }).catch(function(){
-      careerAddBalance(amount);
-      if(prevBid && prevBid.bidderId === state.playerId) careerAddBalance(-prevBid.amount);
-      careerMsg('No se pudo registrar la puja');
+    var slots = {};
+    CAREER_SLOT_DEFS.forEach(function(def){
+      var card = state.ut.squad[def.key] ? utCardById(state.ut.squad[def.key]) : null;
+      slots[def.key] = card ? { id: card.id, name: card.name, position: card.position, grl: card.grl } : null;
     });
-  }
-
-  function careerMakeOffer(p, amount){
-    if(!db || !state.leagueCode) return;
-    if(!p.ownerId || p.ownerId === state.playerId){ careerMsg('No puedes ofertar por ese jugador'); return; }
-    if(amount <= 0){ careerMsg('Ingresa un monto válido'); return; }
-    if(careerWalletBalance() < amount){ careerMsg('Fichas de carrera insuficientes'); return; }
     ensurePlayerId();
-    careerAddBalance(-amount);
-    db.collection('leagues/' + state.leagueCode + '/careerOffers').doc().set({
-      playerId: p.id, playerName: p.name, playerPos: p.position,
-      sellerId: p.ownerId, sellerName: p.ownerName,
-      buyerId: state.playerId, buyerName: careerCoachName(),
-      amount: amount, status: 'pending', createdAt: Date.now(), updatedAt: Date.now()
-    }).then(function(){ careerMsg('Oferta enviada a ' + p.ownerName); })
-      .catch(function(){ careerAddBalance(amount); careerMsg('No se pudo enviar la oferta'); });
+    db.doc('leagues/' + state.leagueCode + '/utSquads/' + state.playerId).set({
+      userId: state.playerId, userName: careerCoachName(), clubName: careerClubName(), slots: slots, updatedAt: Date.now()
+    }, { merge: true }).catch(function(){});
   }
 
-  function careerRespondOffer(offer, accept){
-    var ref = db.doc('leagues/' + state.leagueCode + '/careerOffers/' + offer.id);
-    if(accept){
-      ref.update({ status: 'accepted', updatedAt: Date.now() }).then(function(){
-        careerAddBalance(offer.amount);
-        db.doc('leagues/' + state.leagueCode + '/careerPlayers/' + offer.playerId).update({
-          ownerId: offer.buyerId, ownerName: offer.buyerName, updatedAt: Date.now()
-        }).catch(function(){});
-        var mySquad = careerSquadsCache[state.playerId];
-        if(mySquad && mySquad.slots){
-          for(var i = 0; i < CAREER_SLOT_DEFS.length; i++){
-            var k = CAREER_SLOT_DEFS[i].key;
-            if(mySquad.slots[k] === offer.playerId) careerClearSlot(k);
-          }
-        }
-        careerMsg('Aceptaste la oferta. +' + offer.amount.toLocaleString('es-CO'));
-      }).catch(function(){ careerMsg('No se pudo aceptar la oferta'); });
-    } else {
-      ref.update({ status: 'rejected', updatedAt: Date.now() }).catch(function(){});
-    }
-  }
-
-  function careerMaybeClaimRejectedOffer(offer){
-    if(offer.status !== 'rejected' || offer.buyerId !== state.playerId) return;
-    var key = 'offerRefund:' + offer.id;
-    if(careerClaimsHandled[key]) return;
-    careerClaimsHandled[key] = true;
-    db.doc('leagues/' + state.leagueCode + '/careerOffers/' + offer.id).update({ status: 'refunded' }).then(function(){
-      careerAddBalance(offer.amount);
-      careerMsg('Tu oferta por ' + offer.playerName + ' fue rechazada. Recuperas ' + offer.amount.toLocaleString('es-CO'));
-    }).catch(function(){ careerClaimsHandled[key] = false; });
-  }
-
-  function careerWithdrawOffer(offer){
-    db.doc('leagues/' + state.leagueCode + '/careerOffers/' + offer.id).update({ status: 'withdrawn' }).then(function(){
-      careerAddBalance(offer.amount);
-      careerMsg('Oferta retirada, recuperas tus fichas');
-    }).catch(function(){ careerMsg('No se pudo retirar la oferta'); });
-  }
-
-  function careerGetMySquadRef(){ return db.doc('leagues/' + state.leagueCode + '/careerSquads/' + state.playerId); }
-  function careerAssignSlot(slotKey, playerId){
-    careerGetMySquadRef().set({ userId: state.playerId, userName: careerCoachName(), updatedAt: Date.now() }, { merge: true })
-      .then(function(){
-        var patch = {}; patch['slots.' + slotKey] = playerId;
-        return careerGetMySquadRef().update(patch);
-      }).catch(function(){ careerMsg('No se pudo actualizar tu plantilla'); });
+  function careerGetMySquadRef(){ return db.doc('leagues/' + state.leagueCode + '/utSquads/' + state.playerId); }
+  function careerAssignSlot(slotKey, cardId){
+    if(!utCardById(cardId)) return;
+    state.ut.squad[slotKey] = cardId;
+    saveState();
+    utSyncSquad();
   }
   function careerClearSlot(slotKey){
+    state.ut.squad[slotKey] = null;
+    saveState();
     var patch = {}; patch['slots.' + slotKey] = null;
     careerGetMySquadRef().update(patch).catch(function(){});
+  }
+
+  function openUtPack(tierId){
+    var tier = UT_PACK_TIERS[tierId];
+    if(!tier) return;
+    if(state.balance < tier.price){ careerMsg('Fichas insuficientes para el ' + tier.name); return; }
+    addBalance(-tier.price);
+    var picked = weightedReward(tier.rarities);
+    var info = UT_RARITY_INFO[picked.rarity];
+    var name = UT_PLAYER_POOL[Math.floor(Math.random() * UT_PLAYER_POOL.length)];
+    var position = UT_POSITIONS[Math.floor(Math.random() * UT_POSITIONS.length)];
+    var grl = info.grlMin + Math.floor(Math.random() * (info.grlMax - info.grlMin + 1));
+    var card = { id: 'utc' + Date.now() + Math.floor(Math.random() * 1000), name: name, position: position, grl: grl, rarity: picked.rarity };
+    state.ut.owned.push(card);
+    var emptyKey = null;
+    CAREER_SLOT_DEFS.forEach(function(def){ if(!emptyKey && def.pos === card.position && !state.ut.squad[def.key]) emptyKey = def.key; });
+    if(emptyKey) state.ut.squad[emptyKey] = card.id;
+    if(!state.ut.packHistory) state.ut.packHistory = [];
+    state.ut.packHistory.unshift({ tier: tier.name, name: card.name, position: card.position, grl: card.grl, rarity: card.rarity, ts: Date.now() });
+    if(state.ut.packHistory.length > 15) state.ut.packHistory.length = 15;
+    saveState();
+    if(emptyKey) utSyncSquad();
+
+    var reveal = document.getElementById('utPackReveal');
+    if(reveal){
+      document.getElementById('utPackRevealTitle').textContent = info.icon + ' ' + card.name + ' (' + info.label + ')';
+      document.getElementById('utPackRevealSub').textContent = card.position + ' · GRL ' + card.grl + (emptyKey ? ' — añadido a tu plantilla titular' : ' — guardado en tu colección');
+      reveal.hidden = false;
+    }
+    careerRenderActiveTab();
   }
 
   function careerAvgGrl(list){
@@ -6306,11 +6236,120 @@
     };
   }
 
+  function utGenerateCpuSquad(diffId){
+    var diff = UT_CPU_DIFFICULTIES[diffId] || UT_CPU_DIFFICULTIES.easy;
+    return CAREER_SLOT_DEFS.map(function(def){
+      var grl = diff.grlMin + Math.floor(Math.random() * (diff.grlMax - diff.grlMin + 1));
+      var name = UT_PLAYER_POOL[Math.floor(Math.random() * UT_PLAYER_POOL.length)];
+      return { id: 'cpu-' + def.key, name: name, position: def.pos, grl: grl };
+    });
+  }
+
+  var utCpuMatch = null, utCpuMatchTimer = null;
+  function utPlayCpuMatch(diffId){
+    if(!utSquadIsFull()){ careerMsg('Completa tu plantilla (7/7) antes de jugar'); return; }
+    var diff = UT_CPU_DIFFICULTIES[diffId] || UT_CPU_DIFFICULTIES.easy;
+    var mySquad = utSquadPlayerList();
+    var cpuSquad = utGenerateCpuSquad(diffId);
+    var sim = careerSimulateFullMatch(mySquad, cpuSquad);
+    utCpuMatch = {
+      aClub: careerClubName(), bClub: 'CPU (' + diff.label + ')',
+      status: 'live', liveStartAt: Date.now(), timeline: sim.timeline,
+      scoreA: sim.scoreA, scoreB: sim.scoreB, ratingsA: sim.ratingsA, ratingsB: sim.ratingsB,
+      reward: diff.reward, ratingsApplied: false
+    };
+    var el = document.getElementById('utCpuLiveMatch');
+    if(el) el.hidden = false;
+    utRenderCpuLive();
+    if(utCpuMatchTimer) clearInterval(utCpuMatchTimer);
+    utCpuMatchTimer = setInterval(utRenderCpuLive, 1000);
+  }
+
+  function utFinalizeCpuMatch(){
+    var m = utCpuMatch;
+    if(!m || m.ratingsApplied) return;
+    m.ratingsApplied = true;
+    (m.ratingsA || []).forEach(function(r){
+      var card = utCardById(r.id);
+      if(card) card.grl = r.newGrl;
+    });
+    saveState();
+    utSyncSquad();
+    var won = m.scoreA > m.scoreB, draw = m.scoreA === m.scoreB;
+    var payout = draw ? Math.round(m.reward * 0.4) : (won ? m.reward : 0);
+    if(payout > 0) addBalance(payout);
+    careerMsg(won ? ('¡Ganaste! +' + payout.toLocaleString('es-CO') + ' fichas') : (draw ? ('Empate. +' + payout.toLocaleString('es-CO') + ' fichas') : 'Perdiste el partido'));
+  }
+
+  function utRenderCpuLive(){
+    var m = utCpuMatch;
+    var el = document.getElementById('utCpuLiveMatch');
+    if(!m || !el) return;
+    var elapsed = Date.now() - m.liveStartAt;
+    var finished = elapsed >= CAREER_MATCH_MS;
+    var elapsedMinute = Math.min(90, Math.round((Math.min(elapsed, CAREER_MATCH_MS) / CAREER_MATCH_MS) * 90));
+    var visibleEvents = (m.timeline || []).filter(function(e){ return e.minute <= elapsedMinute; });
+    var scoreA = 0, scoreB = 0;
+    visibleEvents.forEach(function(e){ if(e.type === 'goal'){ if(e.team === 'A') scoreA++; else scoreB++; } });
+
+    el.innerHTML = '';
+    var card = document.createElement('div');
+    card.className = 'career-live-card';
+    card.innerHTML =
+      '<div class="career-live-score">' +
+        '<span class="team">' + escapeHtml(m.aClub) + '</span>' +
+        '<span class="score">' + scoreA + ' - ' + scoreB + '</span>' +
+        '<span class="team">' + escapeHtml(m.bClub) + '</span>' +
+      '</div>' +
+      '<p class="career-live-clock">' + (finished ? 'Partido terminado' : ('Minuto ' + elapsedMinute + "'")) + '</p>';
+    var eventsWrap = document.createElement('div');
+    eventsWrap.className = 'career-live-events';
+    visibleEvents.slice().reverse().forEach(function(e){
+      var row = document.createElement('div');
+      row.className = 'career-event-row';
+      row.innerHTML =
+        '<span class="career-event-min">' + e.minute + "'</span>" +
+        '<span class="career-event-icon">' + careerEventIcon(e.type) + '</span>' +
+        '<span>' + escapeHtml(careerEventText(e)) + '</span>';
+      eventsWrap.appendChild(row);
+    });
+    card.appendChild(eventsWrap);
+
+    if(finished){
+      if(!m.ratingsApplied){
+        utFinalizeCpuMatch();
+        if(utCpuMatchTimer){ clearInterval(utCpuMatchTimer); utCpuMatchTimer = null; }
+      }
+      var outcome = m.scoreA > m.scoreB ? '¡Ganaste!' : (m.scoreA < m.scoreB ? 'Perdiste' : 'Empate');
+      var result = document.createElement('div');
+      result.innerHTML = '<p class="paytable-title" style="margin-top:8px;">' + outcome + ' — Calificaciones de tu plantilla</p>';
+      var ratingsList = document.createElement('div');
+      ratingsList.className = 'career-rating-list';
+      (m.ratingsA || []).forEach(function(r){
+        var delta = r.newGrl - r.grl;
+        var row2 = document.createElement('div');
+        row2.className = 'career-rating-row';
+        row2.innerHTML =
+          '<span>' + escapeHtml(r.name) + '</span>' +
+          '<span class="career-rating-val">' + r.rating.toFixed(1) + ' <span class="' + (delta > 0 ? 'up' : (delta < 0 ? 'down' : '')) + '">(' + (delta >= 0 ? '+' : '') + delta + ' GRL)</span></span>';
+        ratingsList.appendChild(row2);
+      });
+      result.appendChild(ratingsList);
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'btn btn-ghost btn-block';
+      closeBtn.style.marginTop = '10px';
+      closeBtn.textContent = 'Cerrar';
+      closeBtn.addEventListener('click', function(){ utCpuMatch = null; el.hidden = true; careerRenderSquadTab(); });
+      result.appendChild(closeBtn);
+      card.appendChild(result);
+    }
+    el.appendChild(card);
+  }
+
   function careerMatchReqRef(id){ return db.doc('leagues/' + state.leagueCode + '/careerMatches/' + id); }
 
   function careerRequestMatch(opponentId, opponentName, opponentClub){
-    var mySquad = careerSquadsCache[state.playerId];
-    if(!careerSquadIsFull(mySquad)){ careerMsg('Completa tu plantilla (7/7) antes de pedir un partido'); return; }
+    if(!utSquadIsFull()){ careerMsg('Completa tu plantilla (7/7) antes de pedir un partido'); return; }
     var hasActive = careerMatchesCache.some(function(m){
       return (m.aId === state.playerId || m.bId === state.playerId) && (m.status === 'negotiating' || m.status === 'live');
     });
@@ -6341,18 +6380,20 @@
     if(!side) return;
     if(m['confirmed' + side]) return;
     if(!m.amount){ careerMsg('Primero acuerden un monto'); return; }
-    if(careerWalletBalance() < m.amount){ careerMsg('Fichas de carrera insuficientes'); return; }
-    var mySquad = careerSquadsCache[state.playerId];
-    if(!careerSquadIsFull(mySquad)){ careerMsg('Tu plantilla ya no está completa'); return; }
-    careerAddBalance(-m.amount);
+    if(state.balance < m.amount){ careerMsg('Fichas insuficientes'); return; }
+    if(!utSquadIsFull()){ careerMsg('Tu plantilla ya no está completa'); return; }
+    addBalance(-m.amount);
     var oppSide = side === 'A' ? 'B' : 'A';
     var patch = {};
     patch['confirmed' + side] = true;
     patch['escrowed' + side] = true;
     patch.updatedAt = Date.now();
     if(m['confirmed' + oppSide]){
-      var listA = careerSquadPlayerList(careerSquadsCache[m.aId]);
-      var listB = careerSquadPlayerList(careerSquadsCache[m.bId]);
+      var mySquadList = utSquadPlayerList();
+      var oppSquadDoc = side === 'A' ? careerSquadsCache[m.bId] : careerSquadsCache[m.aId];
+      var oppList = careerSquadPlayerList(oppSquadDoc);
+      var listA = side === 'A' ? mySquadList : oppList;
+      var listB = side === 'A' ? oppList : mySquadList;
       if(listA.length === 7 && listB.length === 7){
         var sim = careerSimulateFullMatch(listA, listB);
         patch.status = 'live';
@@ -6366,7 +6407,7 @@
       }
     }
     careerMatchReqRef(m.id).update(patch).catch(function(){
-      careerAddBalance(m.amount);
+      addBalance(m.amount);
       careerMsg('No se pudo confirmar el partido');
     });
   }
@@ -6375,7 +6416,7 @@
     var side = careerMySide(m);
     if(!side || !m['escrowed' + side]) return;
     var patch = {}; patch['confirmed' + side] = false; patch['escrowed' + side] = false; patch.updatedAt = Date.now();
-    careerMatchReqRef(m.id).update(patch).then(function(){ careerAddBalance(m.amount); })
+    careerMatchReqRef(m.id).update(patch).then(function(){ addBalance(m.amount); })
       .catch(function(){});
   }
 
@@ -6384,7 +6425,7 @@
     if(!side) return;
     var status = 'cancelled';
     careerMatchReqRef(m.id).update({ status: status, updatedAt: Date.now() }).then(function(){
-      if(m['escrowed' + side]) careerAddBalance(m.amount);
+      if(m['escrowed' + side]) addBalance(m.amount);
     }).catch(function(){});
   }
 
@@ -6392,28 +6433,20 @@
     if(!m || m.status !== 'live') return;
     var elapsed = Date.now() - m.liveStartAt;
     if(elapsed < CAREER_MATCH_MS) return;
-    if(!m.ratingsApplied){
-      var reqRef = careerMatchReqRef(m.id);
-      db.runTransaction(function(tx){
-        return tx.get(reqRef).then(function(snap){
-          var d = snap.data();
-          if(!d || d.ratingsApplied || d.status !== 'live') return null;
-          tx.update(reqRef, { status: 'finished', ratingsApplied: true, updatedAt: Date.now() });
-          return d;
-        });
-      }).then(function(d){
-        if(!d) return;
-        var batch = db.batch();
-        (d.ratingsA || []).concat(d.ratingsB || []).forEach(function(r){
-          batch.update(db.doc('leagues/' + state.leagueCode + '/careerPlayers/' + r.id), {
-            grl: r.newGrl, value: careerValueFor(r.newGrl), lastRating: r.rating
-          });
-        });
-        batch.commit().catch(function(){});
-      }).catch(function(){});
-    }
     var side = careerMySide(m);
     if(!side) return;
+    var ratingsKey = 'ratingsApplied:' + m.id;
+    if(!m.ratingsApplied && !careerClaimsHandled[ratingsKey]){
+      careerClaimsHandled[ratingsKey] = true;
+      var myRatings = side === 'A' ? m.ratingsA : m.ratingsB;
+      (myRatings || []).forEach(function(r){
+        var card = utCardById(r.id);
+        if(card) card.grl = r.newGrl;
+      });
+      saveState();
+      utSyncSquad();
+      careerMatchReqRef(m.id).update({ status: 'finished', ratingsApplied: true, updatedAt: Date.now() }).catch(function(){});
+    }
     var key = 'matchPayout:' + m.id;
     if(careerClaimsHandled[key]) return;
     if(m.payoutClaimed && m.payoutClaimed[state.playerId]) return;
@@ -6422,49 +6455,20 @@
     careerMatchReqRef(m.id).update(patch).then(function(){
       var iWon = side === 'A' ? m.scoreA > m.scoreB : m.scoreB > m.scoreA;
       var draw = m.scoreA === m.scoreB;
-      if(draw){ careerAddBalance(m.amount); careerMsg('Empate. Recuperas tu apuesta'); }
-      else if(iWon){ careerAddBalance(m.amount * 2); careerMsg('¡Ganaste el partido! +' + (m.amount * 2).toLocaleString('es-CO')); }
+      if(draw){ addBalance(m.amount); careerMsg('Empate. Recuperas tu apuesta'); }
+      else if(iWon){ addBalance(m.amount * 2); careerMsg('¡Ganaste el partido! +' + (m.amount * 2).toLocaleString('es-CO')); }
       else { careerMsg('Perdiste el partido'); }
     }).catch(function(){ careerClaimsHandled[key] = false; });
   }
 
-  function careerFmtTimeLeft(ms){
-    if(ms <= 0) return 'terminando…';
-    var h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
-    if(h > 0) return h + 'h ' + m + 'm';
-    return m + 'm';
-  }
-
-  function careerSubscribePlayers(){
-    if(careerPlayersUnsub){ careerPlayersUnsub(); careerPlayersUnsub = null; }
-    if(!db || !state.leagueCode) return;
-    careerPlayersUnsub = db.collection('leagues/' + state.leagueCode + '/careerPlayers')
-      .onSnapshot(function(snap){
-        careerPlayersCache = snap.docs.map(function(d){ return Object.assign({ id: d.id }, d.data()); });
-        careerPlayersById = {};
-        careerPlayersCache.forEach(function(p){ careerPlayersById[p.id] = p; careerMaybeClaimOutbid(p); });
-        careerResolveExpiredAuctions();
-        careerRenderActiveTab();
-      }, function(){ careerMsg('No se pudo cargar el mercado'); });
-  }
   function careerSubscribeSquads(){
     if(careerSquadsUnsub){ careerSquadsUnsub(); careerSquadsUnsub = null; }
     if(!db || !state.leagueCode) return;
-    careerSquadsUnsub = db.collection('leagues/' + state.leagueCode + '/careerSquads')
+    careerSquadsUnsub = db.collection('leagues/' + state.leagueCode + '/utSquads')
       .onSnapshot(function(snap){
         var map = {};
         snap.docs.forEach(function(d){ map[d.id] = d.data(); });
         careerSquadsCache = map;
-        careerRenderActiveTab();
-      });
-  }
-  function careerSubscribeOffers(){
-    if(careerOffersUnsub){ careerOffersUnsub(); careerOffersUnsub = null; }
-    if(!db || !state.leagueCode) return;
-    careerOffersUnsub = db.collection('leagues/' + state.leagueCode + '/careerOffers')
-      .onSnapshot(function(snap){
-        careerOffersCache = snap.docs.map(function(d){ return Object.assign({ id: d.id }, d.data()); });
-        careerOffersCache.forEach(function(o){ careerMaybeClaimRejectedOffer(o); });
         careerRenderActiveTab();
       });
   }
@@ -6490,82 +6494,30 @@
       }, function(){ careerMsg('No se pudieron cargar los partidos'); });
   }
   function teardownCareerListeners(){
-    if(careerPlayersUnsub){ careerPlayersUnsub(); careerPlayersUnsub = null; }
     if(careerSquadsUnsub){ careerSquadsUnsub(); careerSquadsUnsub = null; }
-    if(careerOffersUnsub){ careerOffersUnsub(); careerOffersUnsub = null; }
     if(careerMatchesUnsub){ careerMatchesUnsub(); careerMatchesUnsub = null; }
-    if(careerWalletUnsub){ careerWalletUnsub(); careerWalletUnsub = null; }
-    if(careerTickTimer){ clearInterval(careerTickTimer); careerTickTimer = null; }
     if(careerLiveTicker){ clearInterval(careerLiveTicker); careerLiveTicker = null; }
-  }
-
-  var careerExpandedBidId = null;
-  var careerExpandedOfferId = null;
-  function careerToggleBidRow(playerId){
-    careerExpandedBidId = careerExpandedBidId === playerId ? null : playerId;
-    careerExpandedOfferId = null;
-    careerRenderMarketTab();
-  }
-  function careerToggleOfferRow(playerId){
-    careerExpandedOfferId = careerExpandedOfferId === playerId ? null : playerId;
-    careerExpandedBidId = null;
-    careerRenderMarketTab();
-  }
-  function careerBuildBidRow(p){
-    var minBid = p.auction ? p.auction.amount + 10 : Math.max(50, Math.round(p.value * 0.5 / 10) * 10);
-    var wrap = document.createElement('div');
-    wrap.className = 'career-bid-row';
-    var input = document.createElement('input');
-    input.type = 'number'; input.min = String(minBid); input.step = '10'; input.value = String(minBid);
-    var confirmBtn = document.createElement('button');
-    confirmBtn.className = 'btn btn-gold btn-sm';
-    confirmBtn.textContent = 'Confirmar';
-    confirmBtn.addEventListener('click', function(){
-      var amt = parseInt(input.value, 10);
-      if(!amt || amt < minBid){ careerMsg('La puja mínima es ' + minBid.toLocaleString('es-CO')); return; }
-      careerExpandedBidId = null;
-      careerPlaceBid(p, amt);
-    });
-    wrap.appendChild(input); wrap.appendChild(confirmBtn);
-    return wrap;
-  }
-  function careerBuildOfferRow(p){
-    var wrap = document.createElement('div');
-    wrap.className = 'career-bid-row';
-    var input = document.createElement('input');
-    input.type = 'number'; input.min = '10'; input.step = '10'; input.value = String(p.value);
-    var sendBtn = document.createElement('button');
-    sendBtn.className = 'btn btn-primary btn-sm';
-    sendBtn.textContent = 'Enviar oferta';
-    sendBtn.addEventListener('click', function(){
-      var amt = parseInt(input.value, 10);
-      if(!amt || amt <= 0){ careerMsg('Ingresa un monto válido'); return; }
-      careerExpandedOfferId = null;
-      careerMakeOffer(p, amt);
-    });
-    wrap.appendChild(input); wrap.appendChild(sendBtn);
-    return wrap;
+    if(utCpuMatchTimer){ clearInterval(utCpuMatchTimer); utCpuMatchTimer = null; }
   }
 
   function careerRenderSquadTab(){
     var pitchEl = document.getElementById('careerPitch');
     if(!pitchEl) return;
-    var squad = careerSquadsCache[state.playerId] || { slots: {} };
     pitchEl.innerHTML = '';
     var ownedIdsInSlots = {};
     CAREER_SLOT_DEFS.forEach(function(def){
-      var pid = squad.slots ? squad.slots[def.key] : null;
+      var cardId = state.ut.squad[def.key];
+      var card = cardId ? utCardById(cardId) : null;
       var pos = CAREER_PITCH_LAYOUT[def.key];
       var chip = document.createElement('div');
-      chip.className = 'career-chip' + (pid ? '' : ' empty');
+      chip.className = 'career-chip' + (card ? '' : ' empty');
       chip.style.left = pos.x + '%';
       chip.style.top = pos.y + '%';
-      if(pid && careerPlayersById[pid]){
-        ownedIdsInSlots[pid] = true;
-        var p = careerPlayersById[pid];
-        var shortName = p.name.split(' ').slice(-1)[0];
+      if(card){
+        ownedIdsInSlots[card.id] = true;
+        var shortName = card.name.split(' ').slice(-1)[0];
         chip.innerHTML =
-          '<span class="career-chip-badge">' + p.grl + '</span>' +
+          '<span class="career-chip-badge">' + card.grl + '</span>' +
           '<span class="career-chip-name">' + escapeHtml(shortName) + '</span>' +
           '<span class="career-chip-grl">' + def.label + '</span>';
       } else {
@@ -6584,163 +6536,74 @@
     if(detailEl) detailEl.remove();
     if(careerExpandedChipKey){
       var def2 = CAREER_SLOT_DEFS.filter(function(d){ return d.key === careerExpandedChipKey; })[0];
-      var pid2 = squad.slots ? squad.slots[def2.key] : null;
+      var card2 = state.ut.squad[def2.key] ? utCardById(state.ut.squad[def2.key]) : null;
       var wrap = document.createElement('div');
       wrap.className = 'career-chip-detail';
       wrap.id = 'careerChipDetail';
-      if(pid2 && careerPlayersById[pid2]){
-        var pp = careerPlayersById[pid2];
+      if(card2){
+        var info2 = UT_RARITY_INFO[card2.rarity] || UT_RARITY_INFO.common;
         wrap.innerHTML =
-          '<div class="career-player-top"><span class="career-player-name"><span class="career-pos-badge ' + pp.position + '">' + pp.position + '</span> ' + escapeHtml(pp.name) + '</span><span class="career-slot-grl">GRL ' + pp.grl + '</span></div>' +
-          (typeof pp.lastRating === 'number' ? '<p class="career-player-meta">Última calificación: ' + pp.lastRating.toFixed(1) + '</p>' : '');
+          '<div class="career-player-top"><span class="career-player-name"><span class="career-pos-badge ' + card2.position + '">' + card2.position + '</span> ' + escapeHtml(card2.name) + '</span><span class="career-slot-grl">GRL ' + card2.grl + '</span></div>' +
+          '<p class="career-player-meta">' + info2.icon + ' ' + info2.label + '</p>';
         var rmBtn = document.createElement('button');
         rmBtn.className = 'btn btn-ghost btn-sm';
         rmBtn.textContent = 'Quitar de la plantilla';
         rmBtn.addEventListener('click', function(){ careerClearSlot(def2.key); careerExpandedChipKey = null; careerRenderSquadTab(); });
         wrap.appendChild(rmBtn);
       } else {
-        wrap.innerHTML = '<p class="career-player-meta">Casilla de ' + def2.label + ' vacía. Consigue un jugador de esa posición en el Mercado.</p>';
+        wrap.innerHTML = '<p class="career-player-meta">Casilla de ' + def2.label + ' vacía. Consigue un jugador de esa posición en Sobres.</p>';
       }
       pitchEl.parentNode.insertBefore(wrap, pitchEl.nextSibling);
     }
 
     var ownedList = document.getElementById('careerOwnedList');
-    var myPlayers = careerPlayersCache.filter(function(p){ return p.ownerId === state.playerId && !ownedIdsInSlots[p.id]; });
+    var myCards = (state.ut.owned || []).filter(function(c){ return !ownedIdsInSlots[c.id]; });
     ownedList.innerHTML = '';
-    if(!myPlayers.length){
-      ownedList.innerHTML = '<p class="league-empty">No tienes jugadores libres en tu plantel. Consigue jugadores en el Mercado.</p>';
+    if(!myCards.length){
+      ownedList.innerHTML = '<p class="league-empty">No tienes cartas libres en tu colección. Abre sobres para conseguir jugadores.</p>';
       return;
     }
-    myPlayers.forEach(function(p){
+    myCards.forEach(function(card){
       var row = document.createElement('div');
       row.className = 'career-player-row';
       var top = document.createElement('div');
       top.className = 'career-player-top';
       top.innerHTML =
-        '<span class="career-player-name"><span class="career-pos-badge ' + p.position + '">' + p.position + '</span> ' + escapeHtml(p.name) + '</span>' +
-        '<span class="career-slot-grl">GRL ' + p.grl + '</span>';
+        '<span class="career-player-name"><span class="career-pos-badge ' + card.position + '">' + card.position + '</span> ' + escapeHtml(card.name) + '</span>' +
+        '<span class="career-slot-grl">GRL ' + card.grl + '</span>';
       row.appendChild(top);
       var emptyDef = null;
       for(var i = 0; i < CAREER_SLOT_DEFS.length; i++){
         var d = CAREER_SLOT_DEFS[i];
-        if(d.pos === p.position && !(squad.slots && squad.slots[d.key])){ emptyDef = d; break; }
+        if(d.pos === card.position && !state.ut.squad[d.key]){ emptyDef = d; break; }
       }
       var actions = document.createElement('div');
       actions.className = 'career-player-actions';
       var placeBtn = document.createElement('button');
       placeBtn.className = 'btn btn-gold btn-sm';
-      placeBtn.textContent = emptyDef ? 'Colocar en ' + emptyDef.label : 'Sin espacio (' + p.position + ')';
+      placeBtn.textContent = emptyDef ? 'Colocar en ' + emptyDef.label : 'Sin espacio (' + card.position + ')';
       placeBtn.disabled = !emptyDef;
-      placeBtn.addEventListener('click', function(){ if(emptyDef) careerAssignSlot(emptyDef.key, p.id); });
+      placeBtn.addEventListener('click', function(){ if(emptyDef){ careerAssignSlot(emptyDef.key, card.id); careerRenderSquadTab(); } });
       actions.appendChild(placeBtn);
       row.appendChild(actions);
       ownedList.appendChild(row);
     });
   }
 
-  function careerRenderMarketTab(){
-    var el = document.getElementById('careerMarketList');
+  function careerRenderPacksTab(){
+    var el = document.getElementById('utPackHistory');
     if(!el) return;
+    var history = (state.ut.packHistory || []).slice(0, 15);
+    if(!history.length){ el.innerHTML = '<p class="league-empty">Aún no has abierto ningún sobre.</p>'; return; }
     el.innerHTML = '';
-    var list = careerPlayersCache.filter(function(p){ return careerMarketFilter === 'ALL' || p.position === careerMarketFilter; });
-    list.sort(function(a, b){ return b.grl - a.grl; });
-    if(!list.length){ el.innerHTML = '<p class="league-empty">No hay jugadores en esta posición.</p>'; return; }
-    list.forEach(function(p){
+    history.forEach(function(h){
+      var info = UT_RARITY_INFO[h.rarity] || UT_RARITY_INFO.common;
       var row = document.createElement('div');
       row.className = 'career-player-row';
-      var top = document.createElement('div');
-      top.className = 'career-player-top';
-      top.innerHTML =
-        '<span class="career-player-name"><span class="career-pos-badge ' + p.position + '">' + p.position + '</span> ' + escapeHtml(p.name) + '</span>' +
-        '<span class="career-slot-grl">GRL ' + p.grl + '</span>';
-      row.appendChild(top);
-      var meta = document.createElement('p');
-      meta.className = 'career-player-meta';
-      meta.textContent = p.team + ' · Valor referencia ' + p.value.toLocaleString('es-CO');
-      row.appendChild(meta);
-
-      if(p.ownerId === state.playerId){
-        var mineMeta = document.createElement('p');
-        mineMeta.className = 'career-player-meta';
-        mineMeta.textContent = '✓ Es tuyo';
-        row.appendChild(mineMeta);
-      } else if(p.ownerId){
-        var ownedMeta = document.createElement('p');
-        ownedMeta.className = 'career-player-meta';
-        ownedMeta.textContent = 'Dueño: ' + p.ownerName;
-        row.appendChild(ownedMeta);
-        var negBtn = document.createElement('button');
-        negBtn.className = 'btn btn-primary btn-sm';
-        negBtn.textContent = 'Negociar';
-        negBtn.addEventListener('click', function(){ careerToggleOfferRow(p.id); });
-        row.appendChild(negBtn);
-        if(careerExpandedOfferId === p.id) row.appendChild(careerBuildOfferRow(p));
-      } else {
-        var auctionMeta = document.createElement('p');
-        auctionMeta.className = 'career-player-meta';
-        auctionMeta.textContent = p.auction
-          ? ('Puja actual: ' + p.auction.amount.toLocaleString('es-CO') + ' (' + p.auction.bidderName + ') · queda ' + careerFmtTimeLeft(p.auction.endsAt - Date.now()))
-          : 'Libre · sin pujas';
-        row.appendChild(auctionMeta);
-        var bidBtn = document.createElement('button');
-        bidBtn.className = 'btn btn-gold btn-sm';
-        bidBtn.textContent = 'Pujar';
-        bidBtn.addEventListener('click', function(){ careerToggleBidRow(p.id); });
-        row.appendChild(bidBtn);
-        if(careerExpandedBidId === p.id) row.appendChild(careerBuildBidRow(p));
-      }
+      row.innerHTML =
+        '<div class="career-player-top"><span class="career-player-name">' + info.icon + ' ' + escapeHtml(h.name) + '</span><span class="career-slot-grl">GRL ' + h.grl + '</span></div>' +
+        '<p class="career-player-meta">' + h.position + ' · ' + info.label + ' · ' + escapeHtml(h.tier) + '</p>';
       el.appendChild(row);
-    });
-  }
-
-  function careerRenderOffersTab(){
-    var bidsEl = document.getElementById('careerMyBidsList');
-    var recvEl = document.getElementById('careerOffersReceivedList');
-    var sentEl = document.getElementById('careerOffersSentList');
-    if(!bidsEl) return;
-
-    var myBids = careerPlayersCache.filter(function(p){ return p.auction && p.auction.bidderId === state.playerId; });
-    bidsEl.innerHTML = myBids.length ? '' : '<p class="league-empty">No tienes pujas activas.</p>';
-    myBids.forEach(function(p){
-      var row = document.createElement('div');
-      row.className = 'career-player-row';
-      row.innerHTML =
-        '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(p.name) + '</span><span class="career-slot-grl">' + p.auction.amount.toLocaleString('es-CO') + '</span></div>' +
-        '<p class="career-player-meta">Queda ' + careerFmtTimeLeft(p.auction.endsAt - Date.now()) + '</p>';
-      bidsEl.appendChild(row);
-    });
-
-    var received = careerOffersCache.filter(function(o){ return o.sellerId === state.playerId && o.status === 'pending'; });
-    recvEl.innerHTML = received.length ? '' : '<p class="league-empty">No tienes ofertas por tus jugadores.</p>';
-    received.forEach(function(o){
-      var row = document.createElement('div');
-      row.className = 'career-player-row';
-      row.innerHTML =
-        '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(o.playerName) + '</span><span class="career-slot-grl">' + o.amount.toLocaleString('es-CO') + '</span></div>' +
-        '<p class="career-player-meta">Oferta de ' + escapeHtml(o.buyerName) + '</p>';
-      var actions = document.createElement('div');
-      actions.className = 'career-player-actions';
-      var acceptBtn = document.createElement('button'); acceptBtn.className = 'btn btn-gold btn-sm'; acceptBtn.textContent = 'Aceptar';
-      acceptBtn.addEventListener('click', function(){ careerRespondOffer(o, true); });
-      var rejectBtn = document.createElement('button'); rejectBtn.className = 'btn btn-ghost btn-sm'; rejectBtn.textContent = 'Rechazar';
-      rejectBtn.addEventListener('click', function(){ careerRespondOffer(o, false); });
-      actions.appendChild(acceptBtn); actions.appendChild(rejectBtn);
-      row.appendChild(actions);
-      recvEl.appendChild(row);
-    });
-
-    var sent = careerOffersCache.filter(function(o){ return o.buyerId === state.playerId && o.status === 'pending'; });
-    sentEl.innerHTML = sent.length ? '' : '<p class="league-empty">No has enviado ofertas.</p>';
-    sent.forEach(function(o){
-      var row = document.createElement('div');
-      row.className = 'career-player-row';
-      row.innerHTML =
-        '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(o.playerName) + '</span><span class="career-slot-grl">' + o.amount.toLocaleString('es-CO') + '</span></div>' +
-        '<p class="career-player-meta">Esperando respuesta de ' + escapeHtml(o.sellerName) + '</p>';
-      var withdrawBtn = document.createElement('button'); withdrawBtn.className = 'btn btn-ghost btn-sm'; withdrawBtn.textContent = 'Retirar oferta';
-      withdrawBtn.addEventListener('click', function(){ careerWithdrawOffer(o); });
-      row.appendChild(withdrawBtn);
-      sentEl.appendChild(row);
     });
   }
 
@@ -6971,9 +6834,10 @@
 
   function careerRenderActiveTab(){
     if(!state.leagueCode) return;
+    var walletAmt = document.getElementById('careerWalletAmt');
+    if(walletAmt) walletAmt.textContent = Math.round(state.balance).toLocaleString('es-CO');
     if(careerActiveTab === 'squad') careerRenderSquadTab();
-    else if(careerActiveTab === 'market') careerRenderMarketTab();
-    else if(careerActiveTab === 'offers') careerRenderOffersTab();
+    else if(careerActiveTab === 'packs') careerRenderPacksTab();
     else if(careerActiveTab === 'matches') careerRenderMatchesTab();
   }
 
@@ -6985,16 +6849,13 @@
       careerRenderActiveTab();
     });
   });
-  Array.prototype.slice.call(document.querySelectorAll('#careerPosFilter .chip-btn')).forEach(function(btn){
-    btn.addEventListener('click', function(){
-      Array.prototype.slice.call(document.querySelectorAll('#careerPosFilter .chip-btn')).forEach(function(b){ b.classList.remove('active'); });
-      btn.classList.add('active');
-      careerMarketFilter = btn.getAttribute('data-amount');
-      careerRenderMarketTab();
-    });
+  Array.prototype.slice.call(document.querySelectorAll('.ut-pack-btn')).forEach(function(btn){
+    btn.addEventListener('click', function(){ openUtPack(btn.getAttribute('data-tier')); });
   });
-  var careerPosFilterFirstBtn = document.querySelector('#careerPosFilter .chip-btn');
-  if(careerPosFilterFirstBtn) careerPosFilterFirstBtn.classList.add('active');
+  var utCpuDifficulty = wireChoiceSelect('utCpuDifficultyChips', 'easy');
+  document.getElementById('utPlayCpuBtn').addEventListener('click', function(){
+    utPlayCpuMatch(utCpuDifficulty.get());
+  });
 
   function renderCareerEntry(){
     document.getElementById('careerMsgBar').textContent = '';
@@ -7025,15 +6886,9 @@
       }
       profileSetup.hidden = true; main.hidden = false;
       document.getElementById('careerClubLabel').textContent = profile.clubName;
-      careerEnsureWallet().then(careerSubscribeWallet);
-      careerEnsurePool().then(function(){
-        careerSubscribePlayers();
-        careerSubscribeSquads();
-        careerSubscribeOffers();
-        careerSubscribeMatches();
-      });
-      if(careerTickTimer) clearInterval(careerTickTimer);
-      careerTickTimer = setInterval(function(){ careerResolveExpiredAuctions(); }, 8000);
+      utSyncSquad();
+      careerSubscribeSquads();
+      careerSubscribeMatches();
       careerRenderActiveTab();
     });
   }
