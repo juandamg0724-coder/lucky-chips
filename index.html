@@ -1861,6 +1861,7 @@
       </div>
 
       <p class="league-msg" id="chessMsgBar"></p>
+      <p class="bet-label" id="chessEloBadge" style="margin-bottom:10px;">Tu ELO: 1200</p>
 
       <div class="paytable" id="chessRulesPanel" hidden>
         <p class="paytable-title">Cómo se juega</p>
@@ -1872,6 +1873,7 @@
           <li>El <b>rey</b> mueve 1 casilla; incluye el enroque y la captura al paso.</li>
         </ul>
         <p class="rules-text">Las dos partes apuestan la misma cantidad de fichas al empezar. Quien gane por jaque mate o porque el rival se rinde se lleva todo el bote; si hay tablas (empate), cada quien recupera su apuesta.</p>
+        <p class="rules-text">Además de las fichas, cada partida (contra la CPU o contra alguien de tu liga) mueve tu <b>ELO</b>: subes más al ganarle a un rival de ELO alto, y bajas más al perder contra uno de ELO bajo. Contra la CPU, cada nivel de dificultad tiene un ELO de referencia distinto (Fácil ≈ 900, Medio ≈ 1200, Difícil ≈ 1500, Experto ≈ 1800).</p>
       </div>
 
       <div class="league-card ornate" id="chessCpuPanel" style="margin-bottom:12px;">
@@ -1888,6 +1890,13 @@
           <button class="choice-btn" data-amount="w">Blancas</button>
           <button class="choice-btn active" data-amount="r">Aleatorio</button>
           <button class="choice-btn" data-amount="b">Negras</button>
+        </div>
+        <p class="bet-label" style="margin-top:10px;">Dificultad</p>
+        <div class="choice-row" id="chessCpuDifficultyChips">
+          <button class="choice-btn" data-amount="easy">Fácil</button>
+          <button class="choice-btn active" data-amount="medium">Medio</button>
+          <button class="choice-btn" data-amount="hard">Difícil</button>
+          <button class="choice-btn" data-amount="expert">Experto</button>
         </div>
         <button class="btn btn-gold btn-block" id="createCpuChessBtn" style="margin-top:10px;">Jugar contra la CPU</button>
       </div>
@@ -2136,7 +2145,7 @@
   function defaultState(){
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1, ownedBorders:['none'], activeBorder:'none', sobreHistory:[],
-      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null };
+      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, chessElo:1200 };
   }
   var state = loadState();
 
@@ -4043,7 +4052,7 @@
   function syncLeagueMember(){
     if(!db || !state.leagueCode || !state.playerName) return;
     db.doc('leagues/' + state.leagueCode + '/members/' + ensurePlayerId()).set({
-      name: state.playerName, coins: state.balance, lastActive: Date.now()
+      name: state.playerName, coins: state.balance, chessElo: state.chessElo || 1200, lastActive: Date.now()
     }).catch(function(){});
   }
 
@@ -5125,7 +5134,28 @@
     return '<svg viewBox="0 0 45 45" class="cp-svg">' + CHESS_PIECE_SHAPES[type] + '</svg>';
   }
   var CHESS_VALUES = { P:100, N:320, B:330, R:500, Q:900, K:20000 };
-  var CHESS_CPU_DEPTH = 2;
+  var CHESS_DIFFICULTIES = [
+    { id:'easy', label:'Fácil', depth:1, elo:900 },
+    { id:'medium', label:'Medio', depth:2, elo:1200 },
+    { id:'hard', label:'Difícil', depth:3, elo:1500 },
+    { id:'expert', label:'Experto', depth:4, elo:1800 }
+  ];
+  function chessDifficultyById(id){
+    for(var i = 0; i < CHESS_DIFFICULTIES.length; i++){ if(CHESS_DIFFICULTIES[i].id === id) return CHESS_DIFFICULTIES[i]; }
+    return CHESS_DIFFICULTIES[1];
+  }
+  var CHESS_ELO_K = 32;
+  function chessUpdateElo(myScore, oppElo){
+    var myElo = state.chessElo || 1200;
+    var expected = 1 / (1 + Math.pow(10, ((oppElo || 1200) - myElo) / 400));
+    var newElo = Math.round(myElo + CHESS_ELO_K * (myScore - expected));
+    var delta = newElo - myElo;
+    state.chessElo = newElo;
+    saveState();
+    var badge = document.getElementById('chessEloBadge');
+    if(badge) badge.textContent = 'Tu ELO: ' + newElo;
+    return delta;
+  }
 
   function chessCloneBoard(b){ return b.map(function(row){ return row.slice(); }); }
   function chessInBounds(r,c){ return r >= 0 && r < 8 && c >= 0 && c < 8; }
@@ -5566,19 +5596,46 @@
     el.scrollTop = el.scrollHeight;
   }
 
+  var chessOppEloCache = {};
+  function chessOnlineOppId(){
+    var od = chessOnlineData;
+    var myColor = chessOnlineMyColor();
+    if(!od || !myColor) return null;
+    var opp = od.players[chessOpp(myColor)];
+    return opp ? opp.id : null;
+  }
+  function chessEnsureOppEloLoaded(oppId){
+    if(!oppId || chessOppEloCache.hasOwnProperty(oppId) || !db || !state.leagueCode) return;
+    chessOppEloCache[oppId] = null;
+    db.doc('leagues/' + state.leagueCode + '/members/' + oppId).get().then(function(snap){
+      chessOppEloCache[oppId] = (snap.exists && snap.data().chessElo) || 1200;
+      renderChessPlayersRow();
+    }).catch(function(){});
+  }
+
   function renderChessPlayersRow(){
     var el = document.getElementById('chessPlayersRow');
+    var badge = document.getElementById('chessEloBadge');
+    if(badge) badge.textContent = 'Tu ELO: ' + (state.chessElo || 1200);
     if(!el) return;
     if(chessMode === 'cpu' && chessLocal){
       var meLabel = chessLocal.myColor === 'w' ? 'Blancas' : 'Negras';
-      el.innerHTML = '<span><b>Tú</b> (' + meLabel + ')</span><span>Bote: ' + (chessLocal.bet * 2).toLocaleString('es-CO') + '</span><span><b>CPU</b></span>';
+      var diffLabel = (chessLocal.difficulty && chessLocal.difficulty.label) || 'CPU';
+      el.innerHTML = '<span><b>Tú</b> (' + meLabel + ') · ELO ' + (state.chessElo || 1200) + '</span><span>Bote: ' + (chessLocal.bet * 2).toLocaleString('es-CO') + '</span><span><b>CPU</b> (' + diffLabel + ') · ELO ' + (chessLocal.oppElo || 1200) + '</span>';
       return;
     }
     if(chessMode === 'online' && chessOnlineData){
       var od = chessOnlineData;
       var wName = od.players.w ? od.players.w.name : '—';
       var bName = od.players.b ? od.players.b.name : '—';
-      el.innerHTML = '<span><b>' + escapeHtml(wName) + '</b> (Blancas)</span><span>Bote: ' + (od.bet * 2).toLocaleString('es-CO') + '</span><span><b>' + escapeHtml(bName) + '</b> (Negras)</span>';
+      var oppId = chessOnlineOppId();
+      chessEnsureOppEloLoaded(oppId);
+      var myColor = chessOnlineMyColor();
+      var myEloLabel = ' · ELO ' + (state.chessElo || 1200);
+      var oppEloLabel = (oppId && chessOppEloCache[oppId] != null) ? (' · ELO ' + chessOppEloCache[oppId]) : '';
+      var wElo = myColor === 'w' ? myEloLabel : (myColor === 'b' ? oppEloLabel : '');
+      var bElo = myColor === 'b' ? myEloLabel : (myColor === 'w' ? oppEloLabel : '');
+      el.innerHTML = '<span><b>' + escapeHtml(wName) + '</b> (Blancas)' + wElo + '</span><span>Bote: ' + (od.bet * 2).toLocaleString('es-CO') + '</span><span><b>' + escapeHtml(bName) + '</b> (Negras)' + bElo + '</span>';
     }
   }
 
@@ -5589,7 +5646,7 @@
       var m = chessLocal;
       chessCpuThinking = false;
       if(!m || m.status !== 'playing') return;
-      var move = chessBestMove(m.pos, CHESS_CPU_DEPTH);
+      var move = chessBestMove(m.pos, m.depth || 2);
       if(!move) return;
       var before = m.pos;
       m.pos = chessApplyMove(m.pos, move);
@@ -5603,28 +5660,33 @@
   function chessFinishCpuMatch(status){
     var m = chessLocal;
     m.status = 'over';
-    var payout = 0, msg = '';
+    var payout = 0, msg = '', myScore = 0.5;
     if(status.result === 'checkmate'){
-      if(status.winner === m.myColor){ payout = m.bet * 2; msg = '¡Jaque mate! Ganaste ' + payout.toLocaleString('es-CO') + ' fichas'; }
-      else { msg = 'Jaque mate de la CPU. Perdiste tu apuesta'; }
+      if(status.winner === m.myColor){ payout = m.bet * 2; msg = '¡Jaque mate! Ganaste ' + payout.toLocaleString('es-CO') + ' fichas'; myScore = 1; }
+      else { msg = 'Jaque mate de la CPU. Perdiste tu apuesta'; myScore = 0; }
     } else if(status.result === 'resign'){
-      if(status.winner === m.myColor){ payout = m.bet * 2; msg = 'La CPU se rindió. Ganaste ' + payout.toLocaleString('es-CO') + ' fichas'; }
-      else { msg = 'Te rendiste. Perdiste tu apuesta'; }
+      if(status.winner === m.myColor){ payout = m.bet * 2; msg = 'La CPU se rindió. Ganaste ' + payout.toLocaleString('es-CO') + ' fichas'; myScore = 1; }
+      else { msg = 'Te rendiste. Perdiste tu apuesta'; myScore = 0; }
     } else {
-      payout = m.bet; msg = 'Tablas. Recuperas tu apuesta';
+      payout = m.bet; msg = 'Tablas. Recuperas tu apuesta'; myScore = 0.5;
     }
     if(payout > 0) addBalance(payout);
+    var delta = chessUpdateElo(myScore, m.oppElo);
+    msg += ' · ELO ' + (delta >= 0 ? '+' : '') + delta + ' (ahora ' + state.chessElo + ')';
     m.result = msg;
     renderChessBoardUI();
+    renderChessPlayersRow();
   }
 
-  function createCpuChessMatch(bet, colorChoice){
+  function createCpuChessMatch(bet, colorChoice, difficultyId){
     if(state.balance < bet){ chessMsg('Fichas insuficientes para esa apuesta'); return; }
     var myColor = colorChoice === 'r' ? (Math.random() < 0.5 ? 'w' : 'b') : colorChoice;
+    var diff = chessDifficultyById(difficultyId);
     addBalance(-bet);
     chessLocal = {
       pos: { board: chessCloneBoard(CHESS_START), turn: 'w', castling: { wK:true, wQ:true, bK:true, bQ:true }, enPassant: null },
-      myColor: myColor, cpuColor: chessOpp(myColor), bet: bet, status: 'playing', result: null, log: []
+      myColor: myColor, cpuColor: chessOpp(myColor), bet: bet, status: 'playing', result: null, log: [],
+      difficulty: diff, depth: diff.depth, oppElo: diff.elo
     };
     chessMode = 'cpu';
     chessSelected = null;
@@ -5790,6 +5852,16 @@
     } else {
       chessMsg('Perdiste la partida');
     }
+    var oppId = chessOnlineOppId();
+    var myScore = od.winner === myColor ? 1 : (od.winner == null ? 0.5 : 0);
+    if(oppId && db && state.leagueCode){
+      db.doc('leagues/' + state.leagueCode + '/members/' + oppId).get().then(function(snap){
+        var oppElo = (snap.exists && snap.data().chessElo) || 1200;
+        var delta = chessUpdateElo(myScore, oppElo);
+        chessMsg((delta >= 0 ? '+' : '') + delta + ' ELO (ahora ' + state.chessElo + ')');
+        renderChessPlayersRow();
+      }).catch(function(){});
+    }
   }
 
   function leaveChessMatch(){
@@ -5823,6 +5895,8 @@
 
   function renderChessEntry(){
     document.getElementById('chessMsgBar').textContent = '';
+    var eloBadge = document.getElementById('chessEloBadge');
+    if(eloBadge) eloBadge.textContent = 'Tu ELO: ' + (state.chessElo || 1200);
     var cpuPanel = document.getElementById('chessCpuPanel');
     var onlineSection = document.getElementById('chessOnlineSection');
     var noLeague = document.getElementById('chessNoLeague');
@@ -5867,8 +5941,9 @@
 
   var chessCpuBet = wireChipSelect('chessCpuBetChips', 300);
   var chessCpuColor = wireChoiceSelect('chessCpuColorChips', 'r');
+  var chessCpuDifficulty = wireChoiceSelect('chessCpuDifficultyChips', 'medium');
   document.getElementById('createCpuChessBtn').addEventListener('click', function(){
-    createCpuChessMatch(chessCpuBet.get(), chessCpuColor.get());
+    createCpuChessMatch(chessCpuBet.get(), chessCpuColor.get(), chessCpuDifficulty.get());
   });
 
   var chessBet = wireChipSelect('chessBetChips', 300);
