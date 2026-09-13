@@ -1759,7 +1759,9 @@
           <li><b>Pasar / Igualar:</b> si nadie subió puedes pasar gratis; si alguien subió, igualas su apuesta para seguir.</li>
           <li><b>Subir:</b> aumentas la apuesta, obligando a los demás a igualarla o retirarse.</li>
         </ul>
-        <p class="rules-text">Dos jugadores ponen las <b>ciegas</b> (apuestas obligatorias) para arrancar cada mano. Si al final quedan varios jugadores, se muestran las cartas y gana la mejor mano.</p>
+        <p class="rules-text">Dos jugadores ponen las <b>ciegas</b> (apuestas obligatorias) para arrancar cada mano: el de la izquierda del dealer pone la <b>ciega chica</b> y el siguiente la <b>ciega grande</b>. El turno avanza en sentido de las manecillas empezando por el jugador después de las ciegas, y se repite en cada nueva ronda de apuestas (flop, turn, river) empezando por el primer jugador activo a la izquierda del dealer.</p>
+        <p class="rules-text"><b>Todo dentro (all-in):</b> si apuestas más de lo que puedes igualar, quedas "todo dentro" con lo que tengas. Si dos o más rivales siguen apostando después de que tú quedaste todo dentro, ese dinero extra forma un <b>bote lateral</b> aparte: tú solo puedes ganar el bote principal (hasta lo que aportaste), nunca el lateral que se juegan los demás entre ellos.</p>
+        <p class="rules-text">Ejemplo rápido: tienes una mano fuerte y nadie ha apostado todavía → conviene <b>subir</b> para hacer crecer el bote. Si alguien ya subió y tu mano es floja → normalmente conviene <b>retirarte</b>. Si el monto para igualar es pequeño comparado con el bote (buenas "pot odds"), a veces conviene <b>igualar</b> aunque tu mano no sea la mejor, para ver la siguiente carta.</p>
         <p class="paytable-title" style="margin-top:6px;">Orden de manos (de mayor a menor)</p>
         <div class="paytable-row"><span>Escalera de color</span></div>
         <div class="paytable-row"><span>Póker (4 iguales)</span></div>
@@ -1835,6 +1837,11 @@
           <button type="button" class="stepper-btn" id="pokerRaiseMinus">−</button>
           <span class="stepper-val tabular" id="pokerRaiseVal" style="width:64px;">0</span>
           <button type="button" class="stepper-btn" id="pokerRaisePlus">+</button>
+        </div>
+        <div class="choice-row" id="pokerRaiseQuickRow" style="margin-top:8px;" hidden>
+          <button type="button" class="choice-btn" id="pokerRaiseHalfBtn">½ Bote</button>
+          <button type="button" class="choice-btn" id="pokerRaisePotBtn">Bote</button>
+          <button type="button" class="choice-btn" id="pokerRaiseAllInBtn">Todo dentro</button>
         </div>
         <div class="poker-actions" id="pokerActions" style="margin-top:10px;"></div>
 
@@ -4397,21 +4404,58 @@
     return endHand(t);
   }
 
+  function buildSidePots(seats){
+    // Reparte el bote en capas según cuánto aportó cada asiento (totalContrib), para que
+    // un jugador all-in con menos fichas no pueda ganar más de lo que él mismo puso en juego.
+    var contributors = [];
+    seats.forEach(function(s){ if(s && s.totalContrib > 0) contributors.push({ seat: s, remaining: s.totalContrib }); });
+    var pots = [];
+    while(true){
+      var active = contributors.filter(function(c){ return c.remaining > 0; });
+      if(!active.length) break;
+      var minAmt = Math.min.apply(null, active.map(function(c){ return c.remaining; }));
+      var amount = 0, eligible = [];
+      active.forEach(function(c){
+        amount += minAmt;
+        c.remaining -= minAmt;
+        if(!c.seat.folded) eligible.push(c.seat);
+      });
+      pots.push({ amount: amount, eligible: eligible });
+    }
+    return pots;
+  }
+
   function settleShowdown(t){
     var contenders = [];
     t.seats.forEach(function(s, i){ if(s && !s.folded) contenders.push(i); });
-    var results = contenders.map(function(i){
+    var scoreByIdx = {};
+    contenders.forEach(function(i){
       var best = bestHand7(t.seats[i].cards.concat(t.community));
-      return { i: i, score: best.score, label: handLabel(best.score) };
+      scoreByIdx[i] = { score: best.score, label: handLabel(best.score) };
     });
-    results.sort(function(a, b){ return compareScores(b.score, a.score); });
-    var topScore = results[0].score;
-    var winners = results.filter(function(r){ return compareScores(r.score, topScore) === 0; });
-    var share = Math.floor(t.pot / winners.length);
-    var remainder = t.pot - share * winners.length;
-    winners.forEach(function(w, idx){ t.seats[w.i].stack += share + (idx === 0 ? remainder : 0); });
-    t.log.push('Showdown: ' + results.map(function(r){ return t.seats[r.i].name + ' (' + r.label + ')'; }).join(', '));
-    t.log.push(winners.map(function(w){ return t.seats[w.i].name; }).join(' y ') + ' gana' + (winners.length > 1 ? 'n' : '') + ' ' + t.pot);
+
+    var pots = buildSidePots(t.seats);
+    var payouts = {};
+    var potLogs = [];
+    pots.forEach(function(pot, potIdx){
+      if(pot.amount <= 0 || !pot.eligible.length) return;
+      var eligibleIdx = pot.eligible.map(function(seat){ return t.seats.indexOf(seat); });
+      var topScore = null;
+      eligibleIdx.forEach(function(i){
+        if(topScore === null || compareScores(scoreByIdx[i].score, topScore) > 0) topScore = scoreByIdx[i].score;
+      });
+      var winners = eligibleIdx.filter(function(i){ return compareScores(scoreByIdx[i].score, topScore) === 0; });
+      var share = Math.floor(pot.amount / winners.length);
+      var remainder = pot.amount - share * winners.length;
+      winners.forEach(function(i, idx){ payouts[i] = (payouts[i] || 0) + share + (idx === 0 ? remainder : 0); });
+      var potName = pots.length === 1 ? 'Bote' : (potIdx === 0 ? 'Bote principal' : ('Bote lateral ' + potIdx));
+      potLogs.push(potName + ' (' + pot.amount + '): ' + winners.map(function(i){ return t.seats[i].name; }).join(' y ') +
+        ' gana' + (winners.length > 1 ? 'n' : '') + ' ' + pot.amount);
+    });
+    Object.keys(payouts).forEach(function(i){ t.seats[i].stack += payouts[i]; });
+
+    t.log.push('Showdown: ' + contenders.map(function(i){ return t.seats[i].name + ' (' + scoreByIdx[i].label + ')'; }).join(', '));
+    potLogs.forEach(function(line){ t.log.push(line); });
     t.showdownReveal = contenders.map(function(i){ return { seat: i, cards: t.seats[i].cards }; });
     return endHand(t);
   }
@@ -4577,25 +4621,45 @@
   function cpuChooseAction(t, seatIdx){
     var seat = t.seats[seatIdx];
     var toCall = t.currentBet - seat.bet;
-    var strength;
+    var strength; // escala aproximada 0..8, comparable con el score de bestHandN post-flop
     if(t.community && t.community.length >= 3){
       strength = bestHandN(seat.cards.concat(t.community)).score[0];
     } else {
       var r1 = pokerRankValue(pokerCardRank(seat.cards[0]));
       var r2 = pokerRankValue(pokerCardRank(seat.cards[1]));
-      strength = (r1 === r2) ? 3 : (Math.max(r1, r2) >= 12 ? 1 : 0);
+      var suited = pokerCardSuit(seat.cards[0]) === pokerCardSuit(seat.cards[1]);
+      var high = Math.max(r1, r2), low = Math.min(r1, r2);
+      if(r1 === r2) strength = high >= 10 ? 5 : 3;
+      else if(high >= 12 && low >= 9) strength = 3;
+      else if(high >= 12) strength = 2;
+      else if(suited && high - low <= 3) strength = 1;
+      else strength = 0;
     }
+    // Más adelante en la mano hay más información (comunitarias visibles), así que la
+    // misma fuerza "pesa" más para decidir subir/pagar/retirarse.
+    var streetFactor = t.stage === 'preflop' ? 0.7 : (t.stage === 'flop' ? 0.85 : (t.stage === 'turn' ? 1 : 1.15));
+    var power = Math.min(1, (strength / 8) * streetFactor);
     var rnd = Math.random();
-    var raiseTo = Math.min(seat.bet + seat.stack, t.currentBet + t.minRaise * (1 + Math.floor(Math.random() * 2)));
+    var sizeMult = 1 + Math.floor(power * 3 + Math.random());
+    var raiseTo = Math.min(seat.bet + seat.stack, t.currentBet + t.minRaise * sizeMult);
+
     if(toCall <= 0){
-      if(strength >= 3 && rnd < 0.5) return { type: 'raise', amount: raiseTo };
-      if(strength >= 1 && rnd < 0.15) return { type: 'raise', amount: raiseTo };
-      return { type: 'check', amount: 0 };
+      var betChance = 0.12 + power * 0.55;
+      return rnd < betChance ? { type: 'raise', amount: raiseTo } : { type: 'check', amount: 0 };
     }
-    if(toCall >= seat.stack) return { type: rnd < 0.75 || strength >= 1 ? 'call' : 'fold', amount: 0 };
+    if(toCall >= seat.stack){
+      var callThresh = 0.25 + power * 0.6;
+      return { type: rnd < callThresh ? 'call' : 'fold', amount: 0 };
+    }
     var potOdds = toCall / Math.max(1, t.pot + toCall);
-    if(strength <= 0 && potOdds > 0.25 && rnd < 0.6) return { type: 'fold', amount: 0 };
-    if(strength >= 4 && rnd < 0.35) return { type: 'raise', amount: raiseTo };
+    var bluffChance = t.stage === 'river' ? 0.05 : 0.1;
+    if(power < 0.15){
+      if(rnd < bluffChance) return { type: 'raise', amount: raiseTo };
+      return { type: potOdds > 0.2 + power ? 'fold' : 'call', amount: 0 };
+    }
+    var raiseChance = Math.max(0, power - 0.45) * 0.9;
+    if(rnd < raiseChance) return { type: 'raise', amount: raiseTo };
+    if(power < potOdds - 0.1 && rnd < 0.5) return { type: 'fold', amount: 0 };
     return { type: 'call', amount: 0 };
   }
 
@@ -4810,10 +4874,12 @@
   function renderPokerActions(t, mySeatIdx){
     var actionsEl = document.getElementById('pokerActions');
     var raiseRow = document.getElementById('pokerRaiseRow');
+    var quickRow = document.getElementById('pokerRaiseQuickRow');
     actionsEl.innerHTML = '';
 
     if(mySeatIdx === -1 || t.status !== 'playing' || mySeatIdx !== t.turnSeat){
       raiseRow.hidden = true;
+      quickRow.hidden = true;
       var hint = document.createElement('p');
       hint.className = 'poker-empty-hint';
       hint.textContent = (mySeatIdx === -1)
@@ -4855,13 +4921,39 @@
       actionsEl.appendChild(raiseBtn);
 
       raiseRow.hidden = false;
+      quickRow.hidden = false;
       document.getElementById('pokerRaiseVal').textContent = pokerRaiseAmt.toLocaleString('es-CO');
       document.getElementById('pokerRaiseMinus').disabled = pokerRaiseAmt <= minRaiseTo;
       document.getElementById('pokerRaisePlus').disabled = pokerRaiseAmt >= maxRaiseTo;
     } else {
       raiseRow.hidden = true;
+      quickRow.hidden = true;
     }
   }
+
+  function pokerQuickRaise(kind){
+    var t = pokerMode === 'cpu' ? localPokerTable : currentPokerTableData;
+    if(!t) return;
+    var idx = tableSeatIndex(t, state.playerId);
+    if(idx === -1 || idx !== t.turnSeat) return;
+    var seat = t.seats[idx];
+    var toCall = Math.max(0, t.currentBet - seat.bet);
+    var maxRaiseTo = seat.bet + seat.stack;
+    var minRaiseTo = Math.min(maxRaiseTo, t.currentBet + t.minRaise);
+    var target;
+    if(kind === 'allin'){
+      target = maxRaiseTo;
+    } else {
+      var potAfterCall = t.pot + toCall;
+      target = t.currentBet + potAfterCall * (kind === 'half' ? 0.5 : 1);
+      target = Math.round(target / t.bigBlind) * t.bigBlind;
+    }
+    pokerRaiseAmt = Math.max(minRaiseTo, Math.min(maxRaiseTo, target));
+    renderPokerActions(t, idx);
+  }
+  document.getElementById('pokerRaiseHalfBtn').addEventListener('click', function(){ pokerQuickRaise('half'); });
+  document.getElementById('pokerRaisePotBtn').addEventListener('click', function(){ pokerQuickRaise('pot'); });
+  document.getElementById('pokerRaiseAllInBtn').addEventListener('click', function(){ pokerQuickRaise('allin'); });
 
   document.getElementById('pokerRaiseMinus').addEventListener('click', function(){
     pokerRaiseAmt = Math.max(pokerRaiseMin, pokerRaiseAmt - pokerRaiseStep);
