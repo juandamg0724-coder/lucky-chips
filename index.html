@@ -1012,15 +1012,18 @@
     box-shadow:var(--shadow);
   }
   .chess-sq{ position:relative; display:flex; align-items:center; justify-content:center; border:none; padding:0; margin:0; cursor:pointer; }
-  .chess-sq.light{ background:#e3cfa0; }
-  .chess-sq.dark{ background:#5a3420; }
+  .chess-sq.light{ background:#b8966a; }
+  .chess-sq.dark{ background:#3c2211; }
   .chess-sq.selected{ box-shadow: inset 0 0 0 3px var(--accent-bright); }
-  .chess-sq.legal-dest::after{ content:''; position:absolute; width:26%; height:26%; border-radius:50%; background:rgba(120,80,20,.45); }
+  .chess-sq.legal-dest::after{ content:''; position:absolute; width:26%; height:26%; border-radius:50%; background:rgba(212,175,55,.55); }
   .chess-sq.capture-dest{ box-shadow: inset 0 0 0 3px var(--ruby-bright); }
   .chess-sq.last-from, .chess-sq.last-to{ box-shadow: inset 0 0 0 2px rgba(212,175,55,.55); }
-  .chess-piece{ font-size:26px; line-height:1; user-select:none; }
-  .chess-piece.white{ color:#fbf3e3; text-shadow:0 1px 2px rgba(0,0,0,.65); }
-  .chess-piece.black{ color:#160b06; text-shadow:0 1px 1px rgba(255,255,255,.2); }
+  .chess-piece{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; user-select:none; }
+  .chess-piece .cp-svg{ width:78%; height:78%; overflow:visible; filter:drop-shadow(0 2px 2px rgba(0,0,0,.45)); }
+  .chess-piece.white .cp-shape{ fill:#f8f2e3; stroke:#241206; stroke-width:1.6; stroke-linejoin:round; }
+  .chess-piece.white .cp-eye{ fill:#241206; }
+  .chess-piece.black .cp-shape{ fill:#1b0f08; stroke:#f0d98a; stroke-width:1; stroke-linejoin:round; }
+  .chess-piece.black .cp-eye{ fill:#f0d98a; }
   .chess-status{ text-align:center; font-weight:700; font-size:.92rem; min-height:1.3em; color:var(--text); }
   .chess-status.check{ color:var(--ruby-bright); }
   .chess-log{ width:100%; max-height:100px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:6px; font-size:.76rem; color:var(--text-muted); font-family:'Space Mono', monospace; }
@@ -4805,7 +4808,18 @@
     ['bP','bP','bP','bP','bP','bP','bP','bP'],
     ['bR','bN','bB','bQ','bK','bB','bN','bR']
   ];
-  var CHESS_UNICODE = { wK:'♔', wQ:'♕', wR:'♖', wB:'♗', wN:'♘', wP:'♙', bK:'♚', bQ:'♛', bR:'♜', bB:'♝', bN:'♞', bP:'♟' };
+  var CHESS_PIECE_BASE = '<rect class="cp-shape" x="9" y="36" width="27" height="5" rx="2"/>';
+  var CHESS_PIECE_SHAPES = {
+    P: '<circle class="cp-shape" cx="22.5" cy="13" r="6.5"/><path class="cp-shape" d="M16 25 Q16 16 22.5 16 Q29 16 29 25 Z"/><rect class="cp-shape" x="14" y="25" width="17" height="4" rx="2"/>' + CHESS_PIECE_BASE,
+    R: '<rect class="cp-shape" x="12" y="8" width="5" height="6"/><rect class="cp-shape" x="20" y="8" width="5" height="6"/><rect class="cp-shape" x="28" y="8" width="5" height="6"/><rect class="cp-shape" x="12" y="13" width="21" height="5"/><path class="cp-shape" d="M14 18 L31 18 L29 33 L16 33 Z"/>' + CHESS_PIECE_BASE,
+    N: '<path class="cp-shape" d="M30 36 C29 30 26 28 23 26 C27 23 29 18 26 13 C24 10 20 9 17 11 C13 14 11 19 11 24 C9 27 8 30 9 33 C10 35 12 34 13 32 L14 36 Z"/><circle class="cp-eye" cx="16" cy="17" r="1.1"/>' + CHESS_PIECE_BASE,
+    B: '<circle class="cp-shape" cx="22.5" cy="8" r="2.4"/><path class="cp-shape" d="M22.5 11 C27 14 29 20 27 29 C26 32 24 34 22.5 34 C21 34 19 32 18 29 C16 20 18 14 22.5 11 Z"/><rect class="cp-shape" x="15" y="30" width="15" height="4" rx="2"/>' + CHESS_PIECE_BASE,
+    Q: '<circle class="cp-shape" cx="12" cy="10" r="2.3"/><circle class="cp-shape" cx="22.5" cy="7" r="2.6"/><circle class="cp-shape" cx="33" cy="10" r="2.3"/><circle class="cp-shape" cx="17" cy="12" r="2"/><circle class="cp-shape" cx="28" cy="12" r="2"/><path class="cp-shape" d="M12 13 L15 28 L30 28 L33 13 L27 20 L22.5 10 L18 20 Z"/><rect class="cp-shape" x="14" y="28" width="17" height="4" rx="2"/>' + CHESS_PIECE_BASE,
+    K: '<rect class="cp-shape" x="21" y="3" width="3" height="8"/><rect class="cp-shape" x="18" y="6" width="9" height="3"/><path class="cp-shape" d="M22.5 12 C28 15 30 21 28 30 C27 33 25 35 22.5 35 C20 35 18 33 17 30 C15 21 17 15 22.5 12 Z"/><rect class="cp-shape" x="14" y="30" width="17" height="4" rx="2"/>' + CHESS_PIECE_BASE
+  };
+  function chessPieceSvg(type){
+    return '<svg viewBox="0 0 45 45" class="cp-svg">' + CHESS_PIECE_SHAPES[type] + '</svg>';
+  }
   var CHESS_VALUES = { P:100, N:320, B:330, R:500, Q:900, K:20000 };
   var CHESS_CPU_DEPTH = 2;
 
@@ -5211,7 +5225,7 @@
         if(destMove) cls += (pos.board[r][c] || destMove.enPassant) ? ' capture-dest' : ' legal-dest';
         sq.className = cls;
         var piece = pos.board[r][c];
-        if(piece) sq.innerHTML = '<span class="chess-piece ' + (chessColorOf(piece) === 'w' ? 'white' : 'black') + '">' + CHESS_UNICODE[piece] + '</span>';
+        if(piece) sq.innerHTML = '<span class="chess-piece ' + (chessColorOf(piece) === 'w' ? 'white' : 'black') + '">' + chessPieceSvg(chessTypeOf(piece)) + '</span>';
         sq.addEventListener('click', (function(rr, cc){ return function(){ chessSquareClick(rr, cc); }; })(r, c));
         boardEl.appendChild(sq);
       });
