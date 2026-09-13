@@ -272,6 +272,17 @@
     box-shadow:0 0 16px -2px var(--neon-cyan);
   }
   .chip-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .choice-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .choice-btn{
+    padding:10px 16px; border-radius:999px; border:2px dashed var(--accent-dim);
+    background:var(--bg-panel); color:var(--text); font-family:'Manrope', sans-serif;
+    font-weight:700; font-size:.82rem; cursor:pointer;
+  }
+  .choice-btn.active{
+    border-style:solid; border-color:var(--neon-cyan-bright);
+    background:radial-gradient(circle at 35% 30%, var(--neon-cyan-bright), var(--neon-purple));
+    color:var(--accent-ink); box-shadow:0 0 16px -2px var(--neon-cyan);
+  }
 
   .action-row{ display:flex; gap:10px; }
   .action-row button{ flex:1; }
@@ -324,6 +335,10 @@
   .paytable-row span:first-child{ font-size:1.15rem; }
   .paytable-row b{ font-family:'Space Mono', monospace; color:var(--accent-bright); }
   .paytable-title{ font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-faint); margin-bottom:2px; }
+  .rules-text{ font-size:.86rem; line-height:1.5; color:var(--text-muted); }
+  .rules-text b{ color:var(--text); }
+  .rules-list{ margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:.86rem; line-height:1.45; color:var(--text-muted); }
+  .rules-list b{ color:var(--text); }
 
   /* ---------- blackjack ---------- */
   .table-felt{
@@ -988,6 +1003,29 @@
   .poker-raise-row{ display:flex; align-items:center; gap:10px; justify-content:center; }
   .poker-log{ width:100%; max-height:110px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; font-size:.72rem; color:var(--text-muted); }
   .poker-empty-hint{ text-align:center; color:var(--text-faint); font-size:.85rem; padding:20px 10px; line-height:1.5; }
+
+  /* ---------- chess ---------- */
+  .chess-board{
+    display:grid; grid-template-columns:repeat(8, 1fr); grid-template-rows:repeat(8, 1fr);
+    width:100%; aspect-ratio:1;
+    border:5px solid var(--accent-dim); border-radius:8px; overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .chess-sq{ position:relative; display:flex; align-items:center; justify-content:center; border:none; padding:0; margin:0; cursor:pointer; }
+  .chess-sq.light{ background:#e3cfa0; }
+  .chess-sq.dark{ background:#5a3420; }
+  .chess-sq.selected{ box-shadow: inset 0 0 0 3px var(--accent-bright); }
+  .chess-sq.legal-dest::after{ content:''; position:absolute; width:26%; height:26%; border-radius:50%; background:rgba(120,80,20,.45); }
+  .chess-sq.capture-dest{ box-shadow: inset 0 0 0 3px var(--ruby-bright); }
+  .chess-sq.last-from, .chess-sq.last-to{ box-shadow: inset 0 0 0 2px rgba(212,175,55,.55); }
+  .chess-piece{ font-size:26px; line-height:1; user-select:none; }
+  .chess-piece.white{ color:#fbf3e3; text-shadow:0 1px 2px rgba(0,0,0,.65); }
+  .chess-piece.black{ color:#160b06; text-shadow:0 1px 1px rgba(255,255,255,.2); }
+  .chess-status{ text-align:center; font-weight:700; font-size:.92rem; min-height:1.3em; color:var(--text); }
+  .chess-status.check{ color:var(--ruby-bright); }
+  .chess-log{ width:100%; max-height:100px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:6px; font-size:.76rem; color:var(--text-muted); font-family:'Space Mono', monospace; }
+  .chess-players-row{ display:flex; justify-content:space-between; font-size:.82rem; color:var(--text-muted); }
+  .chess-players-row b{ color:var(--text); }
 </style>
 </head>
 <body>
@@ -1105,6 +1143,16 @@
             <span>
               <span class="game-name" style="display:block;">Poker en Línea</span>
               <span class="game-meta" id="pokerTileMeta">Juega con tu liga</span>
+            </span>
+          </span>
+          <span class="tile-arrow">→</span>
+        </button>
+        <button class="game-tile wide ornate" data-goto="chess">
+          <span style="display:flex; align-items:center; gap:12px;">
+            <span class="icon-badge icon-ruby">♞</span>
+            <span>
+              <span class="game-name" style="display:block;">Ajedrez con Apuestas</span>
+              <span class="game-meta">Contra la CPU o tu liga</span>
             </span>
           </span>
           <span class="tile-arrow">→</span>
@@ -1582,10 +1630,32 @@
       <div class="view-header">
         <button class="btn-back" data-back>←</button>
         <h2 class="gold-text">Poker en Línea</h2>
-        <span style="width:36px;"></span>
+        <button class="btn-info" data-toggle="pokerRulesPanel">i</button>
       </div>
 
       <p class="league-msg" id="pokerMsgBar"></p>
+
+      <div class="paytable" id="pokerRulesPanel" hidden>
+        <p class="paytable-title">Cómo se juega (Texas Hold'em)</p>
+        <p class="rules-text">Cada jugador recibe 2 cartas propias. Entre todos se van revelando 5 cartas comunes en la mesa (el <b>flop</b>, el <b>turn</b> y el <b>river</b>). Ganas formando la mejor mano de 5 cartas combinando tus 2 cartas con las de la mesa.</p>
+        <p class="rules-text"><b>Rondas de apuestas:</b> antes del flop, y después de cada carta comunitaria nueva. En tu turno puedes:</p>
+        <ul class="rules-list">
+          <li><b>Retirarte:</b> abandonas la mano y pierdes lo que apostaste en ella.</li>
+          <li><b>Pasar / Igualar:</b> si nadie subió puedes pasar gratis; si alguien subió, igualas su apuesta para seguir.</li>
+          <li><b>Subir:</b> aumentas la apuesta, obligando a los demás a igualarla o retirarse.</li>
+        </ul>
+        <p class="rules-text">Dos jugadores ponen las <b>ciegas</b> (apuestas obligatorias) para arrancar cada mano. Si al final quedan varios jugadores, se muestran las cartas y gana la mejor mano.</p>
+        <p class="paytable-title" style="margin-top:6px;">Orden de manos (de mayor a menor)</p>
+        <div class="paytable-row"><span>Escalera de color</span></div>
+        <div class="paytable-row"><span>Póker (4 iguales)</span></div>
+        <div class="paytable-row"><span>Full house</span></div>
+        <div class="paytable-row"><span>Color (5 del mismo palo)</span></div>
+        <div class="paytable-row"><span>Escalera</span></div>
+        <div class="paytable-row"><span>Trío</span></div>
+        <div class="paytable-row"><span>Doble pareja</span></div>
+        <div class="paytable-row"><span>Pareja</span></div>
+        <div class="paytable-row"><span>Carta alta</span></div>
+      </div>
 
       <div class="league-card ornate" id="pokerCpuPanel" style="margin-bottom:12px;">
         <p class="league-card-title">🤖 Jugar contra la CPU</p>
@@ -1657,6 +1727,92 @@
         <div class="poker-log" id="pokerLog"></div>
 
         <button class="btn btn-ghost btn-block" id="leavePokerTableBtn" style="margin-top:12px;">Salir de la mesa</button>
+      </div>
+    </section>
+
+    <!-- CHESS (vs CPU or league) -->
+    <section class="view" data-view="chess" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Ajedrez</h2>
+        <button class="btn-info" data-toggle="chessRulesPanel">i</button>
+      </div>
+
+      <p class="league-msg" id="chessMsgBar"></p>
+
+      <div class="paytable" id="chessRulesPanel" hidden>
+        <p class="paytable-title">Cómo se juega</p>
+        <p class="rules-text">Ajedrez clásico: cada quien mueve sus 16 piezas por turnos. Toca una pieza para ver sus movimientos posibles (puntos dorados) y toca el destino para mover. Ganas dando <b>jaque mate</b>: atrapas al rey rival sin que pueda escapar.</p>
+        <ul class="rules-list">
+          <li>El <b>peón</b> avanza 1 casilla (2 en su primer movimiento) y captura en diagonal.</li>
+          <li>El <b>caballo</b> mueve en "L" y puede saltar piezas.</li>
+          <li>El <b>alfil</b> se mueve en diagonal, la <b>torre</b> en línea recta, y la <b>dama</b> combina ambas.</li>
+          <li>El <b>rey</b> mueve 1 casilla; incluye el enroque y la captura al paso.</li>
+        </ul>
+        <p class="rules-text">Las dos partes apuestan la misma cantidad de fichas al empezar. Quien gane por jaque mate o porque el rival se rinde se lleva todo el bote; si hay tablas (empate), cada quien recupera su apuesta.</p>
+      </div>
+
+      <div class="league-card ornate" id="chessCpuPanel" style="margin-bottom:12px;">
+        <p class="league-card-title">🤖 Jugar contra la CPU</p>
+        <p class="league-card-sub">Practica en cualquier momento, sin conexión ni liga.</p>
+        <p class="bet-label" style="margin-top:10px;">Apuesta</p>
+        <div class="chip-select" id="chessCpuBetChips">
+          <button class="chip-btn" data-amount="100">100</button>
+          <button class="chip-btn active" data-amount="300">300</button>
+          <button class="chip-btn" data-amount="600">600</button>
+        </div>
+        <p class="bet-label" style="margin-top:10px;">Tus piezas</p>
+        <div class="choice-row" id="chessCpuColorChips">
+          <button class="choice-btn" data-amount="w">Blancas</button>
+          <button class="choice-btn active" data-amount="r">Aleatorio</button>
+          <button class="choice-btn" data-amount="b">Negras</button>
+        </div>
+        <button class="btn btn-gold btn-block" id="createCpuChessBtn" style="margin-top:10px;">Jugar contra la CPU</button>
+      </div>
+
+      <div id="chessOnlineSection">
+        <p class="paytable-title">Jugar en línea con tu liga</p>
+
+        <div class="league-card ornate" id="chessOfflinePanel" hidden>
+          <p class="league-card-title">No se pudo conectar</p>
+          <p class="league-card-sub">No logramos conectar con el servidor. Revisa tu conexión e intenta de nuevo.</p>
+          <button class="btn btn-primary btn-block" id="chessOfflineRetryBtn">Reintentar</button>
+        </div>
+
+        <div id="chessNoLeague" hidden>
+          <p class="poker-empty-hint">Únete a una liga de amigos primero: el ajedrez en línea se juega entre los miembros de tu liga.</p>
+          <button class="btn btn-primary btn-block" data-goto="league">Ir a Liga de Amigos</button>
+        </div>
+
+        <div id="chessLobby" hidden>
+          <div class="league-card ornate" style="margin-bottom:12px;">
+            <p class="league-card-title">Crear una partida</p>
+            <p class="league-card-sub">Elige tu apuesta y tus piezas.</p>
+            <div class="chip-select" id="chessBetChips">
+              <button class="chip-btn" data-amount="100">100</button>
+              <button class="chip-btn active" data-amount="300">300</button>
+              <button class="chip-btn" data-amount="600">600</button>
+            </div>
+            <div class="choice-row" id="chessColorChips" style="margin-top:8px;">
+              <button class="choice-btn" data-amount="w">Blancas</button>
+              <button class="choice-btn active" data-amount="r">Aleatorio</button>
+              <button class="choice-btn" data-amount="b">Negras</button>
+            </div>
+            <button class="btn btn-primary btn-block" id="createChessMatchBtn" style="margin-top:10px;">Crear partida</button>
+          </div>
+
+          <p class="paytable-title">Partidas de tu liga</p>
+          <div class="poker-lobby-list" id="chessLobbyList"></div>
+        </div>
+      </div>
+
+      <div id="chessBoardView" hidden>
+        <div class="chess-players-row" id="chessPlayersRow"></div>
+        <p class="chess-status" id="chessStatus" style="margin:8px 0;">Turno: Blancas</p>
+        <div class="chess-board" id="chessBoard"></div>
+        <p class="bet-label" style="margin-top:10px;">Historial</p>
+        <div class="chess-log" id="chessLog"></div>
+        <button class="btn btn-ghost btn-block" id="leaveChessBtn" style="margin-top:12px;">Salir / Rendirse</button>
       </div>
     </section>
 
@@ -1760,7 +1916,7 @@
   function defaultState(){
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1, ownedBorders:['none'], activeBorder:'none', sobreHistory:[],
-      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null };
+      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null };
   }
   var state = loadState();
 
@@ -1819,6 +1975,7 @@
     if(pokerTimerId){ clearInterval(pokerTimerId); pokerTimerId = null; }
     teardownLeagueListener();
     teardownPokerListeners();
+    teardownChessListeners();
 
     if(name === 'hub'){ refreshHub(); dailyTimerId = setInterval(refreshHub, 1000); }
     if(name === 'store'){ renderStore(); renderSobres(); }
@@ -1826,6 +1983,7 @@
     if(name === 'slots'){ refreshSlotBoostUI(); }
     if(name === 'league'){ renderLeague(); leagueTimerId = setInterval(function(){ if(state.leagueCode) syncLeagueMember(); }, 20000); }
     if(name === 'poker'){ renderPokerEntry(); pokerTimerId = setInterval(pokerTick, 1000); }
+    if(name === 'chess'){ renderChessEntry(); }
   }
 
   function selectStoreTab(tab){
@@ -1942,6 +2100,20 @@
         btns.forEach(function(x){ x.classList.remove('active'); });
         b.classList.add('active');
         current = parseInt(b.getAttribute('data-amount'), 10);
+      });
+    });
+    return { get:function(){ return current; }, buttons:btns };
+  }
+
+  function wireChoiceSelect(containerId, defaultValue){
+    var container = document.getElementById(containerId);
+    var current = defaultValue;
+    var btns = Array.prototype.slice.call(container.querySelectorAll('.choice-btn'));
+    btns.forEach(function(b){
+      b.addEventListener('click', function(){
+        btns.forEach(function(x){ x.classList.remove('active'); });
+        b.classList.add('active');
+        current = b.getAttribute('data-amount');
       });
     });
     return { get:function(){ return current; }, buttons:btns };
@@ -4620,6 +4792,771 @@
   var pokerCpuCount = wireChipSelect('pokerCpuCountChips', 3);
   document.getElementById('createCpuPokerTableBtn').addEventListener('click', function(){
     createCpuPokerTable(pokerCpuBuyIn.get(), pokerCpuCount.get());
+  });
+
+  /* ================= AJEDREZ ================= */
+  var CHESS_START = [
+    ['wR','wN','wB','wQ','wK','wB','wN','wR'],
+    ['wP','wP','wP','wP','wP','wP','wP','wP'],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    ['bP','bP','bP','bP','bP','bP','bP','bP'],
+    ['bR','bN','bB','bQ','bK','bB','bN','bR']
+  ];
+  var CHESS_UNICODE = { wK:'♔', wQ:'♕', wR:'♖', wB:'♗', wN:'♘', wP:'♙', bK:'♚', bQ:'♛', bR:'♜', bB:'♝', bN:'♞', bP:'♟' };
+  var CHESS_VALUES = { P:100, N:320, B:330, R:500, Q:900, K:20000 };
+  var CHESS_CPU_DEPTH = 2;
+
+  function chessCloneBoard(b){ return b.map(function(row){ return row.slice(); }); }
+  function chessInBounds(r,c){ return r >= 0 && r < 8 && c >= 0 && c < 8; }
+  function chessColorOf(p){ return p ? p[0] : null; }
+  function chessTypeOf(p){ return p ? p[1] : null; }
+  function chessOpp(color){ return color === 'w' ? 'b' : 'w'; }
+  function chessSquareName(r, c){ return 'abcdefgh'[c] + (r + 1); }
+
+  function chessFindKing(board, color){
+    for(var r = 0; r < 8; r++) for(var c = 0; c < 8; c++){ if(board[r][c] === color + 'K') return { r: r, c: c }; }
+    return null;
+  }
+
+  function chessSquareAttacked(board, r, c, byColor){
+    var pr = byColor === 'w' ? r - 1 : r + 1;
+    if(chessInBounds(pr, c - 1) && board[pr][c - 1] === byColor + 'P') return true;
+    if(chessInBounds(pr, c + 1) && board[pr][c + 1] === byColor + 'P') return true;
+    var knightOffs = [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
+    for(var i = 0; i < knightOffs.length; i++){
+      var nr = r + knightOffs[i][0], nc = c + knightOffs[i][1];
+      if(chessInBounds(nr, nc) && board[nr][nc] === byColor + 'N') return true;
+    }
+    for(var dr = -1; dr <= 1; dr++) for(var dc = -1; dc <= 1; dc++){
+      if(dr === 0 && dc === 0) continue;
+      var kr = r + dr, kc = c + dc;
+      if(chessInBounds(kr, kc) && board[kr][kc] === byColor + 'K') return true;
+    }
+    var rookDirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    for(var d = 0; d < rookDirs.length; d++){
+      var rr = r + rookDirs[d][0], cc = c + rookDirs[d][1];
+      while(chessInBounds(rr, cc)){
+        var p = board[rr][cc];
+        if(p){ if(chessColorOf(p) === byColor && (chessTypeOf(p) === 'R' || chessTypeOf(p) === 'Q')) return true; break; }
+        rr += rookDirs[d][0]; cc += rookDirs[d][1];
+      }
+    }
+    var bishopDirs = [[1,1],[1,-1],[-1,1],[-1,-1]];
+    for(var d2 = 0; d2 < bishopDirs.length; d2++){
+      var rr2 = r + bishopDirs[d2][0], cc2 = c + bishopDirs[d2][1];
+      while(chessInBounds(rr2, cc2)){
+        var p2 = board[rr2][cc2];
+        if(p2){ if(chessColorOf(p2) === byColor && (chessTypeOf(p2) === 'B' || chessTypeOf(p2) === 'Q')) return true; break; }
+        rr2 += bishopDirs[d2][0]; cc2 += bishopDirs[d2][1];
+      }
+    }
+    return false;
+  }
+
+  function chessKingInCheck(board, color){
+    var k = chessFindKing(board, color);
+    if(!k) return true;
+    return chessSquareAttacked(board, k.r, k.c, chessOpp(color));
+  }
+
+  function chessPawnMoves(state, r, c, color, moves){
+    var board = state.board;
+    var dir = color === 'w' ? 1 : -1;
+    var startRow = color === 'w' ? 1 : 6;
+    var promoRow = color === 'w' ? 7 : 0;
+    var one = r + dir;
+    if(chessInBounds(one, c) && !board[one][c]){
+      moves.push({ from: { r: r, c: c }, to: { r: one, c: c }, promotion: one === promoRow ? 'Q' : null });
+      var two = r + 2 * dir;
+      if(r === startRow && !board[two][c]){
+        moves.push({ from: { r: r, c: c }, to: { r: two, c: c }, doubleStep: true });
+      }
+    }
+    [c - 1, c + 1].forEach(function(nc){
+      if(!chessInBounds(one, nc)) return;
+      var target = board[one][nc];
+      if(target && chessColorOf(target) !== color){
+        moves.push({ from: { r: r, c: c }, to: { r: one, c: nc }, promotion: one === promoRow ? 'Q' : null });
+      } else if(!target && state.enPassant && state.enPassant.r === one && state.enPassant.c === nc){
+        moves.push({ from: { r: r, c: c }, to: { r: one, c: nc }, enPassant: true });
+      }
+    });
+  }
+  function chessKnightMoves(board, r, c, color, moves){
+    var offs = [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
+    offs.forEach(function(o){
+      var nr = r + o[0], nc = c + o[1];
+      if(!chessInBounds(nr, nc)) return;
+      var t = board[nr][nc];
+      if(!t || chessColorOf(t) !== color) moves.push({ from: { r: r, c: c }, to: { r: nr, c: nc } });
+    });
+  }
+  function chessSlideMoves(board, r, c, color, dirs, moves){
+    dirs.forEach(function(d){
+      var nr = r + d[0], nc = c + d[1];
+      while(chessInBounds(nr, nc)){
+        var t = board[nr][nc];
+        if(!t){ moves.push({ from: { r: r, c: c }, to: { r: nr, c: nc } }); }
+        else { if(chessColorOf(t) !== color) moves.push({ from: { r: r, c: c }, to: { r: nr, c: nc } }); break; }
+        nr += d[0]; nc += d[1];
+      }
+    });
+  }
+  var CHESS_BISHOP_DIRS = [[1,1],[1,-1],[-1,1],[-1,-1]];
+  var CHESS_ROOK_DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+  var CHESS_QUEEN_DIRS = CHESS_BISHOP_DIRS.concat(CHESS_ROOK_DIRS);
+  function chessKingMoves(state, r, c, color, moves){
+    var board = state.board;
+    for(var dr = -1; dr <= 1; dr++) for(var dc = -1; dc <= 1; dc++){
+      if(dr === 0 && dc === 0) continue;
+      var nr = r + dr, nc = c + dc;
+      if(!chessInBounds(nr, nc)) continue;
+      var t = board[nr][nc];
+      if(!t || chessColorOf(t) !== color) moves.push({ from: { r: r, c: c }, to: { r: nr, c: nc } });
+    }
+    var home = color === 'w' ? 0 : 7;
+    if(r === home && c === 4){
+      var opp = chessOpp(color);
+      if(!chessSquareAttacked(board, r, c, opp)){
+        if(state.castling[color + 'K'] && !board[home][5] && !board[home][6] && board[home][7] === color + 'R'){
+          if(!chessSquareAttacked(board, home, 5, opp) && !chessSquareAttacked(board, home, 6, opp)){
+            moves.push({ from: { r: r, c: c }, to: { r: home, c: 6 }, castle: 'K' });
+          }
+        }
+        if(state.castling[color + 'Q'] && !board[home][3] && !board[home][2] && !board[home][1] && board[home][0] === color + 'R'){
+          if(!chessSquareAttacked(board, home, 3, opp) && !chessSquareAttacked(board, home, 2, opp)){
+            moves.push({ from: { r: r, c: c }, to: { r: home, c: 2 }, castle: 'Q' });
+          }
+        }
+      }
+    }
+  }
+
+  function chessGeneratePseudoMoves(state, color){
+    var board = state.board;
+    var moves = [];
+    for(var r = 0; r < 8; r++) for(var c = 0; c < 8; c++){
+      var p = board[r][c];
+      if(!p || chessColorOf(p) !== color) continue;
+      var type = chessTypeOf(p);
+      if(type === 'P') chessPawnMoves(state, r, c, color, moves);
+      else if(type === 'N') chessKnightMoves(board, r, c, color, moves);
+      else if(type === 'B') chessSlideMoves(board, r, c, color, CHESS_BISHOP_DIRS, moves);
+      else if(type === 'R') chessSlideMoves(board, r, c, color, CHESS_ROOK_DIRS, moves);
+      else if(type === 'Q') chessSlideMoves(board, r, c, color, CHESS_QUEEN_DIRS, moves);
+      else if(type === 'K') chessKingMoves(state, r, c, color, moves);
+    }
+    return moves;
+  }
+
+  function chessApplyMove(state, move){
+    var board = chessCloneBoard(state.board);
+    var castling = Object.assign({}, state.castling);
+    var piece = board[move.from.r][move.from.c];
+    var color = chessColorOf(piece);
+    var type = chessTypeOf(piece);
+    var enPassant = null;
+
+    if(move.enPassant) board[move.from.r][move.to.c] = null;
+    board[move.to.r][move.to.c] = move.promotion ? (color + move.promotion) : piece;
+    board[move.from.r][move.from.c] = null;
+
+    if(move.castle === 'K'){ board[move.from.r][5] = board[move.from.r][7]; board[move.from.r][7] = null; }
+    else if(move.castle === 'Q'){ board[move.from.r][3] = board[move.from.r][0]; board[move.from.r][0] = null; }
+
+    if(type === 'K'){ castling[color + 'K'] = false; castling[color + 'Q'] = false; }
+    if(type === 'R'){
+      var home = color === 'w' ? 0 : 7;
+      if(move.from.r === home && move.from.c === 0) castling[color + 'Q'] = false;
+      if(move.from.r === home && move.from.c === 7) castling[color + 'K'] = false;
+    }
+    var oppColor = chessOpp(color);
+    var oppHome = oppColor === 'w' ? 0 : 7;
+    if(move.to.r === oppHome && move.to.c === 0) castling[oppColor + 'Q'] = false;
+    if(move.to.r === oppHome && move.to.c === 7) castling[oppColor + 'K'] = false;
+
+    if(move.doubleStep) enPassant = { r: (move.from.r + move.to.r) / 2, c: move.from.c };
+
+    return { board: board, castling: castling, enPassant: enPassant, turn: chessOpp(state.turn) };
+  }
+
+  function chessLegalMoves(state, color){
+    var pseudo = chessGeneratePseudoMoves(state, color);
+    var legal = [];
+    pseudo.forEach(function(m){
+      var next = chessApplyMove(state, m);
+      if(!chessKingInCheck(next.board, color)) legal.push(m);
+    });
+    return legal;
+  }
+
+  function chessGameStatus(state){
+    var legal = chessLegalMoves(state, state.turn);
+    var inCheck = chessKingInCheck(state.board, state.turn);
+    if(legal.length === 0){
+      if(inCheck) return { over: true, result: 'checkmate', winner: chessOpp(state.turn) };
+      return { over: true, result: 'stalemate', winner: null };
+    }
+    var pieces = [];
+    for(var r = 0; r < 8; r++) for(var c = 0; c < 8; c++){ if(state.board[r][c]) pieces.push(state.board[r][c]); }
+    if(pieces.length <= 3){
+      var nonKing = pieces.filter(function(p){ return p[1] !== 'K'; });
+      if(nonKing.length === 0 || (nonKing.length === 1 && (nonKing[0][1] === 'B' || nonKing[0][1] === 'N'))){
+        return { over: true, result: 'draw', winner: null };
+      }
+    }
+    return { over: false, inCheck: inCheck };
+  }
+
+  function chessFindMoveTo(moves, r, c){
+    for(var i = 0; i < moves.length; i++){ if(moves[i].to.r === r && moves[i].to.c === c) return moves[i]; }
+    return null;
+  }
+
+  function chessMoveText(move, posBefore){
+    var piece = posBefore.board[move.from.r][move.from.c];
+    var letters = { P:'', N:'C', B:'A', R:'T', Q:'D', K:'R' };
+    var letter = letters[chessTypeOf(piece)] || '';
+    var capture = (posBefore.board[move.to.r][move.to.c] || move.enPassant) ? 'x' : '-';
+    var txt = letter + chessSquareName(move.from.r, move.from.c) + capture + chessSquareName(move.to.r, move.to.c);
+    if(move.castle === 'K') txt = 'O-O';
+    if(move.castle === 'Q') txt = 'O-O-O';
+    if(move.promotion) txt += '=D';
+    return txt;
+  }
+
+  function chessEvaluate(state){
+    var score = 0;
+    for(var r = 0; r < 8; r++) for(var c = 0; c < 8; c++){
+      var p = state.board[r][c];
+      if(!p) continue;
+      var val = CHESS_VALUES[chessTypeOf(p)];
+      var centerBonus = (chessTypeOf(p) === 'N' || chessTypeOf(p) === 'P') ? (3 - (Math.abs(3.5 - r) + Math.abs(3.5 - c))) : 0;
+      score += (chessColorOf(p) === 'w' ? 1 : -1) * (val + centerBonus);
+    }
+    return score;
+  }
+
+  function chessOrderMoves(state, moves){
+    return moves.slice().sort(function(a, b){
+      var ac = state.board[a.to.r][a.to.c] ? 1 : 0;
+      var bc = state.board[b.to.r][b.to.c] ? 1 : 0;
+      return bc - ac;
+    });
+  }
+
+  function chessMinimax(state, depth, alpha, beta){
+    var status = chessGameStatus(state);
+    if(status.over){
+      if(status.result === 'checkmate') return state.turn === 'w' ? (-100000 - depth) : (100000 + depth);
+      return 0;
+    }
+    if(depth === 0) return chessEvaluate(state);
+    var maximizing = state.turn === 'w';
+    var moves = chessOrderMoves(state, chessLegalMoves(state, state.turn));
+    if(maximizing){
+      var best = -Infinity;
+      for(var i = 0; i < moves.length; i++){
+        var val = chessMinimax(chessApplyMove(state, moves[i]), depth - 1, alpha, beta);
+        if(val > best) best = val;
+        if(val > alpha) alpha = val;
+        if(alpha >= beta) break;
+      }
+      return best;
+    }
+    var best2 = Infinity;
+    for(var j = 0; j < moves.length; j++){
+      var val2 = chessMinimax(chessApplyMove(state, moves[j]), depth - 1, alpha, beta);
+      if(val2 < best2) best2 = val2;
+      if(val2 < beta) beta = val2;
+      if(alpha >= beta) break;
+    }
+    return best2;
+  }
+
+  function chessBestMove(state, depth){
+    var moves = chessOrderMoves(state, chessLegalMoves(state, state.turn));
+    if(!moves.length) return null;
+    var maximizing = state.turn === 'w';
+    var bestMove = moves[0];
+    var bestVal = maximizing ? -Infinity : Infinity;
+    var alpha = -Infinity, beta = Infinity;
+    for(var i = 0; i < moves.length; i++){
+      var val = chessMinimax(chessApplyMove(state, moves[i]), depth - 1, alpha, beta);
+      if(maximizing ? val > bestVal : val < bestVal){ bestVal = val; bestMove = moves[i]; }
+      if(maximizing) alpha = Math.max(alpha, bestVal); else beta = Math.min(beta, bestVal);
+    }
+    return bestMove;
+  }
+
+  function chessBoardToFlat(board){
+    var flat = [];
+    for(var r = 0; r < 8; r++) for(var c = 0; c < 8; c++) flat.push(board[r][c] || '--');
+    return flat;
+  }
+  function chessFlatToBoard(flat){
+    var board = [];
+    for(var r = 0; r < 8; r++){
+      var row = [];
+      for(var c = 0; c < 8; c++){ var v = flat[r * 8 + c]; row.push(v === '--' ? null : v); }
+      board.push(row);
+    }
+    return board;
+  }
+
+  /* ---- estado y UI ---- */
+  var chessMode = null; // null | 'cpu' | 'online'
+  var chessLocal = null;
+  var chessSelected = null;
+  var chessCpuThinking = false;
+  var chessOnlineRef = null;
+  var chessOnlineData = null;
+  var chessOnlineUnsub = null;
+  var chessLobbyUnsub = null;
+  var chessPayoutHandled = {};
+  var chessMsgTimer = null;
+
+  function chessMsg(text){
+    var el = document.getElementById('chessMsgBar');
+    if(!el) return;
+    el.textContent = text;
+    clearTimeout(chessMsgTimer);
+    chessMsgTimer = setTimeout(function(){ el.textContent = ''; }, 3500);
+  }
+
+  function chessActivePos(){
+    if(chessMode === 'cpu' && chessLocal) return chessLocal.pos;
+    if(chessMode === 'online' && chessOnlineData){
+      return {
+        board: chessFlatToBoard(chessOnlineData.board),
+        turn: chessOnlineData.turn,
+        castling: chessOnlineData.castling,
+        enPassant: chessOnlineData.enPassant
+      };
+    }
+    return null;
+  }
+  function chessOnlineMyColor(){
+    if(!chessOnlineData) return null;
+    if(chessOnlineData.players.w && chessOnlineData.players.w.id === state.playerId) return 'w';
+    if(chessOnlineData.players.b && chessOnlineData.players.b.id === state.playerId) return 'b';
+    return null;
+  }
+  function chessActiveMyColor(){
+    if(chessMode === 'cpu' && chessLocal) return chessLocal.myColor;
+    if(chessMode === 'online') return chessOnlineMyColor();
+    return null;
+  }
+
+  function chessSquareClick(r, c){
+    if(chessMode === 'cpu'){
+      var m = chessLocal;
+      if(!m || m.status !== 'playing' || m.pos.turn !== m.myColor || chessCpuThinking) return;
+      chessHandleClick(m.pos, r, c, function(move){
+        var before = m.pos;
+        m.pos = chessApplyMove(m.pos, move);
+        m.log.push(chessMoveText(move, before));
+        chessSelected = null;
+        renderChessBoardUI();
+        var st = chessGameStatus(m.pos);
+        if(st.over){ chessFinishCpuMatch(st); return; }
+        scheduleChessCpuMove();
+      });
+      return;
+    }
+    if(chessMode === 'online'){
+      var od = chessOnlineData;
+      var myColor = chessOnlineMyColor();
+      if(!od || od.status !== 'playing' || od.turn !== myColor) return;
+      var pos = chessActivePos();
+      chessHandleClick(pos, r, c, function(move){ postChessMove(move); });
+    }
+  }
+
+  function chessHandleClick(pos, r, c, onMove){
+    var myColor = pos.turn;
+    var piece = pos.board[r][c];
+    if(chessSelected){
+      if(chessSelected.r === r && chessSelected.c === c){ chessSelected = null; renderChessBoardUI(); return; }
+      var legalMoves = chessLegalMoves(pos, myColor).filter(function(mv){ return mv.from.r === chessSelected.r && mv.from.c === chessSelected.c; });
+      var match = chessFindMoveTo(legalMoves, r, c);
+      if(match){ onMove(match); return; }
+      if(piece && chessColorOf(piece) === myColor){ chessSelected = { r: r, c: c }; renderChessBoardUI(); return; }
+      chessSelected = null; renderChessBoardUI();
+      return;
+    }
+    if(piece && chessColorOf(piece) === myColor){ chessSelected = { r: r, c: c }; renderChessBoardUI(); }
+  }
+
+  function renderChessBoardUI(){
+    var pos = chessActivePos();
+    if(!pos) return;
+    var myColor = chessActiveMyColor();
+    var boardEl = document.getElementById('chessBoard');
+    boardEl.innerHTML = '';
+    var rowOrder = myColor === 'b' ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0];
+    var colOrder = myColor === 'b' ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7];
+    var legalForSelected = chessSelected ? chessLegalMoves(pos, pos.turn).filter(function(mv){ return mv.from.r === chessSelected.r && mv.from.c === chessSelected.c; }) : [];
+    rowOrder.forEach(function(r){
+      colOrder.forEach(function(c){
+        var sq = document.createElement('button');
+        sq.type = 'button';
+        var isLight = (r + c) % 2 === 1;
+        var cls = 'chess-sq ' + (isLight ? 'light' : 'dark');
+        if(chessSelected && chessSelected.r === r && chessSelected.c === c) cls += ' selected';
+        var destMove = chessFindMoveTo(legalForSelected, r, c);
+        if(destMove) cls += (pos.board[r][c] || destMove.enPassant) ? ' capture-dest' : ' legal-dest';
+        sq.className = cls;
+        var piece = pos.board[r][c];
+        if(piece) sq.innerHTML = '<span class="chess-piece ' + (chessColorOf(piece) === 'w' ? 'white' : 'black') + '">' + CHESS_UNICODE[piece] + '</span>';
+        sq.addEventListener('click', (function(rr, cc){ return function(){ chessSquareClick(rr, cc); }; })(r, c));
+        boardEl.appendChild(sq);
+      });
+    });
+    renderChessStatus(pos, myColor);
+    renderChessLog();
+    renderChessPlayersRow();
+  }
+
+  function renderChessStatus(pos, myColor){
+    var el = document.getElementById('chessStatus');
+    if(!el) return;
+    el.classList.remove('check');
+    if(chessMode === 'cpu' && chessLocal && chessLocal.status === 'over'){ el.textContent = chessLocal.result; return; }
+    if(chessMode === 'online' && chessOnlineData && chessOnlineData.status === 'finished'){
+      var od = chessOnlineData;
+      if(od.winner == null) el.textContent = 'Tablas';
+      else el.textContent = (od.winner === 'w' ? 'Ganan las Blancas' : 'Ganan las Negras') + (od.result === 'resign' ? ' (rendición)' : '');
+      return;
+    }
+    if(chessMode === 'cpu' && chessCpuThinking){ el.textContent = 'La CPU está pensando…'; return; }
+    var check = chessKingInCheck(pos.board, pos.turn);
+    var turnLabel = pos.turn === 'w' ? 'Blancas' : 'Negras';
+    var mine = myColor && pos.turn === myColor;
+    el.textContent = 'Turno: ' + turnLabel + (mine ? ' (tu turno)' : '') + (check ? ' · ¡Jaque!' : '');
+    if(check) el.classList.add('check');
+  }
+
+  function renderChessLog(){
+    var el = document.getElementById('chessLog');
+    if(!el) return;
+    var log = chessMode === 'cpu' && chessLocal ? chessLocal.log : (chessOnlineData ? chessOnlineData.log : []);
+    el.innerHTML = (log || []).slice(-40).map(function(t){ return '<span>' + escapeHtml(t) + '</span>'; }).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function renderChessPlayersRow(){
+    var el = document.getElementById('chessPlayersRow');
+    if(!el) return;
+    if(chessMode === 'cpu' && chessLocal){
+      var meLabel = chessLocal.myColor === 'w' ? 'Blancas' : 'Negras';
+      el.innerHTML = '<span><b>Tú</b> (' + meLabel + ')</span><span>Bote: ' + (chessLocal.bet * 2).toLocaleString('es-CO') + '</span><span><b>CPU</b></span>';
+      return;
+    }
+    if(chessMode === 'online' && chessOnlineData){
+      var od = chessOnlineData;
+      var wName = od.players.w ? od.players.w.name : '—';
+      var bName = od.players.b ? od.players.b.name : '—';
+      el.innerHTML = '<span><b>' + escapeHtml(wName) + '</b> (Blancas)</span><span>Bote: ' + (od.bet * 2).toLocaleString('es-CO') + '</span><span><b>' + escapeHtml(bName) + '</b> (Negras)</span>';
+    }
+  }
+
+  function scheduleChessCpuMove(){
+    chessCpuThinking = true;
+    renderChessStatus(chessLocal.pos, chessLocal.myColor);
+    setTimeout(function(){
+      var m = chessLocal;
+      chessCpuThinking = false;
+      if(!m || m.status !== 'playing') return;
+      var move = chessBestMove(m.pos, CHESS_CPU_DEPTH);
+      if(!move) return;
+      var before = m.pos;
+      m.pos = chessApplyMove(m.pos, move);
+      m.log.push(chessMoveText(move, before));
+      renderChessBoardUI();
+      var st = chessGameStatus(m.pos);
+      if(st.over) chessFinishCpuMatch(st);
+    }, 550);
+  }
+
+  function chessFinishCpuMatch(status){
+    var m = chessLocal;
+    m.status = 'over';
+    var payout = 0, msg = '';
+    if(status.result === 'checkmate'){
+      if(status.winner === m.myColor){ payout = m.bet * 2; msg = '¡Jaque mate! Ganaste ' + payout.toLocaleString('es-CO') + ' fichas'; }
+      else { msg = 'Jaque mate de la CPU. Perdiste tu apuesta'; }
+    } else if(status.result === 'resign'){
+      if(status.winner === m.myColor){ payout = m.bet * 2; msg = 'La CPU se rindió. Ganaste ' + payout.toLocaleString('es-CO') + ' fichas'; }
+      else { msg = 'Te rendiste. Perdiste tu apuesta'; }
+    } else {
+      payout = m.bet; msg = 'Tablas. Recuperas tu apuesta';
+    }
+    if(payout > 0) addBalance(payout);
+    m.result = msg;
+    renderChessBoardUI();
+  }
+
+  function createCpuChessMatch(bet, colorChoice){
+    if(state.balance < bet){ chessMsg('Fichas insuficientes para esa apuesta'); return; }
+    var myColor = colorChoice === 'r' ? (Math.random() < 0.5 ? 'w' : 'b') : colorChoice;
+    addBalance(-bet);
+    chessLocal = {
+      pos: { board: chessCloneBoard(CHESS_START), turn: 'w', castling: { wK:true, wQ:true, bK:true, bQ:true }, enPassant: null },
+      myColor: myColor, cpuColor: chessOpp(myColor), bet: bet, status: 'playing', result: null, log: []
+    };
+    chessMode = 'cpu';
+    chessSelected = null;
+    renderChessEntry();
+    if(chessLocal.pos.turn === chessLocal.cpuColor) scheduleChessCpuMove();
+  }
+
+  function createChessMatch(bet, colorChoice){
+    if(!db || !state.leagueCode){ chessMsg('La liga no está disponible ahora'); return; }
+    if(!state.playerName){ chessMsg('Primero elige tu nombre en la liga'); return; }
+    if(state.balance < bet){ chessMsg('Fichas insuficientes para esa apuesta'); return; }
+    ensurePlayerId();
+    var myColor = colorChoice === 'r' ? (Math.random() < 0.5 ? 'w' : 'b') : colorChoice;
+    var players = {};
+    players[myColor] = { id: state.playerId, name: state.playerName };
+    players[chessOpp(myColor)] = null;
+    var ref = db.collection('leagues/' + state.leagueCode + '/chessMatches').doc();
+    addBalance(-bet);
+    ref.set({
+      createdAt: Date.now(), createdBy: state.playerId, bet: bet, players: players, status: 'waiting',
+      board: chessBoardToFlat(CHESS_START), turn: 'w',
+      castling: { wK:true, wQ:true, bK:true, bQ:true }, enPassant: null,
+      log: ['Partida creada por ' + state.playerName], winner: null, result: null, payoutClaimed: {}, updatedAt: Date.now()
+    }).then(function(){
+      state.currentChessMatch = { code: state.leagueCode, id: ref.id };
+      saveState();
+      renderChessEntry();
+    }).catch(function(){ addBalance(bet); chessMsg('No se pudo crear la partida'); });
+  }
+
+  function joinChessMatch(matchId, bet){
+    if(!db || !state.leagueCode) return;
+    ensurePlayerId();
+    var ref = db.doc('leagues/' + state.leagueCode + '/chessMatches/' + matchId);
+    ref.get().then(function(snap){
+      if(!snap.exists){ chessMsg('La partida ya no existe'); return; }
+      var mdata = snap.data();
+      if(mdata.status !== 'waiting'){ chessMsg('La partida ya empezó'); return; }
+      if(state.balance < mdata.bet){ chessMsg('Fichas insuficientes'); return; }
+      var openColor = !mdata.players.w ? 'w' : (!mdata.players.b ? 'b' : null);
+      if(!openColor){ chessMsg('La partida ya está completa'); return; }
+      var patch = { status: 'playing', updatedAt: Date.now() };
+      patch['players.' + openColor] = { id: state.playerId, name: state.playerName };
+      ref.update(patch).then(function(){
+        addBalance(-mdata.bet);
+        state.currentChessMatch = { code: state.leagueCode, id: matchId };
+        saveState();
+        renderChessEntry();
+      });
+    }).catch(function(){ chessMsg('No se pudo unir a la partida'); });
+  }
+
+  function subscribeChessLobby(){
+    if(chessLobbyUnsub){ chessLobbyUnsub(); chessLobbyUnsub = null; }
+    if(!db || !state.leagueCode) return;
+    chessLobbyUnsub = db.collection('leagues/' + state.leagueCode + '/chessMatches')
+      .where('status', '!=', 'finished').limit(20)
+      .onSnapshot(function(snap){ renderChessLobbyList(snap); }, function(){ chessMsg('No se pudieron cargar las partidas'); });
+  }
+
+  function renderChessLobbyList(snap){
+    var el = document.getElementById('chessLobbyList');
+    if(!el) return;
+    if(!snap || snap.empty){ el.innerHTML = '<p class="league-empty">Aún no hay partidas abiertas. ¡Crea la primera!</p>'; return; }
+    el.innerHTML = '';
+    snap.docs.forEach(function(doc){
+      var mdata = doc.data();
+      var iAmIn = (mdata.players.w && mdata.players.w.id === state.playerId) || (mdata.players.b && mdata.players.b.id === state.playerId);
+      var full = mdata.players.w && mdata.players.b;
+      var row = document.createElement('div');
+      row.className = 'poker-table-row';
+      row.innerHTML =
+        '<div class="poker-table-info">' +
+          '<span class="poker-table-stakes">Apuesta ' + mdata.bet.toLocaleString('es-CO') + '</span>' +
+          '<span class="poker-table-meta">' + (mdata.players.w ? escapeHtml(mdata.players.w.name) : '¿?') + ' vs ' + (mdata.players.b ? escapeHtml(mdata.players.b.name) : '¿?') + ' · ' + (mdata.status === 'playing' ? 'En juego' : 'Esperando') + '</span>' +
+        '</div>';
+      var btn = document.createElement('button');
+      btn.className = 'btn btn-sm ' + (iAmIn ? 'btn-gold' : 'btn-ghost');
+      btn.textContent = iAmIn ? 'Volver' : (full ? 'Llena' : 'Unirme');
+      btn.disabled = !iAmIn && full;
+      btn.addEventListener('click', function(){
+        if(iAmIn){ state.currentChessMatch = { code: state.leagueCode, id: doc.id }; saveState(); renderChessEntry(); }
+        else { joinChessMatch(doc.id, mdata.bet); }
+      });
+      row.appendChild(btn);
+      el.appendChild(row);
+    });
+  }
+
+  function teardownChessListeners(){
+    if(chessOnlineUnsub){ chessOnlineUnsub(); chessOnlineUnsub = null; }
+    if(chessLobbyUnsub){ chessLobbyUnsub(); chessLobbyUnsub = null; }
+    chessOnlineRef = null; chessOnlineData = null;
+  }
+
+  function openChessMatch(matchId){
+    teardownChessListeners();
+    if(!db){ chessMsg('El ajedrez en línea no está disponible ahora'); return; }
+    var ref = db.doc('leagues/' + state.leagueCode + '/chessMatches/' + matchId);
+    chessOnlineRef = ref;
+    chessOnlineUnsub = ref.onSnapshot(function(snap){
+      if(!snap.exists){
+        chessMsg('La partida terminó');
+        state.currentChessMatch = null; saveState();
+        teardownChessListeners();
+        chessMode = null;
+        renderChessEntry();
+        return;
+      }
+      chessOnlineData = snap.data();
+      chessSelected = null;
+      renderChessBoardUI();
+      maybeHandleChessPayout(matchId);
+    }, function(){ chessMsg('Conexión perdida con la partida'); });
+  }
+
+  function postChessMove(move){
+    if(!chessOnlineRef || !chessOnlineData) return;
+    var pos = chessActivePos();
+    var next = chessApplyMove(pos, move);
+    var status = chessGameStatus(next);
+    var patch = {
+      board: chessBoardToFlat(next.board), turn: next.turn, castling: next.castling, enPassant: next.enPassant,
+      log: (chessOnlineData.log || []).concat([chessMoveText(move, pos)]), updatedAt: Date.now()
+    };
+    if(status.over){
+      patch.status = 'finished';
+      patch.winner = status.winner;
+      patch.result = status.result;
+    }
+    chessOnlineRef.set(patch, { merge: true }).catch(function(){ chessMsg('No se pudo enviar tu jugada'); });
+  }
+
+  function resignChessMatch(){
+    if(!chessOnlineRef || !chessOnlineData) return;
+    var myColor = chessOnlineMyColor();
+    if(!myColor) return;
+    var name = (chessOnlineData.players[myColor] || {}).name || 'Jugador';
+    chessOnlineRef.set({
+      status: 'finished', winner: chessOpp(myColor), result: 'resign', updatedAt: Date.now(),
+      log: (chessOnlineData.log || []).concat([name + ' se rinde'])
+    }, { merge: true }).catch(function(){ chessMsg('No se pudo rendirse'); });
+  }
+
+  function maybeHandleChessPayout(matchId){
+    var od = chessOnlineData;
+    if(!od || od.status !== 'finished') return;
+    var myColor = chessOnlineMyColor();
+    if(!myColor) return;
+    if(chessPayoutHandled[matchId]) return;
+    if(od.payoutClaimed && od.payoutClaimed[myColor]) return;
+    chessPayoutHandled[matchId] = true;
+    if(chessOnlineRef){
+      var claimPatch = {}; claimPatch['payoutClaimed.' + myColor] = true;
+      chessOnlineRef.update(claimPatch).catch(function(){});
+    }
+    if(od.winner === myColor){
+      addBalance(od.bet * 2);
+      chessMsg('¡Ganaste! +' + (od.bet * 2).toLocaleString('es-CO') + ' fichas');
+    } else if(od.winner == null){
+      addBalance(od.bet);
+      chessMsg('Tablas, recuperas tu apuesta');
+    } else {
+      chessMsg('Perdiste la partida');
+    }
+  }
+
+  function leaveChessMatch(){
+    if(chessMode === 'cpu'){
+      if(chessLocal && chessLocal.status === 'playing'){
+        chessFinishCpuMatch({ over: true, result: 'resign', winner: chessLocal.cpuColor });
+        setTimeout(function(){ chessLocal = null; chessMode = null; renderChessEntry(); }, 1200);
+        return;
+      }
+      chessLocal = null; chessMode = null; renderChessEntry();
+      return;
+    }
+    if(chessMode === 'online'){
+      var od = chessOnlineData, ref = chessOnlineRef;
+      if(!od || !ref) return;
+      if(od.status === 'waiting'){
+        ref.delete().then(function(){
+          addBalance(od.bet);
+          state.currentChessMatch = null; saveState();
+          teardownChessListeners(); chessMode = null;
+          renderChessEntry();
+        }).catch(function(){ chessMsg('No se pudo cancelar la partida'); });
+        return;
+      }
+      if(od.status === 'playing'){ resignChessMatch(); return; }
+      state.currentChessMatch = null; saveState();
+      teardownChessListeners(); chessMode = null;
+      renderChessEntry();
+    }
+  }
+
+  function renderChessEntry(){
+    document.getElementById('chessMsgBar').textContent = '';
+    var cpuPanel = document.getElementById('chessCpuPanel');
+    var onlineSection = document.getElementById('chessOnlineSection');
+    var noLeague = document.getElementById('chessNoLeague');
+    var lobby = document.getElementById('chessLobby');
+    var boardView = document.getElementById('chessBoardView');
+    var offlinePanel = document.getElementById('chessOfflinePanel');
+
+    if(chessMode === 'cpu' && chessLocal){
+      cpuPanel.hidden = true; onlineSection.hidden = true; boardView.hidden = false;
+      renderChessBoardUI();
+      return;
+    }
+    cpuPanel.hidden = false; onlineSection.hidden = false;
+
+    if(!db){
+      noLeague.hidden = true; lobby.hidden = true; boardView.hidden = true;
+      if(dbReady){ offlinePanel.hidden = false; } else { offlinePanel.hidden = true; }
+      return;
+    }
+    offlinePanel.hidden = true;
+    if(!state.leagueCode || !state.playerName){
+      noLeague.hidden = false; lobby.hidden = true; boardView.hidden = true;
+      teardownChessListeners();
+      return;
+    }
+    noLeague.hidden = true;
+    if(state.currentChessMatch && state.currentChessMatch.code === state.leagueCode){
+      chessMode = 'online';
+      cpuPanel.hidden = true; onlineSection.hidden = true;
+      lobby.hidden = true; boardView.hidden = false;
+      openChessMatch(state.currentChessMatch.id);
+    } else {
+      chessMode = null;
+      teardownChessListeners();
+      boardView.hidden = true; lobby.hidden = false;
+      subscribeChessLobby();
+    }
+  }
+
+  document.getElementById('leaveChessBtn').addEventListener('click', leaveChessMatch);
+  document.getElementById('chessOfflineRetryBtn').addEventListener('click', function(){ initDb(); renderChessEntry(); });
+
+  var chessCpuBet = wireChipSelect('chessCpuBetChips', 300);
+  var chessCpuColor = wireChoiceSelect('chessCpuColorChips', 'r');
+  document.getElementById('createCpuChessBtn').addEventListener('click', function(){
+    createCpuChessMatch(chessCpuBet.get(), chessCpuColor.get());
+  });
+
+  var chessBet = wireChipSelect('chessBetChips', 300);
+  var chessColor = wireChoiceSelect('chessColorChips', 'r');
+  document.getElementById('createChessMatchBtn').addEventListener('click', function(){
+    createChessMatch(chessBet.get(), chessColor.get());
   });
 
   /* ================= INIT ================= */
