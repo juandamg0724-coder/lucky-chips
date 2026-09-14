@@ -1071,6 +1071,11 @@
   .career-club-label b{ color:var(--text); font-family:'Fraunces', serif; }
   .mgr-bar-track{ width:100%; height:10px; border-radius:6px; background:var(--bg-elevated); border:1px solid var(--line); overflow:hidden; margin-top:6px; }
   .mgr-bar-fill{ height:100%; background:linear-gradient(90deg, var(--neon-cyan-bright), var(--neon-purple)); border-radius:6px; }
+  .mgr-bar-fill.tension{ background:linear-gradient(90deg, var(--neon-cyan-bright), #e0a527, var(--ruby-bright)); }
+  .mgr-nego-history{ display:flex; flex-direction:column; gap:6px; margin-top:8px; max-height:220px; overflow-y:auto; }
+  .mgr-nego-round{ display:flex; justify-content:space-between; gap:8px; padding:6px 10px; border-radius:8px; border:1px solid var(--line-soft); font-size:.85rem; }
+  .mgr-nego-round.by-user{ background:var(--bg-elevated); }
+  .mgr-nego-round.by-ai{ background:var(--bg-panel-2); }
   .mgr-tab-panel{ display:flex; flex-direction:column; gap:8px; }
   .mgr-clickable-row{ cursor:pointer; transition:border-color .15s ease; }
   .mgr-clickable-row:hover{ border-color:var(--accent-dim); }
@@ -2139,11 +2144,12 @@
 
       <div class="paytable" id="mgrRulesPanel" hidden>
         <p class="paytable-title">Cómo funciona</p>
-        <p class="rules-text">Modo carrera 100% offline: diriges un club contra 7 clubes de la CPU, con calendario de ida y vuelta (14 jornadas).</p>
+        <p class="rules-text">Modo carrera 100% offline: diriges un club contra 19 clubes de la CPU, con calendario de ida y vuelta (38 jornadas).</p>
         <ul class="rules-list">
           <li><b>Oficina:</b> presupuesto, confianza de la directiva y buzón de mensajes (ofertas, lesiones, informes, noticias, renovaciones, resultados).</li>
           <li><b>Plantilla:</b> toca a un jugador para ver su ficha y sus acciones: titular/banco, ponerlo en venta o a préstamo, cambiarle el dorsal o renovarle el contrato.</li>
-          <li><b>Fichajes:</b> toca a un jugador del mercado para ver su ficha completa y ofertar o pedirlo prestado. Las ofertas no se resuelven al instante: el club responde 2-3 días después (aceptada, rechazada o con contraoferta) y te avisa por la bandeja de entrada.</li>
+          <li><b>Fichajes:</b> toca a un jugador del mercado para ver su ficha completa y ofertar o pedirlo prestado.</li>
+          <li><b>Negociaciones:</b> comprar y vender jugadores es una negociación real de varias rondas — ofreces un valor, el club acepta, sube su pedido o se pone más tenso si la negociación no avanza. Si acuerdas un traspaso, todavía falta negociar el contrato con el propio jugador antes de que el fichaje se cierre.</li>
           <li>El calendario avanza <b>día a día</b> con "Avanzar día"; se detiene solo el día que te toca jugar.</li>
           <li>La IA de los clubes CPU nunca vende por debajo del valor real de un jugador, y mucho menos a sus estrellas — no hay forma de comprar barato.</li>
           <li>Al terminar la temporada hay premios según tu posición, evolución de jugadores (más rápida en los jóvenes) y arranca una temporada nueva.</li>
@@ -2171,6 +2177,7 @@
           <button class="btn btn-ghost btn-sm mgr-tab-btn active" data-mgr-tab="oficina">🏢 Oficina<span class="mgr-tab-badge" id="mgrOficinaBadge" hidden>0</span></button>
           <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="plantilla">🧑 Plantilla</button>
           <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="fichajes">📝 Fichajes</button>
+          <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="negociaciones">🤝 Negociaciones<span class="mgr-tab-badge" id="mgrNegoBadge" hidden>0</span></button>
           <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="calendario">📅 Calendario</button>
         </div>
 
@@ -2225,10 +2232,18 @@
             <button class="choice-btn" data-amount="value">Valor</button>
           </div>
           <div class="career-player-list" id="mgrTransferList" style="margin-top:10px;"></div>
-          <p class="paytable-title" style="margin-top:16px;">Mis ofertas enviadas</p>
-          <div class="career-player-list" id="mgrMyOffersList"></div>
-          <p class="paytable-title" style="margin-top:16px;">Buzón de ofertas por mis jugadores</p>
-          <div class="career-player-list" id="mgrOffersInList"></div>
+        </div>
+
+        <div class="mgr-tab-panel" data-mgr-panel="negociaciones" hidden>
+          <div id="mgrNegoListView">
+            <p class="paytable-title">Comprando</p>
+            <div class="career-player-list" id="mgrNegoBuyList"></div>
+            <p class="paytable-title" style="margin-top:16px;">Te ofrecen</p>
+            <div class="career-player-list" id="mgrNegoSellList"></div>
+            <p class="paytable-title" style="margin-top:16px;">Contratos pendientes</p>
+            <div class="career-player-list" id="mgrNegoContractList"></div>
+          </div>
+          <div id="mgrNegoDetailView" hidden></div>
         </div>
 
         <div class="mgr-tab-panel" data-mgr-panel="calendario" hidden>
@@ -7111,7 +7126,11 @@
   // (motor de partidos), poissonSample/lambdaFor (partidos CPU vs CPU) y UT_PLAYER_POOL (nombres)
   // ya definidos arriba para Ultimate Team y Apuestas Deportivas.
   var MGR_START_BUDGET = 500000;
-  var MGR_TOTAL_MATCHDAYS_HINT = 14; // 7 rivales CPU x ida y vuelta
+  var MGR_TOTAL_MATCHDAYS_HINT = 38; // 19 rivales CPU x ida y vuelta
+  var MGR_EXTRA_CLUB_NAMES = [
+    'Estrella Azul FC', 'Guerreros del Valle', 'Puma Real', 'Marea Roja', 'Vientos del Pacífico',
+    'Selva Dorada', 'Cimarrones FC', 'Trueno Andino', 'Fénix Costero'
+  ];
 
   function mgrGeneratePlayer(position, minOvr, maxOvr){
     var ovr = Math.max(35, Math.min(90, minOvr + Math.floor(Math.random() * (maxOvr - minOvr + 1))));
@@ -7153,7 +7172,9 @@
     mgrRenderActiveTab();
   }
   function mgrGenerateCpuClubs(){
-    return LEAGUE_TEAMS.slice(0, 7).map(function(team){
+    var pool = LEAGUE_TEAMS.map(function(t){ return { name: t.name, strength: t.strength }; })
+      .concat(MGR_EXTRA_CLUB_NAMES.map(function(n){ return { name: n, strength: 1 + Math.floor(Math.random() * 5) }; }));
+    return pool.slice(0, 19).map(function(team){
       return { name: team.name, strength: team.strength, squad: mgrGenerateSquad(team.strength), pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
     });
   }
@@ -7360,116 +7381,239 @@
     var saleBonus = player.forSale ? 15 : 0;
     return 40 + need + fit + ageBonus + potBonus + saleBonus;
   }
-  function mgrAiRespondToOffer(club, player, offerAmount){
+  var MGR_NEGO_MAX_ROUNDS = 8;
+  function mgrNegotiations(){
+    if(!state.manager.negotiations) state.manager.negotiations = [];
+    return state.manager.negotiations;
+  }
+  function mgrNegoById(id){ return mgrNegotiations().filter(function(n){ return n.id === id; })[0] || null; }
+  function mgrActiveNegoForPlayer(playerId, kind){
+    return mgrNegotiations().some(function(n){ return n.playerId === playerId && n.kind === kind && n.status === 'active'; });
+  }
+  function mgrNegoTensionMult(tension){ return 1 + Math.max(0, tension || 0) / 100 * 0.35; }
+
+  // Umbral nunca por debajo del valor real del jugador: evita comprar estrellas por menos de lo que valen.
+  // La tensión endurece el umbral (nunca lo ablanda) si la negociación no avanza.
+  function mgrNegoBuyThreshold(neg, club, player){
     var importance = mgrPlayerImportanceScore(club, player);
     var needsPosition = mgrClubNeedsPosition(club, player.position);
-    var ratio = offerAmount / Math.max(1, player.value);
-    // Umbral nunca por debajo del valor real del jugador: evita comprar estrellas por menos de lo que valen.
-    var acceptThreshold = 1.05 + Math.max(0, importance) * 0.012
+    var base = 1.05 + Math.max(0, importance) * 0.012
       + (needsPosition ? -0.1 : 0.05)
       + (player.age > 31 ? -0.1 : 0)
       + (player.contractYears <= 1 ? -0.08 : 0)
       + (player.forSale ? -0.12 : 0);
-    acceptThreshold = Math.max(0.9, acceptThreshold);
-    if(importance > 45) acceptThreshold = Math.max(acceptThreshold, player.forSale ? 1.3 : 1.6);
-    var rejectThreshold = acceptThreshold - (0.15 + Math.random() * 0.1);
-    if(ratio >= acceptThreshold) return { action: 'accept' };
-    if(ratio >= rejectThreshold) return { action: 'counter', amount: Math.round(player.value * acceptThreshold / 1000) * 1000 };
-    return { action: 'reject' };
+    base = Math.max(0.9, base);
+    if(importance > 45) base = Math.max(base, player.forSale ? 1.3 : 1.6);
+    return base * mgrNegoTensionMult(neg.tension);
   }
-  function mgrMakeOfferForPlayer(clubIdx, playerId, amount){
+  function mgrNegoSellCeiling(neg, club, player){
+    var evalScore = mgrEvaluatePlayerForCpu(club, player);
+    var importance = mgrPlayerImportanceScore(club, player);
+    var base = 0.8 + Math.max(0, evalScore - 40) * 0.007 + (importance > 45 ? 0.25 : 0);
+    base = Math.min(1.7, Math.max(0.65, base));
+    return base / mgrNegoTensionMult(neg.tension);
+  }
+
+  function mgrNegoStart(kind, clubIdx, playerId, amount){
+    if(mgrActiveNegoForPlayer(playerId, kind)){ mgrMsg('Ya tienes una negociación activa por ese jugador'); return null; }
     var club = state.manager.cpuClubs[clubIdx];
     var player = club ? club.squad.filter(function(p){ return p.id === playerId; })[0] : null;
-    if(!player){ mgrMsg('Ese jugador ya no está disponible'); return; }
+    if(!player){ mgrMsg('Ese jugador ya no está disponible'); return null; }
+    if(!amount || amount <= 0){ mgrMsg('Ingresa un monto válido'); return null; }
+    var neg = {
+      id: 'neg' + Date.now() + Math.floor(Math.random() * 1000), kind: 'buy', stage: 'fee', status: 'active',
+      clubIdx: clubIdx, clubName: club.name, playerId: playerId, playerName: player.name, playerValueSnapshot: player.value,
+      tension: 0, rounds: 0, history: [], myLastAmount: null, myLastRatio: 0, aiLastAmount: null, aiLastRatio: null, agreedFee: null
+    };
+    mgrNegotiations().push(neg);
+    mgrNegoUserRound(neg.id, amount);
+    return neg;
+  }
+  function mgrNegoUserRound(negId, amount){
+    var neg = mgrNegoById(negId);
+    if(!neg || neg.status !== 'active' || neg.kind !== 'buy' || neg.stage !== 'fee') return;
+    var club = state.manager.cpuClubs[neg.clubIdx];
+    var player = club ? club.squad.filter(function(p){ return p.id === neg.playerId; })[0] : null;
+    if(!club || !player){ neg.status = 'rejected'; mgrPushInbox('oferta', 'Negociación cancelada', neg.playerName + ' ya no está disponible.'); saveState(); mgrRenderActiveTab(); return; }
     if(!amount || amount <= 0){ mgrMsg('Ingresa un monto válido'); return; }
-    var already = (state.manager.transferOffersOut || []).some(function(o){
-      return o.playerId === playerId && (o.status === 'pending' || o.status === 'countered');
-    });
-    if(already){ mgrMsg('Ya tienes una oferta pendiente por ' + player.name); return; }
-    if(!state.manager.transferOffersOut) state.manager.transferOffersOut = [];
-    var delay = 2 + Math.floor(Math.random() * 2);
-    state.manager.transferOffersOut.push({
-      id: 'oout' + Date.now(), clubIdx: clubIdx, clubName: club.name, playerId: playerId, playerName: player.name,
-      amount: amount, status: 'pending', resolveAtDay: state.manager.day + delay, createdAt: Date.now()
-    });
-    mgrMsg('Oferta enviada por ' + player.name + '. Tendrás respuesta en ' + delay + ' día(s).');
-    saveState();
-    mgrCloseTransferSheet();
-    mgrRenderActiveTab();
+    var ratio = amount / Math.max(1, player.value);
+    neg.history.push({ by: 'user', amount: amount, action: 'offer' });
+    var improved = ratio > (neg.myLastRatio || 0) + 0.02;
+    neg.myLastAmount = amount; neg.myLastRatio = ratio; neg.rounds += 1;
+
+    var acceptThreshold = mgrNegoBuyThreshold(neg, club, player);
+    if(ratio >= acceptThreshold){
+      neg.status = 'agreed'; neg.agreedFee = amount;
+      mgrPushInbox('fichaje', club.name + ' acepta tu oferta', club.name + ' acepta ' + amount.toLocaleString('es-CO') + ' por ' + player.name + '. Ahora falta negociar el contrato con él.');
+      mgrNegoStartContract(neg);
+      saveState(); mgrRenderActiveTab();
+      return;
+    }
+    neg.tension = Math.min(100, neg.tension + (improved ? 8 : 22));
+    var walkChance = Math.max(0, neg.tension - 60) / 100;
+    if(neg.rounds >= MGR_NEGO_MAX_ROUNDS || Math.random() < walkChance){
+      neg.status = 'rejected';
+      neg.history.push({ by: 'ai', action: 'walk' });
+      mgrPushInbox('oferta', club.name + ' se retira de la negociación', club.name + ' se cansó de negociar por ' + player.name + ' y se levanta de la mesa.');
+      saveState(); mgrRenderActiveTab();
+      return;
+    }
+    var minAsk = Math.max(ratio + 0.06, (neg.aiLastRatio || (acceptThreshold - 0.2)) + 0.03);
+    var askRatio = Math.min(acceptThreshold, minAsk);
+    var newAsk = Math.round(player.value * askRatio / 1000) * 1000;
+    neg.aiLastAmount = newAsk; neg.aiLastRatio = askRatio;
+    neg.history.push({ by: 'ai', amount: newAsk, action: 'counter' });
+    saveState(); mgrRenderActiveTab();
   }
-  function mgrAcceptCounter(offerId){
-    var o = (state.manager.transferOffersOut || []).filter(function(x){ return x.id === offerId; })[0];
-    if(!o || o.status !== 'countered') return;
-    var club = state.manager.cpuClubs[o.clubIdx];
-    var player = club ? club.squad.filter(function(p){ return p.id === o.playerId; })[0] : null;
-    if(!club || !player){ o.status = 'expired'; saveState(); mgrRenderActiveTab(); return; }
-    if(state.manager.club.budget < o.counterAmount){ mgrMsg('Presupuesto insuficiente'); return; }
+  function mgrNegoStartContract(feeNeg){
+    var player = mgrFindCpuPlayerById(feeNeg.playerId);
+    if(!player) return;
+    var askWage = Math.round(mgrWageDemand(player) * 1.15 / 10) * 10;
+    var neg = {
+      id: 'neg' + Date.now() + Math.floor(Math.random() * 1000), kind: 'buy', stage: 'contract', status: 'active',
+      clubIdx: feeNeg.clubIdx, clubName: feeNeg.clubName, playerId: feeNeg.playerId, playerName: feeNeg.playerName,
+      relatedFeeNegId: feeNeg.id, agreedFee: feeNeg.agreedFee, playerWageAsk: askWage,
+      tension: 0, rounds: 0, history: [{ by: 'ai', amount: askWage, action: 'ask' }],
+      myLastAmount: null, myLastRatio: 0, aiLastAmount: askWage
+    };
+    mgrNegotiations().push(neg);
+    mgrPushInbox('contrato', 'Negociar contrato con ' + feeNeg.playerName, feeNeg.playerName + ' pide ' + askWage.toLocaleString('es-CO') + ' de salario para firmar con ' + state.manager.club.name + '.', { negId: neg.id });
+  }
+  function mgrNegoWageRound(negId, wage){
+    var neg = mgrNegoById(negId);
+    if(!neg || neg.status !== 'active' || neg.stage !== 'contract') return;
+    var player = mgrFindCpuPlayerById(neg.playerId);
+    if(!player){ neg.status = 'rejected'; saveState(); mgrRenderActiveTab(); return; }
+    if(!wage || wage <= 0){ mgrMsg('Ingresa un salario válido'); return; }
+    var ratio = wage / Math.max(1, neg.playerWageAsk);
+    neg.history.push({ by: 'user', amount: wage, action: 'offer' });
+    var improved = ratio > (neg.myLastRatio || 0) + 0.02;
+    neg.myLastAmount = wage; neg.myLastRatio = ratio; neg.rounds += 1;
+
+    var acceptRatio = 0.9 * mgrNegoTensionMult(neg.tension);
+    if(ratio >= acceptRatio){
+      neg.status = 'agreed'; neg.agreedWage = wage; neg.agreedYears = 3;
+      mgrNegoFinalizeBuy(neg);
+      saveState(); mgrRenderActiveTab();
+      return;
+    }
+    neg.tension = Math.min(100, neg.tension + (improved ? 8 : 20));
+    if(neg.rounds >= MGR_NEGO_MAX_ROUNDS || neg.tension >= 100){
+      neg.status = 'rejected';
+      mgrPushInbox('oferta', 'El fichaje se cayó', neg.playerName + ' no llegó a un acuerdo personal y el fichaje con ' + neg.clubName + ' se cae.');
+      saveState(); mgrRenderActiveTab();
+      return;
+    }
+    var newAskRatio = Math.min(1.1, Math.max(ratio + 0.05, acceptRatio));
+    var newAsk = Math.round(neg.playerWageAsk * newAskRatio / 10) * 10;
+    neg.aiLastAmount = newAsk;
+    neg.history.push({ by: 'ai', amount: newAsk, action: 'counter' });
+    saveState(); mgrRenderActiveTab();
+  }
+  function mgrNegoFinalizeBuy(neg){
+    var club = state.manager.cpuClubs[neg.clubIdx];
+    var player = club ? club.squad.filter(function(p){ return p.id === neg.playerId; })[0] : null;
+    if(!club || !player){ mgrPushInbox('oferta', 'Fichaje frustrado', neg.playerName + ' ya no estaba disponible cuando cerraste el acuerdo.'); return; }
+    if(state.manager.club.budget < neg.agreedFee){
+      mgrPushInbox('oferta', 'Fichaje frustrado', 'No tenías presupuesto suficiente para pagar ' + neg.agreedFee.toLocaleString('es-CO') + ' por ' + player.name + '.');
+      return;
+    }
     club.squad = club.squad.filter(function(p){ return p.id !== player.id; });
-    state.manager.club.budget -= o.counterAmount;
-    player.contractYears = 3; player.morale = Math.min(100, player.morale + 15); player.number = mgrNextFreeNumber();
+    state.manager.club.budget -= neg.agreedFee;
+    player.contractYears = neg.agreedYears || 3;
+    player.wage = neg.agreedWage;
+    player.morale = Math.min(100, player.morale + 15);
+    player.number = mgrNextFreeNumber();
     state.manager.squad.push(player);
-    o.status = 'accepted';
-    mgrPushInbox('fichaje', '¡Fichaje completado!', 'Aceptaste la contraoferta y fichaste a ' + player.name + ' por ' + o.counterAmount.toLocaleString('es-CO') + '.');
-    mgrMsg('¡Fichaje completado!');
+    mgrPushInbox('fichaje', '¡Fichaje completado!', player.name + ' firma con ' + state.manager.club.name + ' por ' + neg.agreedFee.toLocaleString('es-CO') + ' y un salario de ' + neg.agreedWage.toLocaleString('es-CO') + '.');
+  }
+  function mgrNegoCreateIncomingOffer(clubIdx, playerId, amount){
+    var club = state.manager.cpuClubs[clubIdx];
+    var player = mgrPlayerById(playerId);
+    if(!club || !player) return null;
+    var neg = {
+      id: 'neg' + Date.now() + Math.floor(Math.random() * 1000), kind: 'sell', stage: 'fee', status: 'active',
+      clubIdx: clubIdx, clubName: club.name, playerId: playerId, playerName: player.name, playerValueSnapshot: player.value,
+      tension: 0, rounds: 0, history: [{ by: 'ai', amount: amount, action: 'offer' }],
+      myLastAmount: null, myLastRatio: null, aiLastAmount: amount, aiLastRatio: amount / Math.max(1, player.value), lastGap: null
+    };
+    mgrNegotiations().push(neg);
+    return neg;
+  }
+  function mgrNegoUserAsk(negId, amount){
+    var neg = mgrNegoById(negId);
+    if(!neg || neg.status !== 'active' || neg.kind !== 'sell') return;
+    var club = state.manager.cpuClubs[neg.clubIdx];
+    var player = mgrPlayerById(neg.playerId);
+    if(!club || !player){ neg.status = 'rejected'; saveState(); mgrRenderActiveTab(); return; }
+    if(!amount || amount <= 0){ mgrMsg('Ingresa un monto válido'); return; }
+    var ratio = amount / Math.max(1, player.value);
+    neg.history.push({ by: 'user', amount: amount, action: 'ask' });
+    neg.myLastAmount = amount; neg.myLastRatio = ratio; neg.rounds += 1;
+
+    var ceiling = mgrNegoSellCeiling(neg, club, player);
+    if(ratio <= ceiling){
+      mgrNegoFinalizeSell(neg, amount);
+      saveState(); mgrRenderActiveTab();
+      return;
+    }
+    var gapNow = ratio - ceiling;
+    var improved = neg.lastGap != null && gapNow < neg.lastGap - 0.02;
+    neg.lastGap = gapNow;
+    neg.tension = Math.min(100, neg.tension + (improved ? 8 : 20));
+    var walkChance = Math.max(0, neg.tension - 60) / 100;
+    if(neg.rounds >= MGR_NEGO_MAX_ROUNDS || Math.random() < walkChance){
+      neg.status = 'rejected';
+      neg.history.push({ by: 'ai', action: 'walk' });
+      mgrPushInbox('oferta', club.name + ' retira su oferta', club.name + ' no aceptó tu pedido por ' + player.name + ' y se retira.');
+      saveState(); mgrRenderActiveTab();
+      return;
+    }
+    var newOfferRatio = Math.min(ceiling, Math.max((neg.aiLastRatio || 0) + 0.03, ceiling - 0.02));
+    var newOffer = Math.round(player.value * newOfferRatio / 1000) * 1000;
+    neg.aiLastAmount = newOffer; neg.aiLastRatio = newOfferRatio;
+    neg.history.push({ by: 'ai', amount: newOffer, action: 'counter' });
+    saveState(); mgrRenderActiveTab();
+  }
+  function mgrNegoFinalizeSell(neg, amount){
+    var player = mgrPlayerById(neg.playerId);
+    if(!player) return;
+    state.manager.squad = state.manager.squad.filter(function(p){ return p.id !== neg.playerId; });
+    Object.keys(state.manager.lineup).forEach(function(k){ if(state.manager.lineup[k] === neg.playerId) state.manager.lineup[k] = null; });
+    state.manager.club.budget += amount;
+    neg.status = 'agreed'; neg.agreedFee = amount;
+    mgrPushInbox('fichaje', '¡Venta completada!', neg.clubName + ' pagó ' + amount.toLocaleString('es-CO') + ' por ' + player.name + '.');
+  }
+  function mgrNegoAcceptAsk(negId){
+    var neg = mgrNegoById(negId);
+    if(!neg || neg.status !== 'active' || neg.aiLastAmount == null) return;
+    if(neg.kind === 'buy' && neg.stage === 'fee'){
+      neg.status = 'agreed'; neg.agreedFee = neg.aiLastAmount;
+      neg.history.push({ by: 'user', amount: neg.aiLastAmount, action: 'accept' });
+      mgrPushInbox('fichaje', 'Acuerdo de traspaso', 'Aceptaste pagar ' + neg.aiLastAmount.toLocaleString('es-CO') + ' por ' + neg.playerName + '. Ahora falta negociar el contrato con él.');
+      mgrNegoStartContract(neg);
+    } else if(neg.kind === 'buy' && neg.stage === 'contract'){
+      neg.status = 'agreed'; neg.agreedWage = neg.aiLastAmount; neg.agreedYears = 3;
+      neg.history.push({ by: 'user', amount: neg.aiLastAmount, action: 'accept' });
+      mgrNegoFinalizeBuy(neg);
+    } else if(neg.kind === 'sell'){
+      mgrNegoFinalizeSell(neg, neg.aiLastAmount);
+    }
     saveState();
     mgrRenderActiveTab();
   }
-  function mgrWithdrawOffer(offerId){
-    var o = (state.manager.transferOffersOut || []).filter(function(x){ return x.id === offerId; })[0];
-    if(!o || (o.status !== 'pending' && o.status !== 'countered')) return;
-    o.status = 'withdrawn';
-    mgrMsg('Oferta retirada');
+  function mgrNegoWithdraw(negId){
+    var neg = mgrNegoById(negId);
+    if(!neg || neg.status !== 'active') return;
+    neg.status = 'rejected';
+    neg.history.push({ by: 'user', action: neg.kind === 'sell' ? 'reject' : 'withdraw' });
+    if(neg.stage === 'contract'){
+      mgrPushInbox('oferta', 'Fichaje cancelado', 'Decidiste no seguir negociando el contrato de ' + neg.playerName + ' y el fichaje se cae.');
+    }
+    mgrMsg(neg.kind === 'sell' ? 'Rechazaste la oferta' : 'Retiraste la negociación');
+    if(mgrOpenNegoId === negId) mgrOpenNegoId = null;
     saveState();
     mgrRenderActiveTab();
-  }
-  function mgrResolveTransfersForDay(day){
-    (state.manager.transferOffersOut || []).forEach(function(o){
-      if(o.status !== 'pending' || o.resolveAtDay > day) return;
-      var club = state.manager.cpuClubs[o.clubIdx];
-      var player = club ? club.squad.filter(function(p){ return p.id === o.playerId; })[0] : null;
-      if(!club || !player){ o.status = 'expired'; mgrPushInbox('fichaje', 'Oferta caducada', 'El jugador que ofertaste ya no está disponible.'); return; }
-      var decision = mgrAiRespondToOffer(club, player, o.amount);
-      if(decision.action === 'accept'){
-        if(state.manager.club.budget < o.amount){
-          o.status = 'rejected';
-          mgrPushInbox('oferta', 'Fichaje frustrado', 'No tenías presupuesto suficiente cuando ' + club.name + ' aceptó tu oferta por ' + player.name + '.');
-          return;
-        }
-        club.squad = club.squad.filter(function(p){ return p.id !== player.id; });
-        state.manager.club.budget -= o.amount;
-        player.contractYears = 3; player.morale = Math.min(100, player.morale + 15); player.number = mgrNextFreeNumber();
-        state.manager.squad.push(player);
-        o.status = 'accepted';
-        mgrPushInbox('fichaje', '¡Fichaje completado!', club.name + ' aceptó tu oferta de ' + o.amount.toLocaleString('es-CO') + ' por ' + player.name + '.');
-      } else if(decision.action === 'counter'){
-        o.status = 'countered'; o.counterAmount = decision.amount;
-        mgrPushInbox('oferta', 'Contraoferta de ' + club.name, club.name + ' rechaza tu oferta por ' + player.name + ' pero pide ' + decision.amount.toLocaleString('es-CO') + '.');
-      } else {
-        o.status = 'rejected';
-        mgrPushInbox('oferta', 'Oferta rechazada', club.name + ' rechazó tu oferta de ' + o.amount.toLocaleString('es-CO') + ' por ' + player.name + '.');
-      }
-    });
-    (state.manager.transferOffersIn || []).forEach(function(o){
-      if(o.status === 'countered' && o.resolveAtDay && o.resolveAtDay <= day){
-        var club2 = o.clubIdx != null ? state.manager.cpuClubs[o.clubIdx] : null;
-        var player2 = mgrPlayerById(o.playerId);
-        if(!club2 || !player2){ o.status = 'expired'; return; }
-        var decision2 = mgrAiRespondToOffer(club2, player2, o.counterAmount);
-        if(decision2.action !== 'reject'){
-          state.manager.squad = state.manager.squad.filter(function(p){ return p.id !== player2.id; });
-          Object.keys(state.manager.lineup).forEach(function(k){ if(state.manager.lineup[k] === player2.id) state.manager.lineup[k] = null; });
-          state.manager.club.budget += o.counterAmount;
-          o.status = 'accepted';
-          mgrPushInbox('fichaje', '¡Venta completada!', club2.name + ' aceptó pagar ' + o.counterAmount.toLocaleString('es-CO') + ' por ' + player2.name + '.');
-        } else {
-          o.status = 'rejected';
-          mgrPushInbox('oferta', 'Contraoferta rechazada', club2.name + ' no aceptó tu contraoferta por ' + player2.name + '.');
-        }
-      } else if(o.status === 'pending' && o.expiresAtDay && o.expiresAtDay <= day){
-        o.status = 'expired';
-        mgrPushInbox('oferta', 'Oferta retirada', o.clubName + ' retiró su oferta por ' + o.playerName + ' al no recibir respuesta a tiempo.');
-      }
-    });
   }
   function mgrMakeLoanOffer(clubIdx, playerId){
     var club = state.manager.cpuClubs[clubIdx];
@@ -7493,41 +7637,15 @@
     var clubIdx = Math.floor(Math.random() * state.manager.cpuClubs.length);
     var club = state.manager.cpuClubs[clubIdx];
     var pool = listed.length ? listed : state.manager.squad.filter(function(p){ return !p.onLoan; });
-    var candidates = pool.filter(function(p){ return mgrEvaluatePlayerForCpu(club, p) > 50; });
+    var candidates = pool.filter(function(p){ return mgrEvaluatePlayerForCpu(club, p) > 50 && !mgrActiveNegoForPlayer(p.id, 'sell'); });
     if(!candidates.length) return;
     var player = candidates[Math.floor(Math.random() * candidates.length)];
     var importance = mgrPlayerImportanceScore(club, player);
     var mult = 0.85 + Math.random() * 0.4 + (importance > 45 ? 0.3 : 0) + (player.forSale ? -0.1 : 0);
     var amount = Math.round(player.value * mult / 1000) * 1000;
-    if(!state.manager.transferOffersIn) state.manager.transferOffersIn = [];
-    var offerObj = {
-      id: 'off' + Date.now(), clubIdx: clubIdx, clubName: club.name, playerId: player.id, playerName: player.name,
-      amount: amount, status: 'pending', ts: Date.now(), expiresAtDay: state.manager.day + 3
-    };
-    state.manager.transferOffersIn.push(offerObj);
-    mgrPushInbox('oferta', 'Oferta por ' + player.name, club.name + ' ofrece ' + amount.toLocaleString('es-CO') + ' por ' + player.name + '.', { offerId: offerObj.id });
-  }
-  function mgrRespondIncomingOffer(offerId, action){
-    var offer = (state.manager.transferOffersIn || []).filter(function(o){ return o.id === offerId; })[0];
-    if(!offer || offer.status !== 'pending') return;
-    if(action === 'accept'){
-      var player = mgrPlayerById(offer.playerId);
-      state.manager.squad = state.manager.squad.filter(function(p){ return p.id !== offer.playerId; });
-      Object.keys(state.manager.lineup).forEach(function(k){ if(state.manager.lineup[k] === offer.playerId) state.manager.lineup[k] = null; });
-      state.manager.club.budget += offer.amount;
-      offer.status = 'accepted';
-      mgrMsg('Vendiste a ' + offer.playerName + ' por ' + offer.amount.toLocaleString('es-CO'));
-    } else if(action === 'counter'){
-      offer.counterAmount = Math.round(offer.amount * 1.25 / 1000) * 1000;
-      offer.status = 'countered';
-      offer.resolveAtDay = state.manager.day + 1 + Math.floor(Math.random() * 2);
-      mgrMsg('Le pediste ' + offer.counterAmount.toLocaleString('es-CO') + ' por ' + offer.playerName + '. Responderán pronto.');
-    } else {
-      offer.status = 'rejected';
-      mgrMsg('Rechazaste la oferta por ' + offer.playerName);
-    }
-    saveState();
-    mgrRenderActiveTab();
+    var neg = mgrNegoCreateIncomingOffer(clubIdx, player.id, amount);
+    if(!neg) return;
+    mgrPushInbox('oferta', 'Oferta de transferencia por ' + player.name, club.name + ' ofrece ' + amount.toLocaleString('es-CO') + ' por ' + player.name + '.', { negId: neg.id });
   }
   function mgrWageDemand(player){
     var importance = player.ovr - mgrMySquadAvgOvr();
@@ -7708,7 +7826,6 @@
     var pendingToday = mgrMyFixtureForDay(state.manager.day);
     if(pendingToday && !pendingToday.played){ mgrMsg('Termina el partido de hoy antes de avanzar'); return; }
     state.manager.day += 1;
-    mgrResolveTransfersForDay(state.manager.day);
     mgrMaybeGenerateIncomingOffer();
     var fixturesToday = mgrFixturesForDay(state.manager.day);
     fixturesToday.forEach(function(f){
@@ -7759,7 +7876,7 @@
       myStats: { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 },
       calendar: [], matchday: 0, day: 0,
       topScorers: {}, topAssists: {}, recentForm: [],
-      inbox: [], transferOffersIn: [], transferOffersOut: [],
+      inbox: [], negotiations: [],
       trainingFocus: 'GK'
     };
     mgrAssignInitialLineup();
@@ -7785,10 +7902,17 @@
   }
   function mgrUpdateBadges(){
     var badge = document.getElementById('mgrOficinaBadge');
-    if(!badge) return;
-    var unread = (state.manager.inbox || []).filter(function(m){ return !m.read; }).length;
-    badge.textContent = unread;
-    badge.hidden = unread === 0;
+    if(badge){
+      var unread = (state.manager.inbox || []).filter(function(m){ return !m.read; }).length;
+      badge.textContent = unread;
+      badge.hidden = unread === 0;
+    }
+    var negoBadge = document.getElementById('mgrNegoBadge');
+    if(negoBadge){
+      var activeCount = mgrNegotiations().filter(function(n){ return n.status === 'active'; }).length;
+      negoBadge.textContent = activeCount;
+      negoBadge.hidden = activeCount === 0;
+    }
   }
   function mgrSquadAvgOvr(){
     if(!state.manager.squad.length) return 0;
@@ -7847,22 +7971,17 @@
       var body = document.createElement('p'); body.className = 'career-player-meta'; body.textContent = m.body;
       row.appendChild(body);
 
-      if(m.meta && m.meta.offerId){
-        var offer = (state.manager.transferOffersIn || []).filter(function(o){ return o.id === m.meta.offerId; })[0];
-        if(offer && offer.status === 'pending'){
+      if(m.meta && m.meta.negId){
+        var meNeg = mgrNegoById(m.meta.negId);
+        if(meNeg && meNeg.status === 'active'){
           var actions = document.createElement('div'); actions.className = 'career-player-actions';
-          var acceptBtn = document.createElement('button'); acceptBtn.className = 'btn btn-gold btn-sm'; acceptBtn.textContent = 'Aceptar';
-          acceptBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrRespondIncomingOffer(offer.id, 'accept'); });
-          var counterBtn = document.createElement('button'); counterBtn.className = 'btn btn-primary btn-sm'; counterBtn.textContent = 'Contraofertar (+25%)';
-          counterBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrRespondIncomingOffer(offer.id, 'counter'); });
-          var rejectBtn = document.createElement('button'); rejectBtn.className = 'btn btn-ghost btn-sm'; rejectBtn.textContent = 'Rechazar';
-          rejectBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrRespondIncomingOffer(offer.id, 'reject'); });
-          actions.appendChild(acceptBtn); actions.appendChild(counterBtn); actions.appendChild(rejectBtn);
+          var goBtn = document.createElement('button'); goBtn.className = 'btn btn-gold btn-sm'; goBtn.textContent = 'Ver negociación';
+          goBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrGotoNego(meNeg.id); });
+          actions.appendChild(goBtn);
           row.appendChild(actions);
-        } else if(offer){
+        } else if(meNeg){
           var statusP = document.createElement('p'); statusP.className = 'career-player-meta';
-          statusP.textContent = offer.status === 'accepted' ? 'Ya aceptaste esta oferta.' :
-            (offer.status === 'countered' ? 'Le pediste ' + offer.counterAmount.toLocaleString('es-CO') + '.' : 'Ya respondiste esta oferta.');
+          statusP.textContent = meNeg.status === 'agreed' ? 'Este acuerdo ya se cerró.' : 'Esta negociación ya terminó.';
           row.appendChild(statusP);
         }
       }
@@ -8065,21 +8184,29 @@
     meta3.textContent = 'Salario ' + p.wage.toLocaleString('es-CO') + ' · Contrato ' + p.contractYears + ' año(s) · Valor de mercado ' + p.value.toLocaleString('es-CO');
     sheet.appendChild(meta3);
 
-    var already = (state.manager.transferOffersOut || []).filter(function(o){ return o.playerId === playerId && (o.status === 'pending' || o.status === 'countered'); })[0];
+    var already = mgrNegotiations().filter(function(n){ return n.playerId === playerId && n.kind === 'buy' && n.status === 'active'; })[0];
     if(already){
       var pend = document.createElement('p'); pend.className = 'career-player-meta';
-      pend.textContent = already.status === 'countered'
-        ? (club.name + ' pide ' + already.counterAmount.toLocaleString('es-CO') + ' (respóndele desde "Mis ofertas")')
-        : ('Oferta pendiente: ' + already.amount.toLocaleString('es-CO') + ' · respuesta el día ' + already.resolveAtDay);
+      pend.textContent = 'Ya tienes una negociación activa por este jugador.';
       sheet.appendChild(pend);
+      var goBtn = document.createElement('button');
+      goBtn.className = 'btn btn-gold btn-block'; goBtn.style.marginTop = '6px';
+      goBtn.textContent = 'Ir a la negociación';
+      goBtn.addEventListener('click', function(){ mgrCloseTransferSheet(); mgrGotoNego(already.id); });
+      sheet.appendChild(goBtn);
     } else {
       var wrap = document.createElement('div');
       wrap.className = 'career-bid-row'; wrap.style.marginTop = '6px';
       var input = document.createElement('input');
       input.type = 'number'; input.min = '1000'; input.step = '1000'; input.value = String(p.value);
       var sendBtn = document.createElement('button');
-      sendBtn.className = 'btn btn-gold btn-sm'; sendBtn.textContent = 'Enviar oferta';
-      sendBtn.addEventListener('click', function(){ mgrMakeOfferForPlayer(clubIdx, playerId, parseInt(input.value, 10)); });
+      sendBtn.className = 'btn btn-gold btn-sm'; sendBtn.textContent = 'Ofertar';
+      sendBtn.addEventListener('click', function(){
+        var amt = parseInt(input.value, 10);
+        mgrCloseTransferSheet();
+        var neg = mgrNegoStart('buy', clubIdx, playerId, amt);
+        if(neg) mgrGotoNego(neg.id);
+      });
       wrap.appendChild(input); wrap.appendChild(sendBtn);
       sheet.appendChild(wrap);
 
@@ -8095,34 +8222,6 @@
     closeBtn.textContent = 'Cerrar';
     closeBtn.addEventListener('click', mgrCloseTransferSheet);
     sheet.appendChild(closeBtn);
-  }
-
-  function mgrRenderMyOffers(){
-    var el = document.getElementById('mgrMyOffersList');
-    if(!el) return;
-    var offers = (state.manager.transferOffersOut || []).filter(function(o){ return o.status === 'pending' || o.status === 'countered'; })
-      .sort(function(a, b){ return (a.resolveAtDay || 0) - (b.resolveAtDay || 0); });
-    el.innerHTML = '';
-    if(!offers.length){ el.innerHTML = '<p class="league-empty">No tienes ofertas enviadas activas.</p>'; return; }
-    offers.forEach(function(o){
-      var row = document.createElement('div');
-      row.className = 'career-player-row';
-      var actions = document.createElement('div');
-      actions.className = 'career-player-actions';
-      if(o.status === 'countered'){
-        row.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(o.playerName) + '</span><span class="career-slot-grl">' + o.counterAmount.toLocaleString('es-CO') + '</span></div><p class="career-player-meta">' + escapeHtml(o.clubName) + ' pide ese monto (tu oferta fue ' + o.amount.toLocaleString('es-CO') + ')</p>';
-        var acceptBtn = document.createElement('button'); acceptBtn.className = 'btn btn-gold btn-sm'; acceptBtn.textContent = 'Aceptar contraoferta';
-        acceptBtn.addEventListener('click', function(){ mgrAcceptCounter(o.id); });
-        actions.appendChild(acceptBtn);
-      } else {
-        row.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(o.playerName) + '</span><span class="career-slot-grl">' + o.amount.toLocaleString('es-CO') + '</span></div><p class="career-player-meta">Pendiente · ' + escapeHtml(o.clubName) + ' responde el día ' + o.resolveAtDay + '</p>';
-      }
-      var withdrawBtn = document.createElement('button'); withdrawBtn.className = 'btn btn-ghost btn-sm'; withdrawBtn.textContent = 'Retirar';
-      withdrawBtn.addEventListener('click', function(){ mgrWithdrawOffer(o.id); });
-      actions.appendChild(withdrawBtn);
-      row.appendChild(actions);
-      el.appendChild(row);
-    });
   }
 
   var mgrTransferSort = 'ovr';
@@ -8147,36 +8246,6 @@
         '<p class="career-player-meta">' + escapeHtml(entry.clubName) + ' · Edad ' + p.age + ' · Potencial ' + p.potential + ' · Valor ' + p.value.toLocaleString('es-CO') + '</p>';
       row.addEventListener('click', function(){ mgrOpenTransferSheet(entry.clubIdx, p.id); });
       el.appendChild(row);
-    });
-
-    mgrRenderMyOffers();
-
-    var offersEl = document.getElementById('mgrOffersInList');
-    var pending = (state.manager.transferOffersIn || []).filter(function(o){ return o.status === 'pending'; });
-    var countered = (state.manager.transferOffersIn || []).filter(function(o){ return o.status === 'countered'; });
-    offersEl.innerHTML = '';
-    if(!pending.length && !countered.length){ offersEl.innerHTML = '<p class="league-empty">No tienes ofertas por tus jugadores.</p>'; }
-    pending.forEach(function(o){
-      var row = document.createElement('div');
-      row.className = 'career-player-row';
-      row.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(o.playerName) + '</span><span class="career-slot-grl">' + o.amount.toLocaleString('es-CO') + '</span></div><p class="career-player-meta">Oferta de ' + escapeHtml(o.clubName) + '</p>';
-      var actions = document.createElement('div');
-      actions.className = 'career-player-actions';
-      var acceptBtn = document.createElement('button'); acceptBtn.className = 'btn btn-gold btn-sm'; acceptBtn.textContent = 'Aceptar';
-      acceptBtn.addEventListener('click', function(){ mgrRespondIncomingOffer(o.id, 'accept'); });
-      var counterBtn = document.createElement('button'); counterBtn.className = 'btn btn-primary btn-sm'; counterBtn.textContent = 'Contraofertar (+25%)';
-      counterBtn.addEventListener('click', function(){ mgrRespondIncomingOffer(o.id, 'counter'); });
-      var rejectBtn = document.createElement('button'); rejectBtn.className = 'btn btn-ghost btn-sm'; rejectBtn.textContent = 'Rechazar';
-      rejectBtn.addEventListener('click', function(){ mgrRespondIncomingOffer(o.id, 'reject'); });
-      actions.appendChild(acceptBtn); actions.appendChild(counterBtn); actions.appendChild(rejectBtn);
-      row.appendChild(actions);
-      offersEl.appendChild(row);
-    });
-    countered.forEach(function(o){
-      var row = document.createElement('div');
-      row.className = 'career-player-row';
-      row.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(o.playerName) + '</span><span class="career-slot-grl">' + o.counterAmount.toLocaleString('es-CO') + '</span></div><p class="career-player-meta">Le pediste ese monto a ' + escapeHtml(o.clubName) + ' · responde el día ' + o.resolveAtDay + '</p>';
-      offersEl.appendChild(row);
     });
   }
 
@@ -8297,6 +8366,126 @@
     }
   }
 
+  var mgrOpenNegoId = null;
+  function mgrGotoNego(negId){
+    mgrOpenNegoId = negId;
+    mgrSwitchTab('negociaciones');
+  }
+  function mgrNegoSummaryAmount(neg){
+    if(neg.stage === 'contract') return neg.aiLastAmount != null ? neg.aiLastAmount : neg.playerWageAsk;
+    return neg.aiLastAmount != null ? neg.aiLastAmount : (neg.myLastAmount != null ? neg.myLastAmount : neg.playerValueSnapshot);
+  }
+  function mgrRenderNegoRow(neg){
+    var row = document.createElement('div');
+    row.className = 'career-player-row mgr-clickable-row';
+    var label = neg.stage === 'contract' ? 'Contrato' : (neg.kind === 'buy' ? 'Comprando' : 'Te ofrecen');
+    row.innerHTML =
+      '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(neg.playerName) + '</span><span class="career-slot-grl">' + mgrNegoSummaryAmount(neg).toLocaleString('es-CO') + '</span></div>' +
+      '<p class="career-player-meta">' + escapeHtml(neg.clubName) + ' · ' + label + ' · Ronda ' + neg.rounds + ' · Tensión ' + neg.tension + '%</p>';
+    row.addEventListener('click', function(){ mgrOpenNegoId = neg.id; mgrRenderNegociaciones(); });
+    return row;
+  }
+  function mgrRenderNegociaciones(){
+    var listView = document.getElementById('mgrNegoListView');
+    var detailView = document.getElementById('mgrNegoDetailView');
+    var neg = mgrOpenNegoId ? mgrNegoById(mgrOpenNegoId) : null;
+    if(neg && neg.status !== 'active'){ mgrOpenNegoId = null; neg = null; }
+
+    if(!neg){
+      listView.hidden = false; detailView.hidden = true;
+      var all = mgrNegotiations().filter(function(n){ return n.status === 'active'; });
+      var buyList = all.filter(function(n){ return n.kind === 'buy' && n.stage === 'fee'; });
+      var sellList = all.filter(function(n){ return n.kind === 'sell'; });
+      var contractList = all.filter(function(n){ return n.stage === 'contract'; });
+
+      var buyEl = document.getElementById('mgrNegoBuyList');
+      buyEl.innerHTML = '';
+      if(!buyList.length) buyEl.innerHTML = '<p class="league-empty">No tienes negociaciones de compra activas.</p>';
+      buyList.forEach(function(n){ buyEl.appendChild(mgrRenderNegoRow(n)); });
+
+      var sellEl = document.getElementById('mgrNegoSellList');
+      sellEl.innerHTML = '';
+      if(!sellList.length) sellEl.innerHTML = '<p class="league-empty">Nadie te ha ofertado por tus jugadores.</p>';
+      sellList.forEach(function(n){ sellEl.appendChild(mgrRenderNegoRow(n)); });
+
+      var contractEl = document.getElementById('mgrNegoContractList');
+      contractEl.innerHTML = '';
+      if(!contractList.length) contractEl.innerHTML = '<p class="league-empty">No hay contratos pendientes.</p>';
+      contractList.forEach(function(n){ contractEl.appendChild(mgrRenderNegoRow(n)); });
+      return;
+    }
+
+    listView.hidden = true; detailView.hidden = false;
+    detailView.innerHTML = '';
+
+    var header = document.createElement('div'); header.className = 'career-player-top';
+    var stageLabel = neg.stage === 'contract' ? 'Negociación de contrato' : (neg.kind === 'buy' ? 'Negociando traspaso' : 'Te ofrecen por tu jugador');
+    header.innerHTML = '<span class="career-player-name">' + escapeHtml(neg.playerName) + '</span><span class="career-slot-grl">' + escapeHtml(neg.clubName) + '</span>';
+    detailView.appendChild(header);
+    var sub = document.createElement('p'); sub.className = 'career-player-meta';
+    sub.textContent = stageLabel + ' · Ronda ' + neg.rounds + '/' + MGR_NEGO_MAX_ROUNDS;
+    detailView.appendChild(sub);
+
+    var tensionLabel = document.createElement('p'); tensionLabel.className = 'bet-label'; tensionLabel.style.marginTop = '8px';
+    tensionLabel.textContent = 'Tensión de la negociación';
+    detailView.appendChild(tensionLabel);
+    var barTrack = document.createElement('div'); barTrack.className = 'mgr-bar-track';
+    var barFill = document.createElement('div'); barFill.className = 'mgr-bar-fill tension'; barFill.style.width = neg.tension + '%';
+    barTrack.appendChild(barFill); detailView.appendChild(barTrack);
+
+    var historyWrap = document.createElement('div'); historyWrap.className = 'mgr-nego-history';
+    neg.history.slice(-8).forEach(function(h){
+      var hRow = document.createElement('div'); hRow.className = 'mgr-nego-round by-' + h.by;
+      var who = h.by === 'user' ? 'Tú' : neg.clubName;
+      var text;
+      if(h.action === 'walk') text = who + ' se retira de la mesa';
+      else if(h.action === 'accept') text = who + ' acepta ' + (h.amount || 0).toLocaleString('es-CO');
+      else text = who + ': ' + (h.amount || 0).toLocaleString('es-CO');
+      hRow.innerHTML = '<span>' + text + '</span>';
+      historyWrap.appendChild(hRow);
+    });
+    detailView.appendChild(historyWrap);
+
+    if(neg.aiLastAmount != null){
+      var acceptBtn = document.createElement('button');
+      acceptBtn.className = 'btn btn-gold btn-block'; acceptBtn.style.marginTop = '10px';
+      acceptBtn.textContent = 'Aceptar ' + neg.aiLastAmount.toLocaleString('es-CO');
+      acceptBtn.addEventListener('click', function(){ mgrNegoAcceptAsk(neg.id); });
+      detailView.appendChild(acceptBtn);
+    }
+
+    var wrap = document.createElement('div'); wrap.className = 'career-bid-row'; wrap.style.marginTop = '8px';
+    var input = document.createElement('input'); input.type = 'number'; input.min = '1000'; input.step = '1000';
+    var actionBtn = document.createElement('button'); actionBtn.className = 'btn btn-primary btn-sm';
+    if(neg.stage === 'contract'){
+      input.value = String(neg.myLastAmount || neg.playerWageAsk);
+      actionBtn.textContent = 'Proponer salario';
+      actionBtn.addEventListener('click', function(){ mgrNegoWageRound(neg.id, parseInt(input.value, 10)); });
+    } else if(neg.kind === 'buy'){
+      input.value = String(neg.myLastAmount ? Math.round(neg.myLastAmount * 1.05) : neg.playerValueSnapshot);
+      actionBtn.textContent = 'Subir oferta';
+      actionBtn.addEventListener('click', function(){ mgrNegoUserRound(neg.id, parseInt(input.value, 10)); });
+    } else {
+      input.value = String(neg.myLastAmount ? Math.round(neg.myLastAmount * 1.1) : Math.round((neg.aiLastAmount || neg.playerValueSnapshot) * 1.15));
+      actionBtn.textContent = 'Pedir más';
+      actionBtn.addEventListener('click', function(){ mgrNegoUserAsk(neg.id, parseInt(input.value, 10)); });
+    }
+    wrap.appendChild(input); wrap.appendChild(actionBtn);
+    detailView.appendChild(wrap);
+
+    var withdrawBtn = document.createElement('button');
+    withdrawBtn.className = 'btn btn-ghost btn-block'; withdrawBtn.style.marginTop = '8px';
+    withdrawBtn.textContent = neg.kind === 'sell' ? 'Rechazar oferta' : 'Retirar negociación';
+    withdrawBtn.addEventListener('click', function(){ mgrNegoWithdraw(neg.id); });
+    detailView.appendChild(withdrawBtn);
+
+    var backBtn = document.createElement('button');
+    backBtn.className = 'btn btn-ghost btn-block'; backBtn.style.marginTop = '6px';
+    backBtn.textContent = 'Volver a la lista';
+    backBtn.addEventListener('click', function(){ mgrOpenNegoId = null; mgrRenderNegociaciones(); });
+    detailView.appendChild(backBtn);
+  }
+
   var mgrActiveTab = 'oficina';
   function mgrRenderActiveTab(){
     if(!state.manager || !state.manager.active) return;
@@ -8306,15 +8495,17 @@
     if(mgrActiveTab === 'oficina') mgrRenderOficina();
     else if(mgrActiveTab === 'plantilla') mgrRenderPlantilla();
     else if(mgrActiveTab === 'fichajes') mgrRenderFichajes();
+    else if(mgrActiveTab === 'negociaciones') mgrRenderNegociaciones();
     else if(mgrActiveTab === 'calendario') mgrRenderCalendario();
   }
+  function mgrSwitchTab(tab){
+    mgrActiveTab = tab;
+    Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-btn')).forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgr-tab') === tab); });
+    Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-panel')).forEach(function(pnl){ pnl.hidden = pnl.getAttribute('data-mgr-panel') !== tab; });
+    mgrRenderActiveTab();
+  }
   Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-btn')).forEach(function(btn){
-    btn.addEventListener('click', function(){
-      mgrActiveTab = btn.getAttribute('data-mgr-tab');
-      Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-btn')).forEach(function(b){ b.classList.toggle('active', b === btn); });
-      Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-panel')).forEach(function(pnl){ pnl.hidden = pnl.getAttribute('data-mgr-panel') !== mgrActiveTab; });
-      mgrRenderActiveTab();
-    });
+    btn.addEventListener('click', function(){ mgrSwitchTab(btn.getAttribute('data-mgr-tab')); });
   });
   Array.prototype.slice.call(document.querySelectorAll('#mgrTransferSort .choice-btn')).forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -8357,10 +8548,8 @@
     }
     setup.hidden = true; main.hidden = false;
     mgrAutoFixLineup();
-    mgrActiveTab = 'oficina';
-    Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-btn')).forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mgr-tab') === 'oficina'); });
-    Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-panel')).forEach(function(pnl){ pnl.hidden = pnl.getAttribute('data-mgr-panel') !== 'oficina'; });
-    mgrRenderActiveTab();
+    mgrOpenNegoId = null;
+    mgrSwitchTab('oficina');
   }
   document.getElementById('mgrStartBtn').addEventListener('click', function(){
     var clubName = document.getElementById('mgrClubNameInput').value.trim().slice(0, 24);
