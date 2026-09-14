@@ -1074,6 +1074,36 @@
   .mgr-tab-panel{ display:flex; flex-direction:column; gap:8px; }
   .mgr-clickable-row{ cursor:pointer; transition:border-color .15s ease; }
   .mgr-clickable-row:hover{ border-color:var(--accent-dim); }
+  .mgr-tab-badge{
+    display:inline-flex; align-items:center; justify-content:center; min-width:16px; height:16px;
+    padding:0 4px; border-radius:999px; background:var(--ruby-bright); color:#fff;
+    font-size:.62rem; font-weight:700; margin-left:4px; vertical-align:middle;
+  }
+  .mgr-form-strip{ display:flex; gap:6px; margin-top:6px; }
+  .mgr-form-badge{
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:.72rem; font-weight:700; color:#fff;
+  }
+  .mgr-form-badge.W{ background:var(--neon-green-bright, #1fe89a); }
+  .mgr-form-badge.D{ background:var(--text-faint); color:var(--bg); }
+  .mgr-form-badge.L{ background:var(--ruby-bright); }
+  .mgr-quick-stats{ display:flex; flex-wrap:wrap; gap:16px; margin-top:12px; font-size:.8rem; color:var(--text-muted); }
+  .mgr-quick-stats b{ color:var(--accent-bright); font-family:'Space Mono', monospace; }
+  .mgr-unread{ border-color:var(--accent-bright); }
+  .mgr-new-tag{
+    display:inline-block; background:var(--accent-bright); color:var(--accent-ink);
+    padding:1px 7px; border-radius:999px; font-size:.6rem; font-weight:700; margin-left:6px; vertical-align:middle;
+  }
+  .mgr-inbox-del{
+    background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:.9rem;
+    padding:0 2px; line-height:1;
+  }
+  .mgr-inbox-del:hover{ color:var(--ruby-bright); }
+  .mgr-stats-cols{ display:flex; flex-direction:column; gap:16px; }
+  @media (min-width:860px){
+    .mgr-stats-cols{ flex-direction:row; }
+    .mgr-stats-cols > div{ flex:1; min-width:0; }
+  }
   .mgr-modal-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:60;
     display:flex; align-items:flex-end; justify-content:center;
@@ -2138,7 +2168,7 @@
           <span class="career-wallet-amt">💰 <b id="mgrBudgetLabel">0</b></span>
         </div>
         <div class="match-toolbar">
-          <button class="btn btn-ghost btn-sm mgr-tab-btn active" data-mgr-tab="oficina">🏢 Oficina</button>
+          <button class="btn btn-ghost btn-sm mgr-tab-btn active" data-mgr-tab="oficina">🏢 Oficina<span class="mgr-tab-badge" id="mgrOficinaBadge" hidden>0</span></button>
           <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="plantilla">🧑 Plantilla</button>
           <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="fichajes">📝 Fichajes</button>
           <button class="btn btn-ghost btn-sm mgr-tab-btn" data-mgr-tab="calendario">📅 Calendario</button>
@@ -2148,16 +2178,23 @@
           <div class="league-card ornate">
             <p class="league-card-title" id="mgrOfficeSeason">Temporada 1 · Jornada 0/14</p>
             <p class="league-card-sub" id="mgrOfficePosition">Posición: —</p>
+            <p class="bet-label" style="margin-top:10px;">Forma reciente</p>
+            <div id="mgrFormStrip" class="mgr-form-strip"></div>
             <p class="bet-label" style="margin-top:10px;">Confianza de la directiva</p>
             <div class="mgr-bar-track"><div class="mgr-bar-fill" id="mgrConfidenceFill" style="width:60%;"></div></div>
+            <div class="mgr-quick-stats" id="mgrQuickStats"></div>
           </div>
-          <p class="paytable-title" style="margin-top:16px;">Bandeja de entrada</p>
+          <div class="career-player-top" style="margin-top:16px;">
+            <p class="paytable-title" id="mgrInboxTitle">Bandeja de entrada</p>
+            <button class="btn btn-ghost btn-sm" id="mgrClearReadBtn" hidden>Borrar leídos</button>
+          </div>
           <div class="career-player-list" id="mgrInboxList"></div>
         </div>
 
         <div class="mgr-tab-panel" data-mgr-panel="plantilla" hidden>
           <p class="paytable-title">Alineación (1-3-2-1)</p>
           <div class="career-pitch" id="mgrPitch"></div>
+          <p class="career-player-meta" id="mgrSquadSummary" style="margin-top:8px;"></p>
           <p class="bet-label" style="margin-top:10px;">Entrenamiento enfocado en</p>
           <div class="choice-row" id="mgrTrainingChips">
             <button class="choice-btn active" data-amount="GK">Porteros</button>
@@ -2165,8 +2202,10 @@
             <button class="choice-btn" data-amount="MID">Medios</button>
             <button class="choice-btn" data-amount="FWD">Delanteros</button>
           </div>
-          <p class="paytable-title" style="margin-top:16px;">Plantilla completa</p>
-          <div class="career-player-list" id="mgrSquadList"></div>
+          <p class="paytable-title" style="margin-top:16px;" id="mgrStartersTitle">Titulares</p>
+          <div class="career-player-list" id="mgrStartersList"></div>
+          <p class="paytable-title" style="margin-top:16px;" id="mgrBenchTitle">Suplentes</p>
+          <div class="career-player-list" id="mgrBenchList"></div>
         </div>
 
         <div class="mgr-tab-panel" data-mgr-panel="fichajes" hidden>
@@ -2178,6 +2217,13 @@
             <button class="chip-btn" data-amount="MID" style="width:auto; border-radius:999px; padding:0 12px;">MID</button>
             <button class="chip-btn" data-amount="FWD" style="width:auto; border-radius:999px; padding:0 12px;">FWD</button>
           </div>
+          <p class="bet-label" style="margin-top:8px;">Ordenar por</p>
+          <div class="choice-row" id="mgrTransferSort">
+            <button class="choice-btn active" data-amount="ovr">Media</button>
+            <button class="choice-btn" data-amount="potential">Potencial</button>
+            <button class="choice-btn" data-amount="age">Edad</button>
+            <button class="choice-btn" data-amount="value">Valor</button>
+          </div>
           <div class="career-player-list" id="mgrTransferList" style="margin-top:10px;"></div>
           <p class="paytable-title" style="margin-top:16px;">Mis ofertas enviadas</p>
           <div class="career-player-list" id="mgrMyOffersList"></div>
@@ -2188,10 +2234,22 @@
         <div class="mgr-tab-panel" data-mgr-panel="calendario" hidden>
           <div class="league-card ornate" id="mgrNextMatchCard"></div>
           <div id="mgrLiveMatch" style="margin-top:12px;" hidden></div>
+          <p class="paytable-title" style="margin-top:16px;">Próximos partidos</p>
+          <div class="career-player-list" id="mgrUpcomingList"></div>
+          <p class="paytable-title" style="margin-top:16px;">Últimos resultados</p>
+          <div class="career-player-list" id="mgrRecentResultsList"></div>
           <p class="paytable-title" style="margin-top:16px;">Tabla de posiciones</p>
           <div class="career-player-list" id="mgrStandingsList"></div>
-          <p class="paytable-title" style="margin-top:16px;">Goleadores</p>
-          <div class="career-player-list" id="mgrTopScorersList"></div>
+          <div class="mgr-stats-cols">
+            <div>
+              <p class="paytable-title">Goleadores</p>
+              <div class="career-player-list" id="mgrTopScorersList"></div>
+            </div>
+            <div>
+              <p class="paytable-title">Asistencias</p>
+              <div class="career-player-list" id="mgrTopAssistsList"></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -7269,10 +7327,10 @@
       .sort(function(a, b){ return a.day - b.day; })[0];
   }
 
-  function mgrPushInbox(type, title, body){
+  function mgrPushInbox(type, title, body, meta){
     if(!state.manager.inbox) state.manager.inbox = [];
-    state.manager.inbox.unshift({ id: 'inb' + Date.now() + Math.floor(Math.random() * 1000), type: type, title: title, body: body, ts: Date.now() });
-    if(state.manager.inbox.length > 30) state.manager.inbox.length = 30;
+    state.manager.inbox.unshift({ id: 'inb' + Date.now() + Math.floor(Math.random() * 1000), type: type, title: title, body: body, ts: Date.now(), read: false, meta: meta || null });
+    if(state.manager.inbox.length > 40) state.manager.inbox.length = 40;
   }
 
   var mgrMsgTimer = null;
@@ -7442,11 +7500,12 @@
     var mult = 0.85 + Math.random() * 0.4 + (importance > 45 ? 0.3 : 0) + (player.forSale ? -0.1 : 0);
     var amount = Math.round(player.value * mult / 1000) * 1000;
     if(!state.manager.transferOffersIn) state.manager.transferOffersIn = [];
-    state.manager.transferOffersIn.push({
+    var offerObj = {
       id: 'off' + Date.now(), clubIdx: clubIdx, clubName: club.name, playerId: player.id, playerName: player.name,
       amount: amount, status: 'pending', ts: Date.now(), expiresAtDay: state.manager.day + 3
-    });
-    mgrPushInbox('oferta', 'Oferta por ' + player.name, club.name + ' ofrece ' + amount.toLocaleString('es-CO') + ' por ' + player.name + '.');
+    };
+    state.manager.transferOffersIn.push(offerObj);
+    mgrPushInbox('oferta', 'Oferta por ' + player.name, club.name + ' ofrece ' + amount.toLocaleString('es-CO') + ' por ' + player.name + '.', { offerId: offerObj.id });
   }
   function mgrRespondIncomingOffer(offerId, action){
     var offer = (state.manager.transferOffersIn || []).filter(function(o){ return o.id === offerId; })[0];
@@ -7563,7 +7622,7 @@
       c.pj = 0; c.pg = 0; c.pe = 0; c.pp = 0; c.gf = 0; c.gc = 0; c.pts = 0;
       c.squad.forEach(function(p){ p.age += 1; p.contractYears = Math.max(0, p.contractYears - 1); });
     });
-    state.manager.topScorers = {}; state.manager.topAssists = {};
+    state.manager.topScorers = {}; state.manager.topAssists = {}; state.manager.recentForm = [];
     mgrAutoFixLineup();
     mgrGenerateSeasonCalendar();
   }
@@ -7585,6 +7644,9 @@
     var oppName = mgrClubName(iAmHome ? fixture.away : fixture.home);
     mgrPushInbox('resultado', myScore > oppScore ? '¡Victoria!' : (myScore < oppScore ? 'Derrota' : 'Empate'),
       'Terminaste ' + myScore + '-' + oppScore + ' vs ' + oppName + '.');
+    if(!state.manager.recentForm) state.manager.recentForm = [];
+    state.manager.recentForm.push(myScore > oppScore ? 'W' : (myScore < oppScore ? 'L' : 'D'));
+    if(state.manager.recentForm.length > 5) state.manager.recentForm.shift();
     mgrAutoFixLineup();
     mgrMaybeGenerateIncomingOffer();
     mgrCheckSeasonEnd();
@@ -7696,7 +7758,7 @@
       cpuClubs: mgrGenerateCpuClubs(),
       myStats: { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 },
       calendar: [], matchday: 0, day: 0,
-      topScorers: {}, topAssists: {},
+      topScorers: {}, topAssists: {}, recentForm: [],
       inbox: [], transferOffersIn: [], transferOffersOut: [],
       trainingFocus: 'GK'
     };
@@ -7706,6 +7768,38 @@
     saveState();
   }
 
+  var MGR_INBOX_ICONS = { oferta: '📩', lesion: '🚑', informe: '📊', news: '📰', directiva: '🏛️', renovacion: '✍️', resultado: '⚽', fichaje: '🤝', contrato: '📄' };
+  function mgrMarkInboxRead(id){
+    var msg = (state.manager.inbox || []).filter(function(m){ return m.id === id; })[0];
+    if(msg && !msg.read){ msg.read = true; saveState(); mgrRenderActiveTab(); }
+  }
+  function mgrDeleteInboxMsg(id){
+    state.manager.inbox = (state.manager.inbox || []).filter(function(m){ return m.id !== id; });
+    saveState();
+    mgrRenderActiveTab();
+  }
+  function mgrClearReadInbox(){
+    state.manager.inbox = (state.manager.inbox || []).filter(function(m){ return !m.read; });
+    saveState();
+    mgrRenderActiveTab();
+  }
+  function mgrUpdateBadges(){
+    var badge = document.getElementById('mgrOficinaBadge');
+    if(!badge) return;
+    var unread = (state.manager.inbox || []).filter(function(m){ return !m.read; }).length;
+    badge.textContent = unread;
+    badge.hidden = unread === 0;
+  }
+  function mgrSquadAvgOvr(){
+    if(!state.manager.squad.length) return 0;
+    var sum = 0; state.manager.squad.forEach(function(p){ sum += p.ovr; });
+    return Math.round(sum / state.manager.squad.length);
+  }
+  function mgrSquadTotalValue(){
+    var sum = 0; state.manager.squad.forEach(function(p){ sum += p.value; });
+    return sum;
+  }
+
   function mgrRenderOficina(){
     var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
     document.getElementById('mgrOfficeSeason').textContent = 'Temporada ' + state.manager.season + ' · Día ' + state.manager.day + ' · Jornada ' + state.manager.matchday + '/' + total;
@@ -7713,15 +7807,67 @@
     var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
     document.getElementById('mgrOfficePosition').textContent = 'Posición: ' + myPos + 'º de ' + table.length;
     document.getElementById('mgrConfidenceFill').style.width = Math.max(0, Math.min(100, state.manager.club.boardConfidence)) + '%';
+
+    var statsEl = document.getElementById('mgrQuickStats');
+    if(statsEl){
+      statsEl.innerHTML =
+        '<span><b>' + mgrSquadAvgOvr() + '</b> media de plantilla</span>' +
+        '<span><b>' + mgrSquadTotalValue().toLocaleString('es-CO') + '</b> valor de plantilla</span>';
+    }
+    var formEl = document.getElementById('mgrFormStrip');
+    if(formEl){
+      var form = state.manager.recentForm || [];
+      formEl.innerHTML = form.length
+        ? form.map(function(r){ return '<span class="mgr-form-badge ' + r + '">' + r + '</span>'; }).join('')
+        : '<span class="career-player-meta">Aún no has jugado partidos esta temporada.</span>';
+    }
+
     var inboxEl = document.getElementById('mgrInboxList');
     var inbox = state.manager.inbox || [];
-    if(!inbox.length){ inboxEl.innerHTML = '<p class="league-empty">Sin mensajes por ahora.</p>'; return; }
-    var icons = { oferta: '📩', lesion: '🚑', informe: '📊', news: '📰', directiva: '🏛️', renovacion: '✍️', resultado: '⚽', fichaje: '🤝', contrato: '📄' };
+    var unreadCount = inbox.filter(function(m){ return !m.read; }).length;
+    var titleEl = document.getElementById('mgrInboxTitle');
+    if(titleEl) titleEl.textContent = 'Bandeja de entrada' + (unreadCount ? ' · ' + unreadCount + ' nuevo' + (unreadCount > 1 ? 's' : '') : '');
+    var clearBtn = document.getElementById('mgrClearReadBtn');
+    if(clearBtn) clearBtn.hidden = !inbox.some(function(m){ return m.read; });
+    mgrUpdateBadges();
+
     inboxEl.innerHTML = '';
+    if(!inbox.length){ inboxEl.innerHTML = '<p class="league-empty">Sin mensajes por ahora.</p>'; return; }
     inbox.forEach(function(m){
       var row = document.createElement('div');
-      row.className = 'career-player-row';
-      row.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + (icons[m.type] || '📌') + ' ' + escapeHtml(m.title) + '</span></div><p class="career-player-meta">' + escapeHtml(m.body) + '</p>';
+      row.className = 'career-player-row' + (m.read ? '' : ' mgr-unread');
+      var top = document.createElement('div');
+      top.className = 'career-player-top';
+      top.innerHTML = '<span class="career-player-name">' + (MGR_INBOX_ICONS[m.type] || '📌') + ' ' + escapeHtml(m.title) + (m.read ? '' : ' <span class="mgr-new-tag">Nuevo</span>') + '</span>';
+      var delBtn = document.createElement('button');
+      delBtn.className = 'mgr-inbox-del'; delBtn.textContent = '✕'; delBtn.title = 'Eliminar mensaje';
+      delBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrDeleteInboxMsg(m.id); });
+      top.appendChild(delBtn);
+      row.appendChild(top);
+      var body = document.createElement('p'); body.className = 'career-player-meta'; body.textContent = m.body;
+      row.appendChild(body);
+
+      if(m.meta && m.meta.offerId){
+        var offer = (state.manager.transferOffersIn || []).filter(function(o){ return o.id === m.meta.offerId; })[0];
+        if(offer && offer.status === 'pending'){
+          var actions = document.createElement('div'); actions.className = 'career-player-actions';
+          var acceptBtn = document.createElement('button'); acceptBtn.className = 'btn btn-gold btn-sm'; acceptBtn.textContent = 'Aceptar';
+          acceptBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrRespondIncomingOffer(offer.id, 'accept'); });
+          var counterBtn = document.createElement('button'); counterBtn.className = 'btn btn-primary btn-sm'; counterBtn.textContent = 'Contraofertar (+25%)';
+          counterBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrRespondIncomingOffer(offer.id, 'counter'); });
+          var rejectBtn = document.createElement('button'); rejectBtn.className = 'btn btn-ghost btn-sm'; rejectBtn.textContent = 'Rechazar';
+          rejectBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrRespondIncomingOffer(offer.id, 'reject'); });
+          actions.appendChild(acceptBtn); actions.appendChild(counterBtn); actions.appendChild(rejectBtn);
+          row.appendChild(actions);
+        } else if(offer){
+          var statusP = document.createElement('p'); statusP.className = 'career-player-meta';
+          statusP.textContent = offer.status === 'accepted' ? 'Ya aceptaste esta oferta.' :
+            (offer.status === 'countered' ? 'Le pediste ' + offer.counterAmount.toLocaleString('es-CO') + '.' : 'Ya respondiste esta oferta.');
+          row.appendChild(statusP);
+        }
+      }
+
+      row.addEventListener('click', function(){ mgrMarkInboxRead(m.id); });
       inboxEl.appendChild(row);
     });
   }
@@ -7848,10 +7994,10 @@
       pitchEl.appendChild(chip);
     });
 
-    var listEl = document.getElementById('mgrSquadList');
-    listEl.innerHTML = '';
-    var squad = state.manager.squad.slice().sort(function(a, b){ return b.ovr - a.ovr; });
-    squad.forEach(function(p){
+    var summaryEl = document.getElementById('mgrSquadSummary');
+    if(summaryEl) summaryEl.textContent = 'Media de plantilla ' + mgrSquadAvgOvr() + ' · Valor total ' + mgrSquadTotalValue().toLocaleString('es-CO');
+
+    function buildPlayerRow(p){
       var row = document.createElement('div');
       row.className = 'career-player-row mgr-clickable-row';
       var isStarter = !!startersIds[p.id];
@@ -7861,8 +8007,25 @@
           (isStarter ? ' ⭐' : '') + (injured ? ' 🚑' : '') + (p.onLoan ? ' (cedido)' : '') + (p.forSale ? ' 🏷️' : '') + '</span><span class="career-slot-grl">OVR ' + p.ovr + '</span></div>' +
         '<p class="career-player-meta">Edad ' + p.age + ' · Potencial ' + p.potential + ' · Contrato ' + p.contractYears + ' año(s) · Valor ' + p.value.toLocaleString('es-CO') + '</p>';
       row.addEventListener('click', function(){ mgrOpenPlayerSheet(p.id); });
-      listEl.appendChild(row);
-    });
+      return row;
+    }
+
+    var squad = state.manager.squad.slice().sort(function(a, b){ return b.ovr - a.ovr; });
+    var starters = squad.filter(function(p){ return startersIds[p.id]; });
+    var bench = squad.filter(function(p){ return !startersIds[p.id]; });
+
+    var startersTitle = document.getElementById('mgrStartersTitle');
+    if(startersTitle) startersTitle.textContent = 'Titulares (' + starters.length + '/7)';
+    var startersEl = document.getElementById('mgrStartersList');
+    startersEl.innerHTML = '';
+    starters.forEach(function(p){ startersEl.appendChild(buildPlayerRow(p)); });
+
+    var benchTitle = document.getElementById('mgrBenchTitle');
+    if(benchTitle) benchTitle.textContent = 'Suplentes (' + bench.length + ')';
+    var benchEl = document.getElementById('mgrBenchList');
+    benchEl.innerHTML = '';
+    if(!bench.length){ benchEl.innerHTML = '<p class="league-empty">No tienes jugadores en el banco.</p>'; }
+    bench.forEach(function(p){ benchEl.appendChild(buildPlayerRow(p)); });
   }
 
   var mgrTransferFilter = 'ALL';
@@ -7962,6 +8125,7 @@
     });
   }
 
+  var mgrTransferSort = 'ovr';
   function mgrRenderFichajes(){
     var el = document.getElementById('mgrTransferList');
     el.innerHTML = '';
@@ -7969,7 +8133,10 @@
     state.manager.cpuClubs.forEach(function(club, idx){
       club.squad.forEach(function(p){ if(mgrTransferFilter === 'ALL' || p.position === mgrTransferFilter) list.push({ p: p, clubIdx: idx, clubName: club.name }); });
     });
-    list.sort(function(a, b){ return b.p.ovr - a.p.ovr; });
+    if(mgrTransferSort === 'age') list.sort(function(a, b){ return a.p.age - b.p.age; });
+    else if(mgrTransferSort === 'value') list.sort(function(a, b){ return b.p.value - a.p.value; });
+    else if(mgrTransferSort === 'potential') list.sort(function(a, b){ return b.p.potential - a.p.potential; });
+    else list.sort(function(a, b){ return b.p.ovr - a.p.ovr; });
     if(!list.length) el.innerHTML = '<p class="league-empty">No hay jugadores en esta posición.</p>';
     list.slice(0, 40).forEach(function(entry){
       var p = entry.p;
@@ -8053,6 +8220,44 @@
       card.appendChild(advBtn);
     }
 
+    var upcomingEl = document.getElementById('mgrUpcomingList');
+    if(upcomingEl){
+      var upcoming = state.manager.calendar.filter(function(f){
+        return !f.played && (f.home === 0 || f.away === 0) && f !== todayFixture;
+      }).sort(function(a, b){ return a.day - b.day; }).slice(0, 5);
+      upcomingEl.innerHTML = '';
+      if(!upcoming.length){ upcomingEl.innerHTML = '<p class="league-empty">No hay más partidos programados.</p>'; }
+      upcoming.forEach(function(f){
+        var iAmH = f.home === 0;
+        var opp = mgrClubName(iAmH ? f.away : f.home);
+        var row = document.createElement('div');
+        row.className = 'career-player-row';
+        row.innerHTML = '<div class="career-player-top"><span class="career-player-name">Jornada ' + f.matchday + '</span><span class="career-slot-grl">Día ' + f.day + '</span></div>' +
+          '<p class="career-player-meta">' + (iAmH ? 'Local' : 'Visitante') + ' vs ' + escapeHtml(opp) + '</p>';
+        upcomingEl.appendChild(row);
+      });
+    }
+
+    var recentEl = document.getElementById('mgrRecentResultsList');
+    if(recentEl){
+      var played = state.manager.calendar.filter(function(f){
+        return f.played && (f.home === 0 || f.away === 0);
+      }).sort(function(a, b){ return b.day - a.day; }).slice(0, 5);
+      recentEl.innerHTML = '';
+      if(!played.length){ recentEl.innerHTML = '<p class="league-empty">Aún no has jugado partidos esta temporada.</p>'; }
+      played.forEach(function(f){
+        var iAmH = f.home === 0;
+        var opp = mgrClubName(iAmH ? f.away : f.home);
+        var myScore = iAmH ? f.scoreHome : f.scoreAway, oppScore = iAmH ? f.scoreAway : f.scoreHome;
+        var outcome = myScore > oppScore ? 'Ganaste' : (myScore < oppScore ? 'Perdiste' : 'Empate');
+        var row = document.createElement('div');
+        row.className = 'career-player-row';
+        row.innerHTML = '<div class="career-player-top"><span class="career-player-name">Jornada ' + f.matchday + ' vs ' + escapeHtml(opp) + '</span><span class="career-slot-grl">' + myScore + '-' + oppScore + '</span></div>' +
+          '<p class="career-player-meta">' + outcome + ' · ' + (iAmH ? 'Local' : 'Visitante') + '</p>';
+        recentEl.appendChild(row);
+      });
+    }
+
     var standingsEl = document.getElementById('mgrStandingsList');
     var table = mgrStandingsTable();
     standingsEl.innerHTML = '';
@@ -8069,13 +8274,27 @@
     var scorers = Object.keys(state.manager.topScorers || {}).map(function(name){ return { name: name, goals: state.manager.topScorers[name] }; })
       .sort(function(a, b){ return b.goals - a.goals; }).slice(0, 10);
     scorersEl.innerHTML = '';
-    if(!scorers.length){ scorersEl.innerHTML = '<p class="league-empty">Aún no hay goleadores.</p>'; return; }
+    if(!scorers.length){ scorersEl.innerHTML = '<p class="league-empty">Aún no hay goleadores.</p>'; }
     scorers.forEach(function(s, i){
       var rowEl2 = document.createElement('div');
       rowEl2.className = 'career-player-row';
       rowEl2.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + (i + 1) + '. ' + escapeHtml(s.name) + '</span><span class="career-slot-grl">' + s.goals + ' goles</span></div>';
       scorersEl.appendChild(rowEl2);
     });
+
+    var assistsEl = document.getElementById('mgrTopAssistsList');
+    if(assistsEl){
+      var assisters = Object.keys(state.manager.topAssists || {}).map(function(name){ return { name: name, assists: state.manager.topAssists[name] }; })
+        .sort(function(a, b){ return b.assists - a.assists; }).slice(0, 10);
+      assistsEl.innerHTML = '';
+      if(!assisters.length){ assistsEl.innerHTML = '<p class="league-empty">Aún no hay asistencias.</p>'; }
+      assisters.forEach(function(s, i){
+        var rowEl3 = document.createElement('div');
+        rowEl3.className = 'career-player-row';
+        rowEl3.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + (i + 1) + '. ' + escapeHtml(s.name) + '</span><span class="career-slot-grl">' + s.assists + ' asist.</span></div>';
+        assistsEl.appendChild(rowEl3);
+      });
+    }
   }
 
   var mgrActiveTab = 'oficina';
@@ -8083,6 +8302,7 @@
     if(!state.manager || !state.manager.active) return;
     document.getElementById('mgrClubLabel').textContent = state.manager.club.name;
     document.getElementById('mgrBudgetLabel').textContent = Math.round(state.manager.club.budget).toLocaleString('es-CO');
+    mgrUpdateBadges();
     if(mgrActiveTab === 'oficina') mgrRenderOficina();
     else if(mgrActiveTab === 'plantilla') mgrRenderPlantilla();
     else if(mgrActiveTab === 'fichajes') mgrRenderFichajes();
@@ -8094,6 +8314,14 @@
       Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-btn')).forEach(function(b){ b.classList.toggle('active', b === btn); });
       Array.prototype.slice.call(document.querySelectorAll('.mgr-tab-panel')).forEach(function(pnl){ pnl.hidden = pnl.getAttribute('data-mgr-panel') !== mgrActiveTab; });
       mgrRenderActiveTab();
+    });
+  });
+  Array.prototype.slice.call(document.querySelectorAll('#mgrTransferSort .choice-btn')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      Array.prototype.slice.call(document.querySelectorAll('#mgrTransferSort .choice-btn')).forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      mgrTransferSort = btn.getAttribute('data-amount');
+      mgrRenderFichajes();
     });
   });
   Array.prototype.slice.call(document.querySelectorAll('#mgrPosFilter .chip-btn')).forEach(function(btn){
@@ -8113,6 +8341,7 @@
   });
   document.getElementById('mgrPlayerSheetOverlay').addEventListener('click', function(e){ if(e.target === this) mgrClosePlayerSheet(); });
   document.getElementById('mgrTransferSheetOverlay').addEventListener('click', function(e){ if(e.target === this) mgrCloseTransferSheet(); });
+  document.getElementById('mgrClearReadBtn').addEventListener('click', mgrClearReadInbox);
 
   function renderManagerEntry(){
     document.getElementById('mgrMsgBar').textContent = '';
