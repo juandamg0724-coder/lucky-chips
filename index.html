@@ -1076,6 +1076,24 @@
   .mgr-nego-round{ display:flex; justify-content:space-between; gap:8px; padding:6px 10px; border-radius:8px; border:1px solid var(--line-soft); font-size:.85rem; }
   .mgr-nego-round.by-user{ background:var(--bg-elevated); }
   .mgr-nego-round.by-ai{ background:var(--bg-panel-2); }
+  .mgr-nego-table{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:14px 10px; border-radius:14px; border:1px solid var(--line);
+    background:linear-gradient(180deg, var(--bg-elevated), var(--bg-panel-2));
+  }
+  .mgr-nego-side{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .mgr-nego-side.theirs{ align-items:flex-end; text-align:right; }
+  .mgr-nego-side .mgr-nego-tag{ font-size:.66rem; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em; }
+  .mgr-nego-side .mgr-nego-name{
+    font-family:'Fraunces', serif; font-weight:600; color:var(--text);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+  }
+  .mgr-nego-center{ flex:0 0 auto; text-align:center; padding:0 8px; min-width:0; }
+  .mgr-nego-vs{ font-size:.66rem; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em; }
+  .mgr-nego-amount{ font-family:'Space Mono', monospace; font-weight:700; font-size:1.15rem; color:var(--accent-bright); white-space:nowrap; }
+  .mgr-nego-actions{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .mgr-nego-raise-row{ display:flex; gap:8px; }
+  .mgr-nego-raise-row input{ flex:1; min-width:0; }
   .mgr-tab-panel{ display:flex; flex-direction:column; gap:8px; }
   .mgr-clickable-row{ cursor:pointer; transition:border-color .15s ease; }
   .mgr-clickable-row:hover{ border-color:var(--accent-dim); }
@@ -7449,7 +7467,9 @@
       saveState(); mgrRenderActiveTab();
       return;
     }
-    neg.tension = Math.min(100, neg.tension + (improved ? 8 : 22));
+    // La tensión solo sube si no hubo una mejora real de tu parte: si vas subiendo de verdad,
+    // el pedido del club se mantiene estable en vez de escaparse cada ronda.
+    if(!improved) neg.tension = Math.min(100, neg.tension + 20);
     var walkChance = Math.max(0, neg.tension - 60) / 100;
     if(neg.rounds >= MGR_NEGO_MAX_ROUNDS || Math.random() < walkChance){
       neg.status = 'rejected';
@@ -7458,8 +7478,7 @@
       saveState(); mgrRenderActiveTab();
       return;
     }
-    var minAsk = Math.max(ratio + 0.06, (neg.aiLastRatio || (acceptThreshold - 0.2)) + 0.03);
-    var askRatio = Math.min(acceptThreshold, minAsk);
+    var askRatio = Math.max(mgrNegoBuyThreshold(neg, club, player), ratio + 0.02);
     var newAsk = Math.round(player.value * askRatio / 1000) * 1000;
     neg.aiLastAmount = newAsk; neg.aiLastRatio = askRatio;
     neg.history.push({ by: 'ai', amount: newAsk, action: 'counter' });
@@ -7497,14 +7516,14 @@
       saveState(); mgrRenderActiveTab();
       return;
     }
-    neg.tension = Math.min(100, neg.tension + (improved ? 8 : 20));
+    if(!improved) neg.tension = Math.min(100, neg.tension + 20);
     if(neg.rounds >= MGR_NEGO_MAX_ROUNDS || neg.tension >= 100){
       neg.status = 'rejected';
       mgrPushInbox('oferta', 'El fichaje se cayó', neg.playerName + ' no llegó a un acuerdo personal y el fichaje con ' + neg.clubName + ' se cae.');
       saveState(); mgrRenderActiveTab();
       return;
     }
-    var newAskRatio = Math.min(1.1, Math.max(ratio + 0.05, acceptRatio));
+    var newAskRatio = Math.min(1.1, Math.max(0.9 * mgrNegoTensionMult(neg.tension), ratio + 0.02));
     var newAsk = Math.round(neg.playerWageAsk * newAskRatio / 10) * 10;
     neg.aiLastAmount = newAsk;
     neg.history.push({ by: 'ai', amount: newAsk, action: 'counter' });
@@ -7560,7 +7579,9 @@
     var gapNow = ratio - ceiling;
     var improved = neg.lastGap != null && gapNow < neg.lastGap - 0.02;
     neg.lastGap = gapNow;
-    neg.tension = Math.min(100, neg.tension + (improved ? 8 : 20));
+    // La tensión solo sube si no cediste de verdad: si bajas el pedido en serio, la oferta del
+    // club se mantiene estable en su techo actual en vez de encogerse cada ronda.
+    if(!improved) neg.tension = Math.min(100, neg.tension + 20);
     var walkChance = Math.max(0, neg.tension - 60) / 100;
     if(neg.rounds >= MGR_NEGO_MAX_ROUNDS || Math.random() < walkChance){
       neg.status = 'rejected';
@@ -7569,7 +7590,9 @@
       saveState(); mgrRenderActiveTab();
       return;
     }
-    var newOfferRatio = Math.min(ceiling, Math.max((neg.aiLastRatio || 0) + 0.03, ceiling - 0.02));
+    // La oferta del club nunca retrocede por debajo de lo que ya puso sobre la mesa: pedir más
+    // puede hacer que se plante o se retire, pero no que "retire" plata ya ofrecida.
+    var newOfferRatio = Math.max(neg.aiLastRatio || 0, Math.min(mgrNegoSellCeiling(neg, club, player), ratio - 0.02));
     var newOffer = Math.round(player.value * newOfferRatio / 1000) * 1000;
     neg.aiLastAmount = newOffer; neg.aiLastRatio = newOfferRatio;
     neg.history.push({ by: 'ai', amount: newOffer, action: 'counter' });
@@ -8418,11 +8441,23 @@
     listView.hidden = true; detailView.hidden = false;
     detailView.innerHTML = '';
 
-    var header = document.createElement('div'); header.className = 'career-player-top';
-    var stageLabel = neg.stage === 'contract' ? 'Negociación de contrato' : (neg.kind === 'buy' ? 'Negociando traspaso' : 'Te ofrecen por tu jugador');
-    header.innerHTML = '<span class="career-player-name">' + escapeHtml(neg.playerName) + '</span><span class="career-slot-grl">' + escapeHtml(neg.clubName) + '</span>';
-    detailView.appendChild(header);
-    var sub = document.createElement('p'); sub.className = 'career-player-meta';
+    var rivalName = neg.stage === 'contract' ? neg.playerName : neg.clubName;
+    var rivalTag = neg.stage === 'contract' ? 'Jugador' : (neg.kind === 'buy' ? 'Club vendedor' : 'Club comprador');
+    var currentAmount = neg.aiLastAmount != null ? neg.aiLastAmount : (neg.myLastAmount != null ? neg.myLastAmount : (neg.stage === 'contract' ? neg.playerWageAsk : neg.playerValueSnapshot));
+    var amountLabel = neg.stage === 'contract' ? 'Salario en la mesa' : 'Traspaso en la mesa';
+
+    var table = document.createElement('div'); table.className = 'mgr-nego-table';
+    var mySide = document.createElement('div'); mySide.className = 'mgr-nego-side mine';
+    mySide.innerHTML = '<span class="mgr-nego-tag">Mi club</span><span class="mgr-nego-name">' + escapeHtml(state.manager.club.name) + '</span>';
+    var center = document.createElement('div'); center.className = 'mgr-nego-center';
+    center.innerHTML = '<div class="mgr-nego-vs">' + amountLabel + '</div><div class="mgr-nego-amount">' + currentAmount.toLocaleString('es-CO') + '</div>';
+    var theirSide = document.createElement('div'); theirSide.className = 'mgr-nego-side theirs';
+    theirSide.innerHTML = '<span class="mgr-nego-tag">' + rivalTag + '</span><span class="mgr-nego-name">' + escapeHtml(rivalName) + '</span>';
+    table.appendChild(mySide); table.appendChild(center); table.appendChild(theirSide);
+    detailView.appendChild(table);
+
+    var sub = document.createElement('p'); sub.className = 'career-player-meta'; sub.style.textAlign = 'center'; sub.style.marginTop = '6px';
+    var stageLabel = neg.stage === 'contract' ? 'Negociando contrato con ' + neg.playerName : (neg.kind === 'buy' ? 'Negociando el traspaso de ' + neg.playerName : 'Te ofrecen por ' + neg.playerName);
     sub.textContent = stageLabel + ' · Ronda ' + neg.rounds + '/' + MGR_NEGO_MAX_ROUNDS;
     detailView.appendChild(sub);
 
@@ -8434,9 +8469,9 @@
     barTrack.appendChild(barFill); detailView.appendChild(barTrack);
 
     var historyWrap = document.createElement('div'); historyWrap.className = 'mgr-nego-history';
-    neg.history.slice(-8).forEach(function(h){
+    neg.history.slice(-6).forEach(function(h){
       var hRow = document.createElement('div'); hRow.className = 'mgr-nego-round by-' + h.by;
-      var who = h.by === 'user' ? 'Tú' : neg.clubName;
+      var who = h.by === 'user' ? state.manager.club.name : rivalName;
       var text;
       if(h.action === 'walk') text = who + ' se retira de la mesa';
       else if(h.action === 'accept') text = who + ' acepta ' + (h.amount || 0).toLocaleString('es-CO');
@@ -8446,15 +8481,17 @@
     });
     detailView.appendChild(historyWrap);
 
+    var actions = document.createElement('div'); actions.className = 'mgr-nego-actions';
+
     if(neg.aiLastAmount != null){
       var acceptBtn = document.createElement('button');
-      acceptBtn.className = 'btn btn-gold btn-block'; acceptBtn.style.marginTop = '10px';
+      acceptBtn.className = 'btn btn-gold btn-block';
       acceptBtn.textContent = 'Aceptar ' + neg.aiLastAmount.toLocaleString('es-CO');
       acceptBtn.addEventListener('click', function(){ mgrNegoAcceptAsk(neg.id); });
-      detailView.appendChild(acceptBtn);
+      actions.appendChild(acceptBtn);
     }
 
-    var wrap = document.createElement('div'); wrap.className = 'career-bid-row'; wrap.style.marginTop = '8px';
+    var raiseRow = document.createElement('div'); raiseRow.className = 'mgr-nego-raise-row';
     var input = document.createElement('input'); input.type = 'number'; input.min = '1000'; input.step = '1000';
     var actionBtn = document.createElement('button'); actionBtn.className = 'btn btn-primary btn-sm';
     if(neg.stage === 'contract'){
@@ -8470,20 +8507,22 @@
       actionBtn.textContent = 'Pedir más';
       actionBtn.addEventListener('click', function(){ mgrNegoUserAsk(neg.id, parseInt(input.value, 10)); });
     }
-    wrap.appendChild(input); wrap.appendChild(actionBtn);
-    detailView.appendChild(wrap);
+    raiseRow.appendChild(input); raiseRow.appendChild(actionBtn);
+    actions.appendChild(raiseRow);
 
     var withdrawBtn = document.createElement('button');
-    withdrawBtn.className = 'btn btn-ghost btn-block'; withdrawBtn.style.marginTop = '8px';
+    withdrawBtn.className = 'btn btn-ghost btn-block';
     withdrawBtn.textContent = neg.kind === 'sell' ? 'Rechazar oferta' : 'Retirar negociación';
     withdrawBtn.addEventListener('click', function(){ mgrNegoWithdraw(neg.id); });
-    detailView.appendChild(withdrawBtn);
+    actions.appendChild(withdrawBtn);
 
     var backBtn = document.createElement('button');
-    backBtn.className = 'btn btn-ghost btn-block'; backBtn.style.marginTop = '6px';
+    backBtn.className = 'btn btn-ghost btn-block';
     backBtn.textContent = 'Volver a la lista';
     backBtn.addEventListener('click', function(){ mgrOpenNegoId = null; mgrRenderNegociaciones(); });
-    detailView.appendChild(backBtn);
+    actions.appendChild(backBtn);
+
+    detailView.appendChild(actions);
   }
 
   var mgrActiveTab = 'oficina';
