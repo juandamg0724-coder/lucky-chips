@@ -2185,6 +2185,9 @@
         <div class="field-row" style="margin-top:8px;">
           <input class="text-input" id="mgrCoachNameInput" type="text" maxlength="24" placeholder="Nombre del entrenador">
         </div>
+        <label class="bet-label" style="display:flex; align-items:center; gap:8px; margin-top:10px; cursor:pointer;">
+          <input type="checkbox" id="mgrNoSackInput"> Carrera sin despido (la directiva nunca te destituye)
+        </label>
         <button class="btn btn-gold btn-block" id="mgrStartBtn" style="margin-top:10px;">Fundar club y empezar</button>
       </div>
 
@@ -2209,6 +2212,7 @@
             <div id="mgrFormStrip" class="mgr-form-strip"></div>
             <p class="bet-label" style="margin-top:10px;">Confianza de la directiva</p>
             <div class="mgr-bar-track"><div class="mgr-bar-fill" id="mgrConfidenceFill" style="width:60%;"></div></div>
+            <p class="career-player-meta" id="mgrObjective" style="margin-top:8px;"></p>
             <div class="mgr-quick-stats" id="mgrQuickStats"></div>
           </div>
           <div class="career-player-top" style="margin-top:16px;">
@@ -7911,11 +7915,26 @@
     if(mgrClubNeedsPosition(club, player.position)){ mgrMsg(club.name + ' rechazó el préstamo: necesitan a ' + player.name); return; }
     club.squad = club.squad.filter(function(p){ return p.id !== playerId; });
     player.onLoan = true; player.loanClubIdx = clubIdx; player.loanReturnAt = state.manager.season + 1; player.number = mgrNextFreeNumber();
+    player.loanBuyOption = Math.round(player.value * 1.15 / 1000) * 1000;
     state.manager.squad.push(player);
-    mgrPushInbox('fichaje', 'Préstamo acordado', player.name + ' llega cedido desde ' + club.name + ' hasta fin de temporada.');
+    mgrPushInbox('fichaje', 'Préstamo acordado', player.name + ' llega cedido desde ' + club.name + ' hasta fin de temporada, con opción de compra por ' + player.loanBuyOption.toLocaleString('es-CO') + '.');
     mgrMsg('¡Préstamo acordado! ' + player.name + ' se une a tu plantilla.');
     saveState();
     mgrCloseTransferSheet();
+    mgrRenderActiveTab();
+  }
+  function mgrExerciseLoanOption(playerId){
+    var player = mgrPlayerById(playerId);
+    if(!player || !player.onLoan || !player.loanBuyOption) return;
+    if(state.manager.club.budget < player.loanBuyOption){ mgrMsg('Presupuesto insuficiente para ejercer la opción de compra'); return; }
+    var club = state.manager.cpuClubs[player.loanClubIdx];
+    state.manager.club.budget -= player.loanBuyOption;
+    player.onLoan = false; player.loanClubIdx = null; player.loanReturnAt = null;
+    var boughtFor = player.loanBuyOption; player.loanBuyOption = null;
+    mgrPushInbox('fichaje', '¡Fichaje completado!', 'Ejerciste la opción de compra de ' + player.name + ' por ' + boughtFor.toLocaleString('es-CO') + (club ? (' ante ' + club.name) : '') + '.');
+    mgrMsg('¡Fichaste a ' + player.name + ' en definitiva!');
+    saveState();
+    mgrRenderPlayerSheet();
     mgrRenderActiveTab();
   }
   function mgrMaybeGenerateIncomingOffer(){
@@ -8116,6 +8135,7 @@
     state.manager.academy = academy.filter(function(p){ return p.id !== id; });
     player.number = mgrNextFreeNumber();
     state.manager.squad.push(player);
+    state.manager.seasonPromotions = (state.manager.seasonPromotions || 0) + 1;
     mgrPushInbox('news', 'Promoción desde la cantera', player.name + ' fue promovido al primer equipo.');
     saveState(); mgrRenderActiveTab();
   }
@@ -8124,15 +8144,48 @@
     saveState(); mgrRenderActiveTab();
   }
 
+  var MGR_OBJECTIVE_LABELS = { pos: 'Deportivo', avoid_relegation: 'Deportivo', finance: 'Financiero', academy: 'Cantera' };
+  function mgrGenerateBoardObjective(){
+    var rep = state.manager.club.reputation || 40;
+    var pool = [];
+    if(rep >= 70) pool.push({ type: 'pos', target: 4, text: 'Terminar entre los 4 primeros de la tabla' });
+    else if(rep >= 45) pool.push({ type: 'pos', target: 10, text: 'Terminar en la mitad superior de la tabla' });
+    else pool.push({ type: 'avoid_relegation', text: 'Evitar el descenso de categoría' });
+    pool.push({ type: 'finance', text: 'Terminar la temporada con balance financiero positivo' });
+    pool.push({ type: 'academy', text: 'Promover al menos 1 juvenil de la academia al primer equipo' });
+    state.manager.club.objective = mgrPick(pool);
+  }
+  function mgrEvaluateBoardObjective(myPos, tableLength){
+    var obj = state.manager.club.objective;
+    if(!obj) return true;
+    if(obj.type === 'pos') return myPos <= obj.target;
+    if(obj.type === 'avoid_relegation') return myPos <= tableLength - 2;
+    if(obj.type === 'finance') return (mgrEnsureFinances().seasonIncome - mgrEnsureFinances().seasonExpenses) >= 0;
+    if(obj.type === 'academy') return (state.manager.seasonPromotions || 0) >= 1;
+    return true;
+  }
   function mgrCloseSeason(){
     var table = mgrStandingsTable();
     var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
     var prize = Math.max(5000, Math.round((table.length - myPos + 1) * 15000));
     state.manager.club.budget += prize;
-    state.manager.club.boardConfidence = Math.max(0, Math.min(100,
-      state.manager.club.boardConfidence + (myPos <= Math.ceil(table.length / 2) ? 8 : -10)));
+
+    var finances = mgrEnsureFinances();
+    var wageBill = state.manager.squad.reduce(function(sum, p){ return sum + (p.wage || 0); }, 0);
+    var sponsorIncome = (state.manager.club.sponsor && state.manager.club.sponsor.pay) || 0;
+    state.manager.club.budget += sponsorIncome - wageBill;
+    finances.seasonIncome += prize + sponsorIncome;
+    finances.seasonExpenses += wageBill;
+
+    var objectiveMet = mgrEvaluateBoardObjective(myPos, table.length);
+    var confDelta = (objectiveMet ? 10 : -14) + (myPos <= Math.ceil(table.length / 2) ? 3 : -3);
+    state.manager.club.boardConfidence = Math.max(0, Math.min(100, state.manager.club.boardConfidence + confDelta));
+
     var leagueName = state.manager.division === 1 ? MGR_DIV1_NAME : MGR_DIV2_NAME;
-    mgrPushInbox('resultado', 'Fin de temporada', 'Terminaste ' + myPos + 'º de ' + table.length + ' en la ' + leagueName + '. Premio: ' + prize.toLocaleString('es-CO') + ' fichas.');
+    mgrPushInbox('resultado', 'Fin de temporada', 'Terminaste ' + myPos + 'º de ' + table.length + ' en la ' + leagueName + '. Premio: ' + prize.toLocaleString('es-CO') +
+      ' fichas. Balance: ingresos ' + finances.seasonIncome.toLocaleString('es-CO') + ', gastos ' + finances.seasonExpenses.toLocaleString('es-CO') + '.');
+    mgrPushInbox('directiva', objectiveMet ? 'Objetivo cumplido' : 'Objetivo no cumplido',
+      (state.manager.club.objective ? state.manager.club.objective.text : 'Objetivo de la directiva') + (objectiveMet ? ': cumplido. La directiva está satisfecha.' : ': no se cumplió. La directiva está preocupada.'));
 
     state.manager.squad.forEach(function(p){
       mgrFillPlayerTactical(p);
@@ -8168,14 +8221,34 @@
     mgrSimulateOtherDivisionSeason();
     mgrApplyPromotionRelegation();
 
+    if(state.manager.club.boardConfidence <= 15){
+      state.manager.confidenceCrisisSeasons = (state.manager.confidenceCrisisSeasons || 0) + 1;
+    } else {
+      state.manager.confidenceCrisisSeasons = 0;
+    }
+    var fired = state.manager.confidenceCrisisSeasons >= 2 && !state.manager.noSack;
+
     state.manager.season += 1;
     state.manager.matchday = 0;
     state.manager.myStats = { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
     state.manager.topScorers = {}; state.manager.topAssists = {}; state.manager.recentForm = [];
+    state.manager.seasonPromotions = 0;
+    finances.seasonIncome = 0; finances.seasonExpenses = 0;
+
+    if(fired){
+      state.manager.active = false;
+      mgrMsg('La directiva te ha destituido. Puedes fundar un nuevo club.');
+      saveState();
+      return;
+    }
+    if(state.manager.confidenceCrisisSeasons === 1){
+      mgrPushInbox('directiva', 'Ultimátum de la directiva', 'La confianza está por el suelo. Si no mejora la próxima temporada, la directiva te destituirá.');
+    }
     mgrAutoFixLineup();
     mgrGenerateSeasonCalendar();
     mgrGenerateCup();
     mgrGenerateAcademyIntake();
+    mgrGenerateBoardObjective();
   }
   function mgrCheckSeasonEnd(){
     var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
@@ -8183,6 +8256,10 @@
     if(state.manager.matchday >= total && cupDone) mgrCloseSeason();
   }
 
+  function mgrEnsureFinances(){
+    if(!state.manager.finances) state.manager.finances = { seasonIncome: 0, seasonExpenses: 0 };
+    return state.manager.finances;
+  }
   function mgrFinalizeMyMatch(fixture, sim, iAmHome){
     fixture.played = true;
     fixture.scoreHome = iAmHome ? sim.scoreA : sim.scoreB;
@@ -8194,8 +8271,16 @@
     state.manager.matchday = fixture.matchday;
     var myScore = iAmHome ? sim.scoreA : sim.scoreB, oppScore = iAmHome ? sim.scoreB : sim.scoreA;
     var oppName = mgrClubName(iAmHome ? fixture.away : fixture.home);
-    mgrPushInbox('resultado', myScore > oppScore ? '¡Victoria!' : (myScore < oppScore ? 'Derrota' : 'Empate'),
-      'Terminaste ' + myScore + '-' + oppScore + ' vs ' + oppName + '.');
+    var resultTitle = myScore > oppScore ? '¡Victoria!' : (myScore < oppScore ? 'Derrota' : 'Empate');
+    var resultBody = 'Terminaste ' + myScore + '-' + oppScore + ' vs ' + oppName + '.';
+    if(iAmHome){
+      var club = state.manager.club;
+      var gate = Math.round(club.capacity * (0.4 + club.popularity / 200) * 8 / 1000) * 1000;
+      club.budget += gate;
+      mgrEnsureFinances().seasonIncome += gate;
+      resultBody += ' Taquilla: ' + gate.toLocaleString('es-CO') + '.';
+    }
+    mgrPushInbox('resultado', resultTitle, resultBody);
     if(!state.manager.recentForm) state.manager.recentForm = [];
     state.manager.recentForm.push(myScore > oppScore ? 'W' : (myScore < oppScore ? 'L' : 'D'));
     if(state.manager.recentForm.length > 5) state.manager.recentForm.shift();
@@ -8330,7 +8415,7 @@
     }
   }
 
-  function mgrStartCareer(clubName, coachName){
+  function mgrStartCareer(clubName, coachName, noSack){
     state.manager = {
       active: true,
       club: mgrEnrichClubFields({ name: clubName, coachName: coachName, budget: MGR_START_BUDGET, boardConfidence: 60, strength: 3 }),
@@ -8343,14 +8428,17 @@
       topScorers: {}, topAssists: {}, recentForm: [],
       inbox: [], negotiations: [], academy: [],
       trainingFocus: 'GK',
-      tactics: { style: 'equilibrado', pressing: 50, block: 50, width: 50 }
+      tactics: { style: 'equilibrado', pressing: 50, block: 50, width: 50 },
+      finances: { seasonIncome: 0, seasonExpenses: 0 }, seasonPromotions: 0, confidenceCrisisSeasons: 0,
+      noSack: !!noSack
     };
     mgrInitWorld();
     mgrAssignInitialLineup();
     mgrGenerateSeasonCalendar();
     mgrGenerateCup();
     mgrGenerateAcademyIntake();
-    mgrPushInbox('news', 'Bienvenido a ' + clubName, 'La directiva te da la bienvenida y espera un buen torneo en la ' + MGR_DIV1_NAME + '. Objetivo: terminar en la mitad superior de la tabla.');
+    mgrGenerateBoardObjective();
+    mgrPushInbox('news', 'Bienvenido a ' + clubName, 'La directiva te da la bienvenida y espera un buen torneo en la ' + MGR_DIV1_NAME + '. Objetivo: ' + state.manager.club.objective.text + '.');
     saveState();
   }
 
@@ -8408,11 +8496,19 @@
     document.getElementById('mgrOfficePosition').textContent = 'Posición: ' + myPos + 'º de ' + table.length + cupText;
     document.getElementById('mgrConfidenceFill').style.width = Math.max(0, Math.min(100, state.manager.club.boardConfidence)) + '%';
 
+    var objectiveEl = document.getElementById('mgrObjective');
+    if(objectiveEl && state.manager.club.objective){
+      objectiveEl.textContent = '🎯 Objetivo (' + (MGR_OBJECTIVE_LABELS[state.manager.club.objective.type] || 'Directiva') + '): ' + state.manager.club.objective.text;
+    }
+
     var statsEl = document.getElementById('mgrQuickStats');
     if(statsEl){
+      var finances = mgrEnsureFinances();
       statsEl.innerHTML =
         '<span><b>' + mgrSquadAvgOvr() + '</b> media de plantilla</span>' +
-        '<span><b>' + mgrSquadTotalValue().toLocaleString('es-CO') + '</b> valor de plantilla</span>';
+        '<span><b>' + mgrSquadTotalValue().toLocaleString('es-CO') + '</b> valor de plantilla</span>' +
+        '<span><b>' + finances.seasonIncome.toLocaleString('es-CO') + '</b> ingresos de temporada</span>' +
+        '<span><b>' + finances.seasonExpenses.toLocaleString('es-CO') + '</b> gastos de temporada</span>';
     }
     var formEl = document.getElementById('mgrFormStrip');
     if(formEl){
@@ -8513,6 +8609,13 @@
       tags.className = 'career-player-meta';
       tags.textContent = [p.forSale ? '🏷️ En venta' : null, p.forLoanListed ? '📤 Disponible a préstamo' : null].filter(Boolean).join(' · ');
       sheet.appendChild(tags);
+    }
+    if(p.onLoan && p.loanBuyOption){
+      var loanBuyBtn = document.createElement('button');
+      loanBuyBtn.className = 'btn btn-gold btn-block'; loanBuyBtn.style.marginTop = '6px';
+      loanBuyBtn.textContent = 'Ejercer opción de compra (' + p.loanBuyOption.toLocaleString('es-CO') + ')';
+      loanBuyBtn.addEventListener('click', function(){ mgrExerciseLoanOption(p.id); });
+      sheet.appendChild(loanBuyBtn);
     }
 
     if(!p.onLoan){
@@ -9157,7 +9260,8 @@
     var clubName = document.getElementById('mgrClubNameInput').value.trim().slice(0, 24);
     var coachName = document.getElementById('mgrCoachNameInput').value.trim().slice(0, 24) || state.playerName || 'Entrenador';
     if(!clubName){ mgrMsg('Ponle un nombre a tu club'); return; }
-    mgrStartCareer(clubName, coachName);
+    var noSack = document.getElementById('mgrNoSackInput').checked;
+    mgrStartCareer(clubName, coachName, noSack);
     renderManagerEntry();
   });
 
