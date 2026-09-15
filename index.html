@@ -1353,8 +1353,8 @@
           <span style="display:flex; align-items:center; gap:12px;">
             <span class="icon-badge icon-green">📋</span>
             <span>
-              <span class="game-name" style="display:block;">Director Técnico</span>
-              <span class="game-meta">Modo carrera offline: liga, fichajes y temporadas</span>
+              <span class="game-name" style="display:block;">Modo Carrera</span>
+              <span class="game-meta">Offline: sé el mánager o el jugador en el mundo de Nortalia</span>
             </span>
           </span>
           <span class="tile-arrow">→</span>
@@ -2150,15 +2150,22 @@
       </div>
     </section>
 
-    <!-- DIRECTOR TECNICO (modo carrera offline) -->
+    <!-- MODO CARRERA (Director Técnico + Carrera de Jugador, offline) -->
     <section class="view" data-view="manager" hidden>
       <div class="view-header">
         <button class="btn-back" data-back>←</button>
-        <h2 class="gold-text">Director Técnico</h2>
+        <h2 class="gold-text" id="mgrViewTitle">Modo Carrera</h2>
         <button class="btn-info" data-toggle="mgrRulesPanel">i</button>
       </div>
 
       <p class="league-msg" id="mgrMsgBar"></p>
+
+      <div class="league-card ornate" id="modeChooser" hidden>
+        <p class="league-card-title">⚽ Elige tu modo de carrera</p>
+        <p class="league-card-sub">Ambos modos comparten el mismo mundo inventado de Nortalia.</p>
+        <button class="btn btn-gold btn-block" id="modeChooserManagerBtn" style="margin-top:12px;">🧑‍💼 <span id="modeChooserManagerLabel">Ser mánager</span></button>
+        <button class="btn btn-primary btn-block" id="modeChooserPlayerBtn" style="margin-top:8px;">⚽ <span id="modeChooserPlayerLabel">Ser jugador</span></button>
+      </div>
 
       <div class="paytable" id="mgrRulesPanel" hidden>
         <p class="paytable-title">Cómo funciona</p>
@@ -2178,6 +2185,7 @@
       </div>
 
       <div class="league-card ornate" id="mgrSetup" hidden>
+        <button class="btn btn-ghost btn-sm" id="mgrBackToChooserBtn" style="margin-bottom:8px;">‹ Volver</button>
         <p class="league-card-title">🏟️ Funda tu club</p>
         <p class="league-card-sub">Este modo es offline: no necesitas liga ni conexión a internet.</p>
         <div class="field-row">
@@ -2312,6 +2320,131 @@
               <div class="career-player-list" id="mgrTopAssistsList"></div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div class="league-card ornate" id="pcSetup" hidden>
+        <button class="btn btn-ghost btn-sm" id="pcBackToChooserBtn" style="margin-bottom:8px;">‹ Volver</button>
+        <p class="league-card-title">⚽ Crea tu jugador</p>
+        <p class="league-card-sub">Empiezas tu carrera como futbolista en el mundo de Nortalia.</p>
+        <div class="field-row">
+          <input class="text-input" id="pcFirstNameInput" type="text" maxlength="20" placeholder="Nombre">
+        </div>
+        <div class="field-row" style="margin-top:8px;">
+          <input class="text-input" id="pcLastNameInput" type="text" maxlength="20" placeholder="Apellido">
+        </div>
+        <div class="field-row" style="margin-top:8px; gap:8px;">
+          <input class="text-input" id="pcAgeInput" type="number" min="16" max="21" value="17" placeholder="Edad" style="flex:1;">
+          <input class="text-input" id="pcNationalityInput" type="text" maxlength="20" placeholder="Nacionalidad" value="Nortalia" style="flex:2;">
+        </div>
+        <p class="bet-label" style="margin-top:10px;">Posición</p>
+        <div class="choice-row" id="pcPositionChips">
+          <button class="choice-btn" data-amount="GK">Portero</button>
+          <button class="choice-btn active" data-amount="DEF">Defensa</button>
+          <button class="choice-btn" data-amount="MID">Mediocampista</button>
+          <button class="choice-btn" data-amount="FWD">Delantero</button>
+        </div>
+        <p class="bet-label" style="margin-top:10px;">Pie dominante</p>
+        <div class="choice-row" id="pcFootChips">
+          <button class="choice-btn active" data-amount="Derecho">Derecho</button>
+          <button class="choice-btn" data-amount="Izquierdo">Izquierdo</button>
+        </div>
+        <div class="field-row" style="margin-top:8px; gap:8px;">
+          <input class="text-input" id="pcHeightInput" type="number" min="160" max="200" value="178" placeholder="Altura (cm)" style="flex:1;">
+          <input class="text-input" id="pcWeightInput" type="number" min="55" max="100" value="72" placeholder="Peso (kg)" style="flex:1;">
+          <input class="text-input" id="pcNumberInput" type="number" min="1" max="99" value="10" placeholder="Dorsal" style="flex:1;">
+        </div>
+        <p class="bet-label" style="margin-top:10px;">Peinado</p>
+        <div class="choice-row" id="pcHairChips">
+          <button class="choice-btn active" data-amount="Corto">Corto</button>
+          <button class="choice-btn" data-amount="Rapado">Rapado</button>
+          <button class="choice-btn" data-amount="Largo">Largo</button>
+          <button class="choice-btn" data-amount="Rizado">Rizado</button>
+        </div>
+        <p class="bet-label" style="margin-top:10px;">Celebración de gol</p>
+        <div class="choice-row" id="pcCelebrationChips">
+          <button class="choice-btn active" data-amount="Señalar al cielo">Señalar al cielo</button>
+          <button class="choice-btn" data-amount="Salto con puño">Salto con puño</button>
+          <button class="choice-btn" data-amount="Corazón con las manos">Corazón con las manos</button>
+          <button class="choice-btn" data-amount="Deslizada de rodillas">Deslizada de rodillas</button>
+        </div>
+        <p class="bet-label" style="margin-top:10px;">Historia de origen</p>
+        <div class="choice-row" id="pcOriginChips">
+          <button class="choice-btn active" data-amount="promesa">Joven promesa</button>
+          <button class="choice-btn" data-amount="canterano">Canterano</button>
+          <button class="choice-btn" data-amount="rechazado">Jugador rechazado</button>
+          <button class="choice-btn" data-amount="desconocido">Talento desconocido</button>
+          <button class="choice-btn" data-amount="legado">Hijo de una leyenda</button>
+          <button class="choice-btn" data-amount="ligamenor">Liga pequeña</button>
+        </div>
+        <button class="btn btn-gold btn-block" id="pcFindClubsBtn" style="margin-top:12px;">Buscar clubes</button>
+        <div id="pcClubPicker" style="margin-top:10px;" hidden>
+          <p class="paytable-title">Elige dónde empezar</p>
+          <div class="career-player-list" id="pcClubPickerList"></div>
+        </div>
+      </div>
+
+      <div id="pcMain" hidden>
+        <div class="career-wallet-row">
+          <span class="career-club-label">⚽ <b id="pcPlayerLabel">Mi jugador</b></span>
+          <span class="career-wallet-amt">🏟️ <b id="pcClubLabel">Mi club</b></span>
+        </div>
+        <div class="match-toolbar">
+          <button class="btn btn-ghost btn-sm pc-tab-btn active" data-pc-tab="mijugador">👤 Mi jugador<span class="mgr-tab-badge" id="pcInboxBadge" hidden>0</span></button>
+          <button class="btn btn-ghost btn-sm pc-tab-btn" data-pc-tab="entrenamiento">🏋️ Entrenamiento</button>
+          <button class="btn btn-ghost btn-sm pc-tab-btn" data-pc-tab="relaciones">💬 Relaciones</button>
+          <button class="btn btn-ghost btn-sm pc-tab-btn" data-pc-tab="contrato">💰 Contrato</button>
+          <button class="btn btn-ghost btn-sm pc-tab-btn" data-pc-tab="calendario">📅 Calendario</button>
+        </div>
+
+        <div class="mgr-tab-panel" data-pc-panel="mijugador">
+          <div class="league-card ornate">
+            <p class="league-card-title" id="pcHeaderLine">Temporada 1 · Día 0</p>
+            <p class="league-card-sub" id="pcClubLine">Club: —</p>
+            <p class="bet-label" style="margin-top:10px;">Confianza del entrenador</p>
+            <div class="mgr-bar-track"><div class="mgr-bar-fill" id="pcConfidenceFill" style="width:50%;"></div></div>
+            <p class="career-player-meta" id="pcRoleLine" style="margin-top:6px;"></p>
+            <p class="career-player-meta" id="pcObjectiveLine" style="margin-top:6px;"></p>
+            <div class="mgr-quick-stats" id="pcQuickStats" style="margin-top:8px;"></div>
+          </div>
+          <p class="paytable-title" style="margin-top:16px;">Atributos</p>
+          <div class="career-player-list" id="pcAttrsList"></div>
+          <div class="career-player-top" style="margin-top:16px;">
+            <p class="paytable-title" id="pcInboxTitle">Bandeja de entrada</p>
+            <button class="btn btn-ghost btn-sm" id="pcClearReadBtn" hidden>Borrar leídos</button>
+          </div>
+          <div class="career-player-list" id="pcInboxList"></div>
+          <p class="paytable-title" style="margin-top:16px;">📱 Redes sociales</p>
+          <div class="career-player-list" id="pcSocialList"></div>
+        </div>
+
+        <div class="mgr-tab-panel" data-pc-panel="entrenamiento" hidden>
+          <p class="paytable-title">Ejercicios individuales</p>
+          <p class="career-player-meta">Cada ejercicio da experiencia y mejora un poco el atributo relacionado, a costa de algo de fatiga.</p>
+          <div class="career-player-list" id="pcTrainingList"></div>
+        </div>
+
+        <div class="mgr-tab-panel" data-pc-panel="relaciones" hidden>
+          <p class="paytable-title">Relaciones</p>
+          <div class="career-player-list" id="pcRelationsList"></div>
+        </div>
+
+        <div class="mgr-tab-panel" data-pc-panel="contrato" hidden>
+          <p class="paytable-title">Mi contrato</p>
+          <div class="career-player-list" id="pcContractInfo"></div>
+          <p class="paytable-title" style="margin-top:16px;">Ofertas de otros clubes</p>
+          <div class="career-player-list" id="pcOffersList"></div>
+        </div>
+
+        <div class="mgr-tab-panel" data-pc-panel="calendario" hidden>
+          <div class="league-card ornate" id="pcNextMatchCard"></div>
+          <div id="pcLiveMatch" style="margin-top:12px;" hidden></div>
+          <p class="paytable-title" style="margin-top:16px;">Próximos partidos</p>
+          <div class="career-player-list" id="pcUpcomingList"></div>
+          <p class="paytable-title" style="margin-top:16px;">Últimos resultados</p>
+          <div class="career-player-list" id="pcRecentResultsList"></div>
+          <p class="paytable-title" style="margin-top:16px;">Tabla de posiciones</p>
+          <div class="career-player-list" id="pcStandingsList"></div>
         </div>
       </div>
     </section>
@@ -9472,22 +9605,690 @@
   document.getElementById('mgrTransferSheetOverlay').addEventListener('click', function(e){ if(e.target === this) mgrCloseTransferSheet(); });
   document.getElementById('mgrClearReadBtn').addEventListener('click', mgrClearReadInbox);
 
+  /* ================= CARRERA DE JUGADOR ================= */
+  // Reutiliza sin tocar: mgrEnrichClubFields, mgrMakeClubStub, mgrMaterializeClub, mgrGenerateSquad,
+  // mgrFillPlayerTactical, mgrDeriveAttributes, MGR_ROLE_POOL/MGR_DEV_PLANS/MGR_FEET, mgrRoundRobinPairs,
+  // mgrClubQuickStrength, mgrPick, mgrAssignRivalries, mgrBestLineupList, mgrDayForMatchday,
+  // careerSimulateFullMatch, poissonSample/lambdaFor, escapeHtml. state.manager no se toca.
+  var PC_FILLER_CLUB_NAMES = ['Real Boreal', 'Unión Federal'];
+  var PC_ORIGIN_DATA = {
+    promesa: { label: 'Joven promesa', ovrMod: 2, potMod: 8, division: 2 },
+    canterano: { label: 'Canterano', ovrMod: 0, potMod: 4, division: 2 },
+    rechazado: { label: 'Jugador rechazado', ovrMod: -4, potMod: 6, division: 2 },
+    desconocido: { label: 'Talento desconocido', ovrMod: -2, potMod: 12, division: 2 },
+    legado: { label: 'Hijo de una leyenda', ovrMod: 4, potMod: 2, division: 1 },
+    ligamenor: { label: 'Liga pequeña', ovrMod: -6, potMod: 5, division: 2 }
+  };
+  var PC_DEV_FOCUS = {
+    portero: ['posicionamiento', 'vision'], central: ['defensa', 'entradas'], lateral: ['velocidad', 'resistencia'],
+    organizador: ['pase', 'vision'], recuperador: ['intercepciones', 'entradas'], delantero: ['finalizacion', 'tiro'], extremo: ['velocidad', 'regate']
+  };
+  // Los objetivos se guardan como {key, text} (sin funciones) porque state.playerCareer pasa por
+  // JSON.stringify en saveState() — las funciones se perderían al recargar. El check real se busca
+  // por key en PC_OBJECTIVE_CHECKS al evaluar.
+  var PC_OBJECTIVES_BY_POS = {
+    GK: [
+      { key: 'gk_clean', text: 'Mantener la portería en cero' },
+      { key: 'gk_max1', text: 'Encajar máximo 1 gol' }
+    ],
+    DEF: [
+      { key: 'def_win', text: 'Ganar el partido' },
+      { key: 'rating7', text: 'Conseguir una valoración de 7.0+' }
+    ],
+    MID: [
+      { key: 'mid_assist', text: 'Dar una asistencia' },
+      { key: 'rating7', text: 'Conseguir una valoración de 7.0+' }
+    ],
+    FWD: [
+      { key: 'fwd_goal', text: 'Marcar un gol' },
+      { key: 'rating7', text: 'Conseguir una valoración de 7.0+' }
+    ]
+  };
+  var PC_OBJECTIVE_CHECKS = {
+    gk_clean: function(ctx){ return ctx.oppGoals === 0; },
+    gk_max1: function(ctx){ return ctx.oppGoals <= 1; },
+    def_win: function(ctx){ return ctx.myGoals > ctx.oppGoals; },
+    mid_assist: function(ctx){ return ctx.assists >= 1; },
+    fwd_goal: function(ctx){ return ctx.goals >= 1; },
+    rating7: function(ctx){ return ctx.rating >= 7; }
+  };
+  var PC_TRAINING_EXERCISES = [
+    { key: 'tiro', label: 'Tiro', attr: 'tiro' }, { key: 'pase', label: 'Pase', attr: 'pase' },
+    { key: 'regate', label: 'Regate', attr: 'regate' }, { key: 'velocidad', label: 'Velocidad', attr: 'velocidad' },
+    { key: 'defensa', label: 'Defensa', attr: 'defensa' }, { key: 'fisico', label: 'Físico', attr: 'fisico' }
+  ];
+  var MGR_INBOX_ICONS_PC = MGR_INBOX_ICONS;
+
+  function pcAllClubNamePool(){
+    return LEAGUE_TEAMS.map(function(t){ return t.name; }).concat(MGR_EXTRA_CLUB_NAMES).concat(MGR_DIV2_CLUB_NAMES).concat(PC_FILLER_CLUB_NAMES);
+  }
+  function pcInitWorld(){
+    var names = pcAllClubNamePool();
+    var div1Names = names.slice(0, 20), div2Names = names.slice(20, 40);
+    state.playerCareer.division1Pool = div1Names.map(function(n){ return mgrMaterializeClub(mgrMakeClubStub(n, 1 + Math.floor(Math.random() * 5))); });
+    state.playerCareer.division2Pool = div2Names.map(function(n){ return mgrMakeClubStub(n, 1 + Math.floor(Math.random() * 4)); });
+    mgrAssignRivalries(state.playerCareer.division1Pool.concat(state.playerCareer.division2Pool));
+  }
+  function pcSuggestClubs(originKey){
+    var origin = PC_ORIGIN_DATA[originKey] || PC_ORIGIN_DATA.canterano;
+    var poolKey = origin.division === 1 ? 'division1Pool' : 'division2Pool';
+    var pool = state.playerCareer[poolKey];
+    var shuffled = pool.slice().sort(function(){ return Math.random() - 0.5; });
+    var picks = shuffled.slice(0, 3).map(mgrMaterializeClub);
+    return { poolKey: poolKey, clubs: picks };
+  }
+  function pcFreeNumberInSquad(squad, preferred){
+    var used = {};
+    squad.forEach(function(p){ if(p.number) used[p.number] = true; });
+    if(preferred && !used[preferred]) return preferred;
+    for(var n = 1; n <= 99; n++){ if(!used[n]) return n; }
+    return 99;
+  }
+  var pcPendingSuggestion = null;
+  function pcStartCareer(chosenClub, poolKey){
+    var originKey = pcOriginChoice.get();
+    var origin = PC_ORIGIN_DATA[originKey] || PC_ORIGIN_DATA.canterano;
+    var position = pcPositionChoice.get();
+    var age = Math.max(16, Math.min(21, parseInt(document.getElementById('pcAgeInput').value, 10) || 17));
+    var baseOvr = Math.max(38, Math.min(70, 45 + origin.ovrMod + Math.floor(Math.random() * 8)));
+    var potential = Math.min(94, baseOvr + 20 + origin.potMod + Math.floor(Math.random() * 10));
+    var firstName = document.getElementById('pcFirstNameInput').value.trim().slice(0, 20) || 'Jugador';
+    var lastName = document.getElementById('pcLastNameInput').value.trim().slice(0, 20) || 'Anónimo';
+    var requestedNumber = parseInt(document.getElementById('pcNumberInput').value, 10) || 10;
+    var player = {
+      id: 'pc' + Date.now() + Math.floor(Math.random() * 100000),
+      name: firstName + ' ' + lastName,
+      age: age, position: position, ovr: baseOvr, potential: potential,
+      physical: 55 + Math.floor(Math.random() * 25), morale: 70, form: 60, fatigue: 0,
+      wage: Math.round((baseOvr * baseOvr * 1.5) / 10) * 10,
+      value: Math.round((baseOvr * baseOvr * 30) / 100) * 100,
+      contractYears: 2,
+      seasonApps: 0, seasonGoals: 0, seasonAssists: 0, seasonRatingSum: 0, seasonInjuries: 0, seasonYellows: 0,
+      injuredUntil: 0, onLoan: false, forSale: false, forLoanListed: false,
+      foot: pcFootChoice.get(), height: parseInt(document.getElementById('pcHeightInput').value, 10) || 178,
+      weight: parseInt(document.getElementById('pcWeightInput').value, 10) || 72,
+      hairStyle: pcHairChoice.get(), celebration: pcCelebrationChoice.get(),
+      nationality: document.getElementById('pcNationalityInput').value.trim().slice(0, 20) || 'Nortalia',
+      origin: origin.label,
+      role: mgrPick(MGR_ROLE_POOL[position] || MGR_ROLE_POOL.MID),
+      secondaryPosition: null,
+      devPlan: mgrPick(MGR_DEV_PLANS[position] || MGR_DEV_PLANS.MID),
+      attrs: mgrDeriveAttributes(position, baseOvr),
+      isUser: true, xp: 0, level: 1,
+      coachConfidence: 50, role_: null,
+      relationships: { coach: 55, teammates: 60, board: 50, press: 50, fans: 50 },
+      careerStats: { matches: 0, goals: 0, assists: 0, titles: [], awards: [], clubsPlayed: [chosenClub.name], bestSeasonRating: 0 }
+    };
+    player.number = pcFreeNumberInSquad(chosenClub.squad, requestedNumber);
+    chosenClub.squad.push(player);
+    var clubIdx = state.playerCareer[poolKey].indexOf(chosenClub);
+
+    state.playerCareer.active = true;
+    state.playerCareer.myPlayer = player;
+    state.playerCareer.clubPool = poolKey;
+    state.playerCareer.clubIdx = clubIdx;
+    state.playerCareer.division = poolKey === 'division1Pool' ? 1 : 2;
+    state.playerCareer.season = 1; state.playerCareer.day = 0; state.playerCareer.matchday = 0;
+    state.playerCareer.inbox = []; state.playerCareer.social = []; state.playerCareer.press = [];
+    state.playerCareer.history = { seasons: [] };
+    state.playerCareer.pendingObjective = null;
+
+    pcGenerateSeasonCalendar();
+    pcPushInbox('news', 'Bienvenido a ' + chosenClub.name, 'Firmas tu primer contrato profesional con ' + chosenClub.name + '. ¡Que empiece tu carrera!');
+    saveState();
+  }
+  function pcGenerateSeasonCalendar(){
+    var pool = state.playerCareer[state.playerCareer.clubPool];
+    var n = pool.length;
+    var rounds = mgrRoundRobinPairs(n);
+    var calendar = [];
+    rounds.forEach(function(round, ri){
+      round.forEach(function(pair){
+        var home = ri % 2 === 0 ? pair[0] : pair[1];
+        var away = ri % 2 === 0 ? pair[1] : pair[0];
+        var matchday = ri + 1;
+        calendar.push({ matchday: matchday, day: mgrDayForMatchday(matchday), home: home, away: away, played: false, scoreHome: null, scoreAway: null });
+      });
+    });
+    var n1 = rounds.length;
+    rounds.forEach(function(round, ri){
+      round.forEach(function(pair){
+        var home = ri % 2 === 0 ? pair[1] : pair[0];
+        var away = ri % 2 === 0 ? pair[0] : pair[1];
+        var matchday = n1 + ri + 1;
+        calendar.push({ matchday: matchday, day: mgrDayForMatchday(matchday), home: home, away: away, played: false, scoreHome: null, scoreAway: null });
+      });
+    });
+    state.playerCareer.calendar = calendar;
+    state.playerCareer.day = 0;
+  }
+  function pcClubName(idx){ return state.playerCareer[state.playerCareer.clubPool][idx].name; }
+  function pcStandingsTable(){
+    var pool = state.playerCareer[state.playerCareer.clubPool];
+    return pool.map(function(c, i){ return { idx: i, name: c.name, stats: c }; })
+      .sort(function(a, b){ if(b.stats.pts !== a.stats.pts) return b.stats.pts - a.stats.pts; return (b.stats.gf - b.stats.gc) - (a.stats.gf - a.stats.gc); });
+  }
+  function pcApplyStandings(homeIdx, awayIdx, sh, sa){
+    var pool = state.playerCareer[state.playerCareer.clubPool];
+    var homeRow = pool[homeIdx], awayRow = pool[awayIdx];
+    homeRow.pj++; awayRow.pj++; homeRow.gf += sh; homeRow.gc += sa; awayRow.gf += sa; awayRow.gc += sh;
+    if(sh > sa){ homeRow.pg++; homeRow.pts += 3; awayRow.pp++; }
+    else if(sh < sa){ awayRow.pg++; awayRow.pts += 3; homeRow.pp++; }
+    else { homeRow.pe++; awayRow.pe++; homeRow.pts++; awayRow.pts++; }
+  }
+  function pcSimQuickResult(homeIdx, awayIdx){
+    var pool = state.playerCareer[state.playerCareer.clubPool];
+    var lh = lambdaFor(Math.max(0.3, (mgrClubQuickStrength(pool[homeIdx]) - 50) / 10), true);
+    var la = lambdaFor(Math.max(0.3, (mgrClubQuickStrength(pool[awayIdx]) - 50) / 10), false);
+    return { scoreHome: poissonSample(lh), scoreAway: poissonSample(la) };
+  }
+  function pcMyFixtureForDay(day){
+    return (state.playerCareer.calendar || []).filter(function(f){
+      return f.day === day && (f.home === state.playerCareer.clubIdx || f.away === state.playerCareer.clubIdx);
+    })[0];
+  }
+  function pcNextMyFixture(){
+    return (state.playerCareer.calendar || []).filter(function(f){
+      return !f.played && (f.home === state.playerCareer.clubIdx || f.away === state.playerCareer.clubIdx);
+    }).sort(function(a, b){ return a.day - b.day; })[0];
+  }
+  function pcRoleForConfidence(conf){
+    if(conf >= 80) return 'estrella';
+    if(conf >= 60) return 'titular';
+    if(conf >= 35) return 'rotacion';
+    return 'reserva';
+  }
+  var PC_ROLE_LABELS = { estrella: 'Estrella del equipo', titular: 'Titular habitual', rotacion: 'Jugador de rotación', reserva: 'Suplente / reserva' };
+  function pcAmISelected(){
+    var role = pcRoleForConfidence(state.playerCareer.myPlayer.coachConfidence);
+    var chance = { estrella: 0.97, titular: 0.85, rotacion: 0.5, reserva: 0.15 }[role];
+    return Math.random() < chance;
+  }
+  function pcBuildClubXI(club){
+    var iWantToPlay = pcAmISelected();
+    var list = mgrBestLineupList(club.squad);
+    var me = state.playerCareer.myPlayer;
+    var iPlay = false;
+    if(iWantToPlay){
+      var replaced = false;
+      for(var i = 0; i < list.length; i++){
+        if(list[i].position === me.position){ list[i] = { id: me.id, name: me.name, position: me.position, grl: me.ovr }; replaced = true; break; }
+      }
+      if(!replaced && list.length < 7) list.push({ id: me.id, name: me.name, position: me.position, grl: me.ovr });
+      iPlay = true;
+    }
+    return { list: list, iPlay: iPlay };
+  }
+  function pcGenerateObjective(){
+    var pos = state.playerCareer.myPlayer.position;
+    var options = PC_OBJECTIVES_BY_POS[pos] || PC_OBJECTIVES_BY_POS.MID;
+    state.playerCareer.pendingObjective = mgrPick(options);
+  }
+  function pcPushInbox(type, title, body, meta){
+    if(!state.playerCareer.inbox) state.playerCareer.inbox = [];
+    state.playerCareer.inbox.unshift({ id: 'pinb' + Date.now() + Math.floor(Math.random() * 1000), type: type, title: title, body: body, ts: Date.now(), read: false, meta: meta || null });
+    if(state.playerCareer.inbox.length > 40) state.playerCareer.inbox.length = 40;
+  }
+  function pcMarkInboxRead(id){
+    var msg = (state.playerCareer.inbox || []).filter(function(m){ return m.id === id; })[0];
+    if(msg && !msg.read){ msg.read = true; saveState(); pcRenderActiveTab(); }
+  }
+  function pcDeleteInboxMsg(id){
+    state.playerCareer.inbox = (state.playerCareer.inbox || []).filter(function(m){ return m.id !== id; });
+    saveState(); pcRenderActiveTab();
+  }
+  function pcClearReadInbox(){
+    state.playerCareer.inbox = (state.playerCareer.inbox || []).filter(function(m){ return !m.read; });
+    saveState(); pcRenderActiveTab();
+  }
+  function pcGainXp(amount){
+    var me = state.playerCareer.myPlayer;
+    me.xp = (me.xp || 0) + amount;
+    var xpNeeded = 100 + (me.level || 1) * 20;
+    while(me.xp >= xpNeeded){
+      me.xp -= xpNeeded;
+      me.level = (me.level || 1) + 1;
+      var growth = 1 + Math.floor(Math.random() * 2);
+      me.ovr = Math.min(me.potential, me.ovr + growth);
+      var focus = PC_DEV_FOCUS[me.devPlan] || [];
+      focus.forEach(function(a){ if(me.attrs[a] != null) me.attrs[a] = Math.min(99, me.attrs[a] + 2); });
+      pcPushInbox('informe', '¡Subiste de nivel!', 'Alcanzas el nivel ' + me.level + '. Tu media ahora es ' + me.ovr + '.');
+      xpNeeded = 100 + me.level * 20;
+    }
+  }
+  function pcCheckSeasonEnd(){
+    var total = state.playerCareer.calendar.length ? state.playerCareer.calendar[state.playerCareer.calendar.length - 1].matchday : 0;
+    if(state.playerCareer.matchday >= total) pcCloseSeason();
+  }
+  function pcCloseSeason(){
+    var me = state.playerCareer.myPlayer;
+    var pool = state.playerCareer[state.playerCareer.clubPool];
+    var table = pcStandingsTable();
+    var myClubPos = table.map(function(r){ return r.idx; }).indexOf(state.playerCareer.clubIdx) + 1;
+    var avgRating = me.seasonApps ? (me.seasonRatingSum / me.seasonApps) : 0;
+    if(!state.playerCareer.history) state.playerCareer.history = { seasons: [] };
+    state.playerCareer.history.seasons.push({ season: state.playerCareer.season, club: pool[state.playerCareer.clubIdx].name, position: myClubPos, apps: me.seasonApps, goals: me.seasonGoals, assists: me.seasonAssists, avgRating: Math.round(avgRating * 100) / 100 });
+    if(avgRating > (me.careerStats.bestSeasonRating || 0)) me.careerStats.bestSeasonRating = Math.round(avgRating * 100) / 100;
+    pcPushInbox('resultado', 'Fin de temporada', 'Tu club terminó ' + myClubPos + 'º. Jugaste ' + me.seasonApps + ' partidos, ' + me.seasonGoals + ' goles y ' + me.seasonAssists + ' asistencias.');
+    me.age += 1;
+    me.seasonApps = 0; me.seasonGoals = 0; me.seasonAssists = 0; me.seasonRatingSum = 0; me.seasonInjuries = 0; me.seasonYellows = 0;
+    pool.forEach(function(c){ c.pj = 0; c.pg = 0; c.pe = 0; c.pp = 0; c.gf = 0; c.gc = 0; c.pts = 0; });
+    state.playerCareer.season += 1;
+    state.playerCareer.matchday = 0;
+    pcGenerateSeasonCalendar();
+  }
+  function pcFinalizeMatch(fixture, sim, myXI){
+    fixture.played = true;
+    fixture.scoreHome = sim.scoreA; fixture.scoreAway = sim.scoreB;
+    pcApplyStandings(fixture.home, fixture.away, fixture.scoreHome, fixture.scoreAway);
+    var iAmHome = fixture.home === state.playerCareer.clubIdx;
+    var myScore = iAmHome ? sim.scoreA : sim.scoreB, oppScore = iAmHome ? sim.scoreB : sim.scoreA;
+    var oppIdx = iAmHome ? fixture.away : fixture.home;
+    var oppName = pcClubName(oppIdx);
+    state.playerCareer.matchday = fixture.matchday;
+
+    var me = state.playerCareer.myPlayer;
+    var resultTitle = myScore > oppScore ? '¡Victoria!' : (myScore < oppScore ? 'Derrota' : 'Empate');
+    if(myXI.iPlay){
+      var ratings = iAmHome ? sim.ratingsA : sim.ratingsB;
+      var myRatingEntry = ratings.filter(function(r){ return r.id === me.id; })[0];
+      var goalsThisMatch = 0, assistsThisMatch = 0;
+      (sim.timeline || []).forEach(function(e){
+        if(e.type !== 'goal') return;
+        if(e.player === me.name) goalsThisMatch++;
+        if(e.assist === me.name) assistsThisMatch++;
+      });
+      if(myRatingEntry){
+        me.ovr = myRatingEntry.newGrl;
+        me.seasonApps = (me.seasonApps || 0) + 1;
+        me.seasonGoals = (me.seasonGoals || 0) + goalsThisMatch;
+        me.seasonAssists = (me.seasonAssists || 0) + assistsThisMatch;
+        me.seasonRatingSum = (me.seasonRatingSum || 0) + myRatingEntry.rating;
+        me.careerStats.matches++; me.careerStats.goals += goalsThisMatch; me.careerStats.assists += assistsThisMatch;
+        me.morale = Math.max(0, Math.min(100, me.morale + (myRatingEntry.rating >= 7 ? 4 : (myRatingEntry.rating < 5 ? -6 : 0))));
+        var obj = state.playerCareer.pendingObjective;
+        var objCheck = obj && PC_OBJECTIVE_CHECKS[obj.key];
+        var objMet = objCheck ? objCheck({ myGoals: myScore, oppGoals: oppScore, rating: myRatingEntry.rating, goals: goalsThisMatch, assists: assistsThisMatch }) : null;
+        state.playerCareer.pendingObjective = null;
+        var xpGain = 20 + Math.round(myRatingEntry.rating * 3) + (objMet ? 15 : 0);
+        pcGainXp(xpGain);
+        var confDelta = (myRatingEntry.rating >= 7 ? 6 : (myRatingEntry.rating < 5 ? -8 : 1)) + (objMet == null ? 0 : (objMet ? 5 : -3));
+        me.coachConfidence = Math.max(0, Math.min(100, me.coachConfidence + confDelta));
+        pcPushInbox('resultado', resultTitle + ' vs ' + oppName, 'Tu valoración: ' + myRatingEntry.rating.toFixed(1) + (goalsThisMatch ? ' · ' + goalsThisMatch + ' gol(es)' : '') + (assistsThisMatch ? ' · ' + assistsThisMatch + ' asistencia(s)' : '') + (obj ? (' · Objetivo (' + obj.text + '): ' + (objMet ? 'cumplido' : 'fallado')) : ''));
+      }
+    } else {
+      state.playerCareer.pendingObjective = null;
+      me.coachConfidence = Math.max(0, me.coachConfidence - 2);
+      pcPushInbox('news', 'No jugaste', 'El entrenador no te alineó vs ' + oppName + ' (' + resultTitle.toLowerCase() + ' ' + myScore + '-' + oppScore + ').');
+    }
+    pcCheckSeasonEnd();
+    saveState();
+  }
+  var pcLiveMatch = null, pcLiveTimer = null;
+  function pcTodayMatchInfo(day){
+    var fixture = pcMyFixtureForDay(day);
+    if(!fixture || fixture.played) return null;
+    var pool = state.playerCareer[state.playerCareer.clubPool];
+    var iAmHome = fixture.home === state.playerCareer.clubIdx;
+    var oppIdx = iAmHome ? fixture.away : fixture.home;
+    return { fixture: fixture, iAmHome: iAmHome, oppName: pool[oppIdx].name, oppClub: pool[oppIdx] };
+  }
+  function pcPlayMatchday(mode){
+    if(!state.playerCareer) return;
+    var today = pcTodayMatchInfo(state.playerCareer.day);
+    if(!today){ mgrMsg('Hoy no tienes partido. Avanza el día.'); return; }
+    var pool = state.playerCareer[state.playerCareer.clubPool];
+    var myClub = pool[state.playerCareer.clubIdx];
+    mgrMaterializeClub(today.oppClub);
+    if(!state.playerCareer.pendingObjective) pcGenerateObjective();
+    var myXI = pcBuildClubXI(myClub);
+    var oppList = mgrBestLineupList(today.oppClub.squad);
+    var iAmHome = today.iAmHome;
+    var sim = careerSimulateFullMatch(iAmHome ? myXI.list : oppList, iAmHome ? oppList : myXI.list);
+    var myClubName = myClub.name;
+
+    if(mode === 'sim'){
+      pcFinalizeMatch(today.fixture, sim, myXI);
+      pcRenderActiveTab();
+    } else {
+      pcLiveMatch = {
+        fixture: today.fixture, sim: sim, myXI: myXI, liveStartAt: Date.now(), finalized: false,
+        homeName: iAmHome ? myClubName : today.oppName, awayName: iAmHome ? today.oppName : myClubName
+      };
+      document.getElementById('pcLiveMatch').hidden = false;
+      pcRenderLiveMatch();
+      if(pcLiveTimer) clearInterval(pcLiveTimer);
+      pcLiveTimer = setInterval(pcRenderLiveMatch, 1000);
+    }
+  }
+  function pcAdvanceDay(){
+    if(!state.playerCareer) return;
+    var pending = pcMyFixtureForDay(state.playerCareer.day);
+    if(pending && !pending.played){ mgrMsg('Termina el partido de hoy antes de avanzar'); return; }
+    state.playerCareer.day += 1;
+    (state.playerCareer.calendar || []).filter(function(f){ return f.day === state.playerCareer.day; }).forEach(function(f){
+      if(f.home !== state.playerCareer.clubIdx && f.away !== state.playerCareer.clubIdx && !f.played){
+        var res = pcSimQuickResult(f.home, f.away);
+        f.played = true; f.scoreHome = res.scoreHome; f.scoreAway = res.scoreAway;
+        pcApplyStandings(f.home, f.away, res.scoreHome, res.scoreAway);
+      }
+    });
+    pcCheckSeasonEnd();
+    saveState();
+    pcRenderActiveTab();
+  }
+  function pcRenderLiveMatch(){
+    var m = pcLiveMatch;
+    var el = document.getElementById('pcLiveMatch');
+    if(!m || !el) return;
+    var elapsed = Date.now() - m.liveStartAt;
+    var finished = elapsed >= CAREER_MATCH_MS;
+    var elapsedMinute = Math.min(90, Math.round((Math.min(elapsed, CAREER_MATCH_MS) / CAREER_MATCH_MS) * 90));
+    var visibleEvents = (m.sim.timeline || []).filter(function(e){ return e.minute <= elapsedMinute; });
+    var scoreA = 0, scoreB = 0;
+    visibleEvents.forEach(function(e){ if(e.type === 'goal'){ if(e.team === 'A') scoreA++; else scoreB++; } });
+
+    el.innerHTML = '';
+    var card = document.createElement('div');
+    card.className = 'career-live-card';
+    card.innerHTML =
+      '<div class="career-live-score">' +
+        '<span class="team">' + escapeHtml(m.homeName) + '</span>' +
+        '<span class="score">' + scoreA + ' - ' + scoreB + '</span>' +
+        '<span class="team">' + escapeHtml(m.awayName) + '</span>' +
+      '</div>' +
+      '<p class="career-live-clock">' + (finished ? 'Partido terminado' : ('Minuto ' + elapsedMinute + "'")) + '</p>';
+    var eventsWrap = document.createElement('div');
+    eventsWrap.className = 'career-live-events';
+    visibleEvents.slice().reverse().forEach(function(e){
+      var row = document.createElement('div');
+      row.className = 'career-event-row';
+      row.innerHTML = '<span class="career-event-min">' + e.minute + "'</span><span class=\"career-event-icon\">" + careerEventIcon(e.type) + '</span><span>' + escapeHtml(careerEventText(e)) + '</span>';
+      eventsWrap.appendChild(row);
+    });
+    card.appendChild(eventsWrap);
+
+    if(finished){
+      if(!m.finalized){
+        m.finalized = true;
+        if(pcLiveTimer){ clearInterval(pcLiveTimer); pcLiveTimer = null; }
+        pcFinalizeMatch(m.fixture, m.sim, m.myXI);
+        saveState();
+      }
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'btn btn-ghost btn-block'; closeBtn.style.marginTop = '10px';
+      closeBtn.textContent = 'Cerrar';
+      closeBtn.addEventListener('click', function(){ pcLiveMatch = null; el.hidden = true; pcRenderActiveTab(); });
+      card.appendChild(closeBtn);
+    }
+    el.appendChild(card);
+  }
+  function pcTrain(exerciseKey){
+    var ex = PC_TRAINING_EXERCISES.filter(function(e){ return e.key === exerciseKey; })[0];
+    if(!ex) return;
+    var me = state.playerCareer.myPlayer;
+    if((me.fatigue || 0) >= 90){ mgrMsg('Estás muy fatigado, descansa antes de entrenar.'); return; }
+    me.attrs[ex.attr] = Math.min(99, (me.attrs[ex.attr] || 50) + 1);
+    me.fatigue = Math.min(100, (me.fatigue || 0) + 12);
+    pcGainXp(8);
+    mgrMsg('Entrenaste ' + ex.label + '.');
+    saveState();
+    pcRenderActiveTab();
+  }
+
+  function pcRenderMiJugador(){
+    var me = state.playerCareer.myPlayer;
+    var pool = state.playerCareer[state.playerCareer.clubPool];
+    var club = pool[state.playerCareer.clubIdx];
+    document.getElementById('pcPlayerLabel').textContent = me.name;
+    document.getElementById('pcClubLabel').textContent = club.name;
+    var total = state.playerCareer.calendar.length ? state.playerCareer.calendar[state.playerCareer.calendar.length - 1].matchday : 0;
+    document.getElementById('pcHeaderLine').textContent = 'Temporada ' + state.playerCareer.season + ' · Día ' + state.playerCareer.day + ' · Jornada ' + state.playerCareer.matchday + '/' + total;
+    document.getElementById('pcClubLine').textContent = club.name + ' · Nivel ' + me.level + ' (XP ' + me.xp + ')';
+    document.getElementById('pcConfidenceFill').style.width = Math.max(0, Math.min(100, me.coachConfidence)) + '%';
+    document.getElementById('pcRoleLine').textContent = 'Rol en el equipo: ' + PC_ROLE_LABELS[pcRoleForConfidence(me.coachConfidence)];
+    document.getElementById('pcObjectiveLine').textContent = state.playerCareer.pendingObjective ? ('🎯 Próximo objetivo: ' + state.playerCareer.pendingObjective.text) : '';
+    document.getElementById('pcQuickStats').innerHTML =
+      '<span><b>' + me.ovr + '</b> media (pot. ' + me.potential + ')</span>' +
+      '<span><b>' + me.seasonApps + '</b> partidos</span>' +
+      '<span><b>' + me.seasonGoals + '</b> goles</span>' +
+      '<span><b>' + me.seasonAssists + '</b> asistencias</span>';
+
+    var attrsEl = document.getElementById('pcAttrsList');
+    attrsEl.innerHTML = '';
+    var attrRow = document.createElement('div'); attrRow.className = 'career-player-row';
+    attrRow.innerHTML = '<p class="career-player-meta">RIT ' + me.attrs.velocidad + ' · TIR ' + me.attrs.tiro + ' · PAS ' + me.attrs.pase + ' · REG ' + me.attrs.regate + ' · DEF ' + me.attrs.defensa + ' · FIS ' + me.attrs.fisico + '</p>' +
+      '<p class="career-player-meta">Rol: ' + me.role + ' · Pie ' + me.foot + ' · ' + me.height + 'cm/' + me.weight + 'kg · Origen: ' + me.origin + '</p>';
+    attrsEl.appendChild(attrRow);
+
+    var inboxEl = document.getElementById('pcInboxList');
+    var inbox = state.playerCareer.inbox || [];
+    var unread = inbox.filter(function(m){ return !m.read; }).length;
+    document.getElementById('pcInboxTitle').textContent = 'Bandeja de entrada' + (unread ? ' · ' + unread + ' nuevo' + (unread > 1 ? 's' : '') : '');
+    var clearBtn = document.getElementById('pcClearReadBtn');
+    if(clearBtn) clearBtn.hidden = !inbox.some(function(m){ return m.read; });
+    var badge = document.getElementById('pcInboxBadge');
+    if(badge){ badge.textContent = unread; badge.hidden = unread === 0; }
+    inboxEl.innerHTML = '';
+    if(!inbox.length){ inboxEl.innerHTML = '<p class="league-empty">Sin mensajes por ahora.</p>'; }
+    inbox.forEach(function(m){
+      var row = document.createElement('div');
+      row.className = 'career-player-row' + (m.read ? '' : ' mgr-unread');
+      var top = document.createElement('div'); top.className = 'career-player-top';
+      top.innerHTML = '<span class="career-player-name">' + (MGR_INBOX_ICONS_PC[m.type] || '📌') + ' ' + escapeHtml(m.title) + (m.read ? '' : ' <span class="mgr-new-tag">Nuevo</span>') + '</span>';
+      var delBtn = document.createElement('button'); delBtn.className = 'mgr-inbox-del'; delBtn.textContent = '✕'; delBtn.title = 'Eliminar mensaje';
+      delBtn.addEventListener('click', function(e){ e.stopPropagation(); pcDeleteInboxMsg(m.id); });
+      top.appendChild(delBtn); row.appendChild(top);
+      var body = document.createElement('p'); body.className = 'career-player-meta'; body.textContent = m.body;
+      row.appendChild(body);
+      row.addEventListener('click', function(){ pcMarkInboxRead(m.id); });
+      inboxEl.appendChild(row);
+    });
+
+    var socialEl = document.getElementById('pcSocialList');
+    var social = state.playerCareer.social || [];
+    socialEl.innerHTML = '';
+    if(!social.length){ socialEl.innerHTML = '<p class="league-empty">Todavía no hay actividad en redes.</p>'; }
+    social.slice(0, 10).forEach(function(post){
+      var srow = document.createElement('div'); srow.className = 'career-player-row';
+      srow.innerHTML = '<p class="career-player-meta"><b>' + escapeHtml(post.handle) + '</b>: ' + escapeHtml(post.text) + '</p>';
+      socialEl.appendChild(srow);
+    });
+  }
+  function pcRenderEntrenamiento(){
+    var listEl = document.getElementById('pcTrainingList');
+    var me = state.playerCareer.myPlayer;
+    listEl.innerHTML = '';
+    var fatigueRow = document.createElement('p'); fatigueRow.className = 'career-player-meta';
+    fatigueRow.textContent = 'Fatiga actual: ' + (me.fatigue || 0) + '/100';
+    listEl.appendChild(fatigueRow);
+    PC_TRAINING_EXERCISES.forEach(function(ex){
+      var row = document.createElement('div'); row.className = 'career-player-row';
+      row.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + ex.label + '</span><span class="career-slot-grl">' + me.attrs[ex.attr] + '</span></div>';
+      var btn = document.createElement('button'); btn.className = 'btn btn-primary btn-sm'; btn.textContent = 'Entrenar';
+      btn.addEventListener('click', function(){ pcTrain(ex.key); });
+      row.appendChild(btn);
+      listEl.appendChild(row);
+    });
+  }
+  function pcRenderRelaciones(){
+    var listEl = document.getElementById('pcRelationsList');
+    var rel = state.playerCareer.myPlayer.relationships;
+    var labels = { coach: 'Entrenador', teammates: 'Compañeros', board: 'Directiva', press: 'Prensa', fans: 'Afición' };
+    listEl.innerHTML = '';
+    Object.keys(labels).forEach(function(key){
+      var row = document.createElement('div'); row.className = 'career-player-row';
+      row.innerHTML = '<p class="bet-label">' + labels[key] + ': ' + rel[key] + '/100</p>' +
+        '<div class="mgr-bar-track"><div class="mgr-bar-fill" style="width:' + Math.max(0, Math.min(100, rel[key])) + '%;"></div></div>';
+      listEl.appendChild(row);
+    });
+  }
+  function pcRenderContrato(){
+    var me = state.playerCareer.myPlayer;
+    var infoEl = document.getElementById('pcContractInfo');
+    infoEl.innerHTML = '';
+    var row = document.createElement('div'); row.className = 'career-player-row';
+    row.innerHTML = '<p class="career-player-meta">Salario: ' + me.wage.toLocaleString('es-CO') + ' · Contrato: ' + me.contractYears + ' año(s) · Valor de mercado: ' + me.value.toLocaleString('es-CO') + '</p>';
+    infoEl.appendChild(row);
+    var offersEl = document.getElementById('pcOffersList');
+    offersEl.innerHTML = '<p class="league-empty">Todavía nadie más se ha interesado en ti.</p>';
+  }
+  function pcRenderCalendario(){
+    var card = document.getElementById('pcNextMatchCard');
+    var total = state.playerCareer.calendar.length ? state.playerCareer.calendar[state.playerCareer.calendar.length - 1].matchday : 0;
+    var today = pcTodayMatchInfo(state.playerCareer.day);
+    card.innerHTML = '';
+    var dayLabel = document.createElement('p'); dayLabel.className = 'league-card-title';
+    dayLabel.textContent = 'Día ' + state.playerCareer.day;
+    card.appendChild(dayLabel);
+    if(today){
+      var sub = document.createElement('p'); sub.className = 'league-card-sub';
+      sub.textContent = 'Jornada ' + today.fixture.matchday + ' de ' + total + ' · ' + (today.iAmHome ? 'Local' : 'Visitante') + ' vs ' + today.oppName;
+      card.appendChild(sub);
+      var playBtn = document.createElement('button'); playBtn.className = 'btn btn-primary btn-block'; playBtn.style.marginTop = '10px';
+      playBtn.textContent = '▶️ Jugar partido'; playBtn.addEventListener('click', function(){ pcPlayMatchday('play'); });
+      var simBtn = document.createElement('button'); simBtn.className = 'btn btn-ghost btn-block'; simBtn.style.marginTop = '8px';
+      simBtn.textContent = '⏭️ Simular partido'; simBtn.addEventListener('click', function(){ pcPlayMatchday('sim'); });
+      card.appendChild(playBtn); card.appendChild(simBtn);
+    } else {
+      var next = pcNextMyFixture();
+      var sub2 = document.createElement('p'); sub2.className = 'league-card-sub';
+      sub2.textContent = next ? ('Próximo partido: jornada ' + next.matchday + ' (día ' + next.day + ', faltan ' + (next.day - state.playerCareer.day) + ' día(s))') : 'Temporada terminada, cerrando…';
+      card.appendChild(sub2);
+      var advBtn = document.createElement('button'); advBtn.className = 'btn btn-primary btn-block'; advBtn.style.marginTop = '10px';
+      advBtn.textContent = '⏩ Avanzar día'; advBtn.disabled = !next;
+      advBtn.addEventListener('click', pcAdvanceDay);
+      card.appendChild(advBtn);
+    }
+
+    var upcomingEl = document.getElementById('pcUpcomingList');
+    var upcoming = (state.playerCareer.calendar || []).filter(function(f){ return !f.played && (!today || f !== today.fixture) && (f.home === state.playerCareer.clubIdx || f.away === state.playerCareer.clubIdx); }).sort(function(a, b){ return a.day - b.day; }).slice(0, 5);
+    upcomingEl.innerHTML = '';
+    if(!upcoming.length){ upcomingEl.innerHTML = '<p class="league-empty">No hay más partidos programados.</p>'; }
+    upcoming.forEach(function(f){
+      var iAmH = f.home === state.playerCareer.clubIdx;
+      var opp = pcClubName(iAmH ? f.away : f.home);
+      var row = document.createElement('div'); row.className = 'career-player-row';
+      row.innerHTML = '<div class="career-player-top"><span class="career-player-name">Jornada ' + f.matchday + '</span><span class="career-slot-grl">Día ' + f.day + '</span></div><p class="career-player-meta">' + (iAmH ? 'Local' : 'Visitante') + ' vs ' + escapeHtml(opp) + '</p>';
+      upcomingEl.appendChild(row);
+    });
+
+    var recentEl = document.getElementById('pcRecentResultsList');
+    var played = (state.playerCareer.calendar || []).filter(function(f){ return f.played && (f.home === state.playerCareer.clubIdx || f.away === state.playerCareer.clubIdx); }).sort(function(a, b){ return b.day - a.day; }).slice(0, 5);
+    recentEl.innerHTML = '';
+    if(!played.length){ recentEl.innerHTML = '<p class="league-empty">Aún no has jugado partidos esta temporada.</p>'; }
+    played.forEach(function(f){
+      var iAmH = f.home === state.playerCareer.clubIdx;
+      var opp = pcClubName(iAmH ? f.away : f.home);
+      var myScore = iAmH ? f.scoreHome : f.scoreAway, oppScore = iAmH ? f.scoreAway : f.scoreHome;
+      var outcome = myScore > oppScore ? 'Ganaste' : (myScore < oppScore ? 'Perdiste' : 'Empate');
+      var row = document.createElement('div'); row.className = 'career-player-row';
+      row.innerHTML = '<div class="career-player-top"><span class="career-player-name">Jornada ' + f.matchday + ' vs ' + escapeHtml(opp) + '</span><span class="career-slot-grl">' + myScore + '-' + oppScore + '</span></div><p class="career-player-meta">' + outcome + ' · ' + (iAmH ? 'Local' : 'Visitante') + '</p>';
+      recentEl.appendChild(row);
+    });
+
+    var standingsEl = document.getElementById('pcStandingsList');
+    var table = pcStandingsTable();
+    standingsEl.innerHTML = '';
+    table.forEach(function(row, i){
+      var rowEl = document.createElement('div'); rowEl.className = 'career-player-row';
+      rowEl.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + (i + 1) + '. ' + escapeHtml(row.name) + (row.idx === state.playerCareer.clubIdx ? ' (tú)' : '') + '</span><span class="career-slot-grl">' + row.stats.pts + ' pts</span></div>' +
+        '<p class="career-player-meta">PJ ' + row.stats.pj + ' · G ' + row.stats.pg + ' · E ' + row.stats.pe + ' · P ' + row.stats.pp + ' · GF ' + row.stats.gf + ' · GC ' + row.stats.gc + ' · DIF ' + (row.stats.gf - row.stats.gc) + '</p>';
+      standingsEl.appendChild(rowEl);
+    });
+  }
+
+  var pcActiveTab = 'mijugador';
+  function pcRenderActiveTab(){
+    if(!state.playerCareer || !state.playerCareer.active) return;
+    if(pcActiveTab === 'mijugador') pcRenderMiJugador();
+    else if(pcActiveTab === 'entrenamiento') pcRenderEntrenamiento();
+    else if(pcActiveTab === 'relaciones') pcRenderRelaciones();
+    else if(pcActiveTab === 'contrato') pcRenderContrato();
+    else if(pcActiveTab === 'calendario') pcRenderCalendario();
+  }
+  function pcSwitchTab(tab){
+    pcActiveTab = tab;
+    Array.prototype.slice.call(document.querySelectorAll('.pc-tab-btn')).forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-pc-tab') === tab); });
+    Array.prototype.slice.call(document.querySelectorAll('[data-pc-panel]')).forEach(function(pnl){ pnl.hidden = pnl.getAttribute('data-pc-panel') !== tab; });
+    pcRenderActiveTab();
+  }
+  Array.prototype.slice.call(document.querySelectorAll('.pc-tab-btn')).forEach(function(btn){
+    btn.addEventListener('click', function(){ pcSwitchTab(btn.getAttribute('data-pc-tab')); });
+  });
+  document.getElementById('pcClearReadBtn').addEventListener('click', pcClearReadInbox);
+
+  var pcPositionChoice = wireChoiceSelect('pcPositionChips', 'DEF');
+  var pcFootChoice = wireChoiceSelect('pcFootChips', 'Derecho');
+  var pcHairChoice = wireChoiceSelect('pcHairChips', 'Corto');
+  var pcCelebrationChoice = wireChoiceSelect('pcCelebrationChips', 'Señalar al cielo');
+  var pcOriginChoice = wireChoiceSelect('pcOriginChips', 'promesa');
+  document.getElementById('pcFindClubsBtn').addEventListener('click', function(){
+    var firstName = document.getElementById('pcFirstNameInput').value.trim();
+    var lastName = document.getElementById('pcLastNameInput').value.trim();
+    if(!firstName || !lastName){ mgrMsg('Ponle nombre y apellido a tu jugador'); return; }
+    if(!state.playerCareer) state.playerCareer = {};
+    pcInitWorld();
+    var suggestion = pcSuggestClubs(pcOriginChoice.get());
+    pcPendingSuggestion = suggestion;
+    var listEl = document.getElementById('pcClubPickerList');
+    listEl.innerHTML = '';
+    suggestion.clubs.forEach(function(club){
+      var row = document.createElement('div'); row.className = 'career-player-row mgr-clickable-row';
+      row.innerHTML = '<div class="career-player-top"><span class="career-player-name">' + escapeHtml(club.name) + '</span><span class="career-slot-grl">Rep. ' + club.reputation + '</span></div>' +
+        '<p class="career-player-meta">' + escapeHtml(club.city) + ' · Media de plantilla ' + Math.round(mgrClubAvgOvr(club)) + '</p>';
+      row.addEventListener('click', function(){
+        pcStartCareer(club, suggestion.poolKey);
+        renderManagerEntry();
+      });
+      listEl.appendChild(row);
+    });
+    document.getElementById('pcClubPicker').hidden = false;
+  });
+
+  var mgrEntryScreen = 'chooser'; // 'chooser' | 'mgrSetup' | 'pcSetup'
+  function mgrHideAllEntryScreens(){
+    ['modeChooser', 'mgrSetup', 'mgrMain', 'pcSetup', 'pcMain'].forEach(function(id){
+      document.getElementById(id).hidden = true;
+    });
+  }
   function renderManagerEntry(){
     document.getElementById('mgrMsgBar').textContent = '';
     mgrClosePlayerSheet();
     mgrCloseTransferSheet();
-    var setup = document.getElementById('mgrSetup');
-    var main = document.getElementById('mgrMain');
-    if(!state.manager || !state.manager.active){
-      setup.hidden = false; main.hidden = true;
+    mgrHideAllEntryScreens();
+    var title = document.getElementById('mgrViewTitle');
+    var managerActive = state.manager && state.manager.active;
+    var playerActive = state.playerCareer && state.playerCareer.active;
+
+    if(managerActive){
+      title.textContent = 'Director Técnico';
+      document.getElementById('mgrMain').hidden = false;
+      mgrAutoFixLineup();
+      mgrOpenNegoId = null;
+      mgrSwitchTab('oficina');
+      return;
+    }
+    if(playerActive){
+      title.textContent = 'Carrera de Jugador';
+      document.getElementById('pcMain').hidden = false;
+      pcSwitchTab('mijugador');
+      return;
+    }
+    if(mgrEntryScreen === 'mgrSetup'){
+      title.textContent = 'Director Técnico';
+      document.getElementById('mgrSetup').hidden = false;
       var coachInput = document.getElementById('mgrCoachNameInput');
       if(coachInput && !coachInput.value) coachInput.value = state.playerName || '';
       return;
     }
-    setup.hidden = true; main.hidden = false;
-    mgrAutoFixLineup();
-    mgrOpenNegoId = null;
-    mgrSwitchTab('oficina');
+    if(mgrEntryScreen === 'pcSetup'){
+      title.textContent = 'Carrera de Jugador';
+      document.getElementById('pcSetup').hidden = false;
+      return;
+    }
+    title.textContent = 'Modo Carrera';
+    document.getElementById('modeChooser').hidden = false;
   }
   var mgrDifficultyChoice = wireChoiceSelect('mgrDifficultyChips', 'normal');
   document.getElementById('mgrStartBtn').addEventListener('click', function(){
@@ -9496,6 +10297,22 @@
     if(!clubName){ mgrMsg('Ponle un nombre a tu club'); return; }
     var noSack = document.getElementById('mgrNoSackInput').checked;
     mgrStartCareer(clubName, coachName, noSack, mgrDifficultyChoice.get());
+    renderManagerEntry();
+  });
+  document.getElementById('modeChooserManagerBtn').addEventListener('click', function(){
+    mgrEntryScreen = 'mgrSetup';
+    renderManagerEntry();
+  });
+  document.getElementById('modeChooserPlayerBtn').addEventListener('click', function(){
+    mgrEntryScreen = 'pcSetup';
+    renderManagerEntry();
+  });
+  document.getElementById('mgrBackToChooserBtn').addEventListener('click', function(){
+    mgrEntryScreen = 'chooser';
+    renderManagerEntry();
+  });
+  document.getElementById('pcBackToChooserBtn').addEventListener('click', function(){
+    mgrEntryScreen = 'chooser';
     renderManagerEntry();
   });
 
