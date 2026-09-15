@@ -2243,6 +2243,8 @@
           <div class="career-player-list" id="mgrStartersList"></div>
           <p class="paytable-title" style="margin-top:16px;" id="mgrBenchTitle">Suplentes</p>
           <div class="career-player-list" id="mgrBenchList"></div>
+          <p class="paytable-title" style="margin-top:16px;" id="mgrAcademyTitle">Academia de jóvenes</p>
+          <div class="career-player-list" id="mgrAcademyList"></div>
         </div>
 
         <div class="mgr-tab-panel" data-mgr-panel="fichajes" hidden>
@@ -7347,6 +7349,8 @@
     bandas: ['Lateral ofensivo', 'Extremo', 'Extremo inverso']
   };
   var MGR_FEET = ['Derecho', 'Izquierdo'];
+  var MGR_DEV_PLANS = { GK: ['portero'], DEF: ['central', 'lateral'], MID: ['organizador', 'recuperador'], FWD: ['delantero', 'extremo'] };
+  var MGR_DEV_PLAN_LABELS = { portero: 'Portero', central: 'Central', lateral: 'Lateral', organizador: 'Organizador', recuperador: 'Recuperador', delantero: 'Delantero', extremo: 'Extremo' };
   function mgrDeriveAttributes(position, ovr){
     function n(base, spread){ return Math.max(30, Math.min(99, Math.round(base + (Math.random() * 2 - 1) * spread))); }
     if(position === 'GK'){
@@ -7381,7 +7385,18 @@
       player.secondaryPosition = null;
     }
     player.attrs = mgrDeriveAttributes(player.position, player.ovr);
+    player.devPlan = mgrPick(MGR_DEV_PLANS[player.position] || MGR_DEV_PLANS.MID);
+    player.seasonInjuries = player.seasonInjuries || 0;
     return player;
+  }
+  function mgrSetDevPlan(playerId, plan){
+    var player = mgrPlayerById(playerId);
+    if(!player) return;
+    var valid = MGR_DEV_PLANS[player.position] || [];
+    if(valid.indexOf(plan) === -1) return;
+    player.devPlan = plan;
+    saveState();
+    mgrRenderPlayerSheet();
   }
   function mgrPlayerTacticalFactor(player, tactics){
     if(!player.role) mgrFillPlayerTactical(player);
@@ -7957,6 +7972,7 @@
         p.form = Math.max(0, Math.min(100, p.form + (r.rating - 6) * 3));
         if(Math.random() < 0.035){
           p.injuredUntil = state.manager.matchday + 1 + Math.floor(Math.random() * 3);
+          p.seasonInjuries = (p.seasonInjuries || 0) + 1;
           mgrPushInbox('lesion', 'Lesión', p.name + ' se lesionó y estará fuera unas jornadas.');
         }
       }
@@ -8064,6 +8080,50 @@
     mgrCheckSeasonEnd();
   }
 
+  /* ================= ACADEMIA DE JÓVENES ================= */
+  var MGR_PERSONALITIES = ['Ambicioso', 'Trabajador', 'Tranquilo', 'Líder nato', 'Talentoso pero inconsistente', 'Profesional ejemplar'];
+  function mgrGenerateAcademyIntake(){
+    if(!state.manager.academy) state.manager.academy = [];
+    var club = state.manager.club;
+    var count = 2 + Math.round(((club.academyLevel || 3) / 5) * 3);
+    var positions = ['GK', 'DEF', 'MID', 'FWD'];
+    for(var i = 0; i < count; i++){
+      var position = mgrPick(positions);
+      var scoutQuality = club.scoutingLevel || 3;
+      var baseOvr = 38 + Math.floor(Math.random() * 10);
+      var potential = Math.min(94, baseOvr + 15 + Math.floor(Math.random() * (10 + scoutQuality * 3)));
+      var age = 16 + Math.floor(Math.random() * 3);
+      var player = {
+        id: 'yth' + Date.now() + Math.floor(Math.random() * 1000000),
+        name: UT_PLAYER_POOL[Math.floor(Math.random() * UT_PLAYER_POOL.length)],
+        age: age, position: position, ovr: baseOvr, potential: potential,
+        physical: 55 + Math.floor(Math.random() * 20), morale: 70, form: 60,
+        wage: Math.round((baseOvr * baseOvr * 2) / 10) * 10,
+        value: Math.round((baseOvr * baseOvr * 40) / 100) * 100,
+        contractYears: 3, seasonApps: 0, seasonGoals: 0, seasonAssists: 0, seasonRatingSum: 0, seasonInjuries: 0,
+        injuredUntil: 0, onLoan: false, number: 0, forSale: false, forLoanListed: false,
+        personality: mgrPick(MGR_PERSONALITIES)
+      };
+      mgrFillPlayerTactical(player);
+      state.manager.academy.push(player);
+    }
+    if(count > 0) mgrPushInbox('informe', 'Nuevos juveniles en la academia', 'La academia presenta ' + count + ' nuevo(s) prospecto(s) esta temporada.');
+  }
+  function mgrPromoteYouth(id){
+    var academy = state.manager.academy || [];
+    var player = academy.filter(function(p){ return p.id === id; })[0];
+    if(!player) return;
+    state.manager.academy = academy.filter(function(p){ return p.id !== id; });
+    player.number = mgrNextFreeNumber();
+    state.manager.squad.push(player);
+    mgrPushInbox('news', 'Promoción desde la cantera', player.name + ' fue promovido al primer equipo.');
+    saveState(); mgrRenderActiveTab();
+  }
+  function mgrReleaseYouth(id){
+    state.manager.academy = (state.manager.academy || []).filter(function(p){ return p.id !== id; });
+    saveState(); mgrRenderActiveTab();
+  }
+
   function mgrCloseSeason(){
     var table = mgrStandingsTable();
     var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
@@ -8075,16 +8135,25 @@
     mgrPushInbox('resultado', 'Fin de temporada', 'Terminaste ' + myPos + 'º de ' + table.length + ' en la ' + leagueName + '. Premio: ' + prize.toLocaleString('es-CO') + ' fichas.');
 
     state.manager.squad.forEach(function(p){
+      mgrFillPlayerTactical(p);
       var avgRating = p.seasonApps ? (p.seasonRatingSum / p.seasonApps) : 6.0;
-      var growth;
-      if(p.age <= 23) growth = (avgRating - 6) * 1.5 + (p.potential - p.ovr) * 0.08;
-      else if(p.age <= 29) growth = (avgRating - 6) * 0.6;
-      else growth = (avgRating - 6) * 0.3 - (p.age - 29) * 0.6;
+      var base;
+      if(p.age <= 23) base = (avgRating - 6) * 1.5 + (p.potential - p.ovr) * 0.08;
+      else if(p.age <= 29) base = (avgRating - 6) * 0.6;
+      else base = (avgRating - 6) * 0.3 - (p.age - 29) * 0.6;
+      var minutesFactor = Math.min(1, (p.seasonApps || 0) / 25);
+      var moraleFactor = (p.morale - 50) / 50;
+      var facilities = state.manager.club.facilities || 3;
+      var staff = state.manager.club.staffLevel || 3;
+      var clubFactor = 1 + ((facilities + staff - 6) / 10) * 0.15;
+      var planBonus = p.devPlan ? 0.15 : 0;
+      var injuryPenalty = (p.seasonInjuries || 0) * 0.4;
+      var growth = base * (0.5 + 0.5 * minutesFactor) * clubFactor + moraleFactor * 0.6 + planBonus - injuryPenalty;
       p.ovr = Math.max(35, Math.min(p.potential, Math.round(p.ovr + growth)));
       p.age += 1;
       p.value = Math.round((p.ovr * p.ovr * 40) / 100) * 100;
       p.contractYears = Math.max(0, p.contractYears - 1);
-      p.seasonApps = 0; p.seasonGoals = 0; p.seasonAssists = 0; p.seasonRatingSum = 0;
+      p.seasonApps = 0; p.seasonGoals = 0; p.seasonAssists = 0; p.seasonRatingSum = 0; p.seasonInjuries = 0;
       if(p.contractYears === 0) mgrPushInbox('contrato', 'Contrato por vencer', p.name + ' se quedó sin contrato. Renuévalo o podría irse gratis.');
     });
     state.manager.squad = state.manager.squad.filter(function(p){
@@ -8106,6 +8175,7 @@
     mgrAutoFixLineup();
     mgrGenerateSeasonCalendar();
     mgrGenerateCup();
+    mgrGenerateAcademyIntake();
   }
   function mgrCheckSeasonEnd(){
     var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
@@ -8263,7 +8333,7 @@
   function mgrStartCareer(clubName, coachName){
     state.manager = {
       active: true,
-      club: { name: clubName, coachName: coachName, budget: MGR_START_BUDGET, boardConfidence: 60 },
+      club: mgrEnrichClubFields({ name: clubName, coachName: coachName, budget: MGR_START_BUDGET, boardConfidence: 60, strength: 3 }),
       season: 1,
       squad: mgrGenerateSquad(3),
       lineup: {},
@@ -8271,7 +8341,7 @@
       myStats: { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 },
       calendar: [], matchday: 0, day: 0,
       topScorers: {}, topAssists: {}, recentForm: [],
-      inbox: [], negotiations: [],
+      inbox: [], negotiations: [], academy: [],
       trainingFocus: 'GK',
       tactics: { style: 'equilibrado', pressing: 50, block: 50, width: 50 }
     };
@@ -8279,6 +8349,7 @@
     mgrAssignInitialLineup();
     mgrGenerateSeasonCalendar();
     mgrGenerateCup();
+    mgrGenerateAcademyIntake();
     mgrPushInbox('news', 'Bienvenido a ' + clubName, 'La directiva te da la bienvenida y espera un buen torneo en la ' + MGR_DIV1_NAME + '. Objetivo: terminar en la mitad superior de la tabla.');
     saveState();
   }
@@ -8498,6 +8569,21 @@
     });
     sheet.appendChild(renewRow);
 
+    var devTitle = document.createElement('p');
+    devTitle.className = 'paytable-title'; devTitle.style.marginTop = '6px';
+    devTitle.textContent = 'Plan de desarrollo: ' + (MGR_DEV_PLAN_LABELS[p.devPlan] || p.devPlan);
+    sheet.appendChild(devTitle);
+    var devRow = document.createElement('div');
+    devRow.className = 'choice-row';
+    (MGR_DEV_PLANS[p.position] || []).forEach(function(plan){
+      var pBtn = document.createElement('button');
+      pBtn.className = 'choice-btn' + (plan === p.devPlan ? ' active' : '');
+      pBtn.textContent = MGR_DEV_PLAN_LABELS[plan];
+      pBtn.addEventListener('click', function(){ mgrSetDevPlan(p.id, plan); });
+      devRow.appendChild(pBtn);
+    });
+    sheet.appendChild(devRow);
+
     var closeBtn = document.createElement('button');
     closeBtn.className = 'btn btn-ghost btn-block'; closeBtn.style.marginTop = '10px';
     closeBtn.textContent = 'Cerrar';
@@ -8591,6 +8677,28 @@
     benchEl.innerHTML = '';
     if(!bench.length){ benchEl.innerHTML = '<p class="league-empty">No tienes jugadores en el banco.</p>'; }
     bench.forEach(function(p){ benchEl.appendChild(buildPlayerRow(p)); });
+
+    var academyEl = document.getElementById('mgrAcademyList');
+    if(academyEl){
+      var academy = state.manager.academy || [];
+      academyEl.innerHTML = '';
+      if(!academy.length){ academyEl.innerHTML = '<p class="league-empty">No hay juveniles en la academia por ahora.</p>'; }
+      academy.forEach(function(p){
+        var row = document.createElement('div');
+        row.className = 'career-player-row';
+        row.innerHTML =
+          '<div class="career-player-top"><span class="career-player-name"><span class="career-pos-badge ' + p.position + '">' + p.position + '</span> ' + escapeHtml(p.name) + '</span><span class="career-slot-grl">OVR ' + p.ovr + '</span></div>' +
+          '<p class="career-player-meta">Edad ' + p.age + ' · Potencial ' + p.potential + ' · ' + escapeHtml(p.personality) + '</p>';
+        var actions = document.createElement('div'); actions.className = 'career-player-actions';
+        var promoteBtn = document.createElement('button'); promoteBtn.className = 'btn btn-gold btn-sm'; promoteBtn.textContent = 'Promover';
+        promoteBtn.addEventListener('click', function(){ mgrPromoteYouth(p.id); });
+        var releaseBtn = document.createElement('button'); releaseBtn.className = 'btn btn-ghost btn-sm'; releaseBtn.textContent = 'Liberar';
+        releaseBtn.addEventListener('click', function(){ mgrReleaseYouth(p.id); });
+        actions.appendChild(promoteBtn); actions.appendChild(releaseBtn);
+        row.appendChild(actions);
+        academyEl.appendChild(row);
+      });
+    }
   }
 
   var mgrTransferFilter = 'ALL';
@@ -8605,6 +8713,12 @@
     var overlay = document.getElementById('mgrTransferSheetOverlay');
     if(overlay) overlay.hidden = true;
   }
+  function mgrScoutedDisplay(value, level){
+    if(level >= 4) return String(value);
+    var noise = level <= 1 ? 8 : (level === 2 ? 5 : 3);
+    var lo = Math.max(30, value - noise), hi = Math.min(99, value + noise);
+    return lo + '-' + hi;
+  }
   function mgrRenderTransferSheet(){
     if(!mgrOpenTransferKey) return;
     var parts = mgrOpenTransferKey.split(':');
@@ -8614,16 +8728,22 @@
     if(p) mgrFillPlayerTactical(p);
     var sheet = document.getElementById('mgrTransferSheet');
     if(!p){ mgrCloseTransferSheet(); mgrRenderFichajes(); return; }
+    var scoutLevel = state.manager.club.scoutingLevel || 3;
 
     sheet.innerHTML = '';
     var header = document.createElement('div');
     header.className = 'career-player-top';
-    header.innerHTML = '<span class="career-player-name"><span class="career-pos-badge ' + p.position + '">' + p.position + '</span> ' + escapeHtml(p.name) + '</span><span class="career-slot-grl">OVR ' + p.ovr + '</span>';
+    header.innerHTML = '<span class="career-player-name"><span class="career-pos-badge ' + p.position + '">' + p.position + '</span> ' + escapeHtml(p.name) + '</span><span class="career-slot-grl">OVR ' + mgrScoutedDisplay(p.ovr, scoutLevel) + '</span>';
     sheet.appendChild(header);
 
     var meta = document.createElement('p'); meta.className = 'career-player-meta';
-    meta.textContent = escapeHtml(club.name) + ' · Edad ' + p.age + ' · Potencial ' + p.potential;
+    meta.textContent = escapeHtml(club.name) + ' · Edad ' + p.age + ' · Potencial ' + mgrScoutedDisplay(p.potential, scoutLevel);
     sheet.appendChild(meta);
+    if(scoutLevel < 4){
+      var scoutNote = document.createElement('p'); scoutNote.className = 'career-player-meta';
+      scoutNote.textContent = '🔎 Tu nivel de scouting (' + scoutLevel + '/5) solo da un rango aproximado. Mejora tus instalaciones de scouting para ver cifras exactas.';
+      sheet.appendChild(scoutNote);
+    }
     var metaRole = document.createElement('p'); metaRole.className = 'career-player-meta';
     metaRole.textContent = 'Rol: ' + p.role + ' · Pie ' + p.foot + (p.secondaryPosition ? ' · Posición secundaria: ' + p.secondaryPosition : '');
     sheet.appendChild(metaRole);
