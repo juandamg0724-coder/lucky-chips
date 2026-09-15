@@ -2220,6 +2220,8 @@
             <button class="btn btn-ghost btn-sm" id="mgrClearReadBtn" hidden>Borrar leídos</button>
           </div>
           <div class="career-player-list" id="mgrInboxList"></div>
+          <p class="paytable-title" style="margin-top:16px;">📱 Redes sociales</p>
+          <div class="career-player-list" id="mgrSocialList"></div>
         </div>
 
         <div class="mgr-tab-panel" data-mgr-panel="plantilla" hidden>
@@ -7937,6 +7939,84 @@
     mgrRenderPlayerSheet();
     mgrRenderActiveTab();
   }
+  /* ================= NOTICIAS, PRENSA Y REDES SOCIALES ================= */
+  var MGR_SOCIAL_HANDLES = ['@FutbolTotal', '@FansLiga', '@RadioNortalia', '@PrensaDeportiva'];
+  function mgrPostSocial(handle, text){
+    if(!state.manager.social) state.manager.social = [];
+    state.manager.social.unshift({ id: 'soc' + Date.now() + Math.floor(Math.random() * 1000), handle: handle, text: text, ts: Date.now() });
+    if(state.manager.social.length > 20) state.manager.social.length = 20;
+  }
+  function mgrRunCpuTransferAI(){
+    var clubs = state.manager.cpuClubs;
+    if(!clubs || clubs.length < 2) return;
+    var buyer = mgrPick(clubs);
+    var needPositions = ['GK', 'DEF', 'MID', 'FWD'].filter(function(pos){ return mgrClubNeedsPosition(buyer, pos); });
+    if(!needPositions.length) return;
+    var pos = mgrPick(needPositions);
+    var candidates = [];
+    clubs.forEach(function(c){
+      if(c === buyer) return;
+      c.squad.forEach(function(p){ if(p.position === pos && !mgrClubNeedsPosition(c, pos)) candidates.push({ club: c, player: p }); });
+    });
+    if(!candidates.length) return;
+    var pick = mgrPick(candidates);
+    pick.club.squad = pick.club.squad.filter(function(p){ return p.id !== pick.player.id; });
+    pick.player.contractYears = 3; pick.player.number = 0;
+    buyer.squad.push(pick.player);
+    mgrPostSocial(mgrPick(MGR_SOCIAL_HANDLES), buyer.name + ' fichó a ' + pick.player.name + ', procedente de ' + pick.club.name + '.');
+  }
+  function mgrRunCpuCoachChangeCheck(){
+    var clubs = (state.manager.cpuClubs || []).filter(function(c){ return c.pj >= 5 && (c.pts / Math.max(1, c.pj)) < 0.8; });
+    if(!clubs.length) return;
+    var club = mgrPick(clubs);
+    club.strength = Math.max(1, Math.min(5, club.strength + (Math.random() < 0.5 ? -1 : 1)));
+    mgrPostSocial(mgrPick(MGR_SOCIAL_HANDLES), club.name + ' destituyó a su entrenador tras los malos resultados.');
+  }
+  function mgrRunTableCommentary(){
+    var table = mgrStandingsTable();
+    var top = table[0];
+    if(top && top.idx !== 0){
+      var leagueName = state.manager.division === 1 ? MGR_DIV1_NAME : MGR_DIV2_NAME;
+      mgrPostSocial(mgrPick(MGR_SOCIAL_HANDLES), top.name + ' sigue como líder de la ' + leagueName + '.');
+    }
+  }
+  function mgrGenerateWorldNewsTick(){
+    if(Math.random() < 0.12) mgrRunCpuTransferAI();
+    if(Math.random() < 0.05) mgrRunCpuCoachChangeCheck();
+    if(Math.random() < 0.08) mgrRunTableCommentary();
+  }
+  var MGR_PRESS_QUESTIONS = [
+    { q: '¿Cómo calificarías el rendimiento del equipo hoy?', options: [
+      { label: 'Excelente, el equipo dio todo', morale: 6, conf: 2 },
+      { label: 'Cumplimos, pero hay que mejorar', morale: 2, conf: 1 },
+      { label: 'Fue un desastre, exijo más', morale: -6, conf: 3 }
+    ] },
+    { q: '¿Qué opinas de la presión de la afición?', options: [
+      { label: 'La entiendo, estamos para exigencias', morale: 0, conf: 2 },
+      { label: 'Necesitamos más paciencia', morale: 3, conf: -2 },
+      { label: 'No me afecta en nada', morale: -1, conf: 1 }
+    ] }
+  ];
+  function mgrMaybeGeneratePressConference(oppName){
+    if(Math.random() > 0.5) return;
+    var q = mgrPick(MGR_PRESS_QUESTIONS);
+    var press = { id: 'press' + Date.now() + Math.floor(Math.random() * 1000), question: q.q, options: q.options, resolved: false, oppName: oppName };
+    if(!state.manager.press) state.manager.press = [];
+    state.manager.press.push(press);
+    mgrPushInbox('prensa', 'Rueda de prensa', 'Los periodistas preguntan sobre el partido vs ' + oppName + '.', { pressId: press.id });
+  }
+  function mgrAnswerPress(pressId, optionIdx){
+    var press = (state.manager.press || []).filter(function(p){ return p.id === pressId; })[0];
+    if(!press || press.resolved) return;
+    var opt = press.options[optionIdx];
+    if(!opt) return;
+    press.resolved = true;
+    state.manager.squad.forEach(function(p){ p.morale = Math.max(0, Math.min(100, p.morale + (opt.morale || 0))); });
+    state.manager.club.boardConfidence = Math.max(0, Math.min(100, state.manager.club.boardConfidence + (opt.conf || 0)));
+    mgrMsg('Respondiste a la prensa.');
+    saveState();
+    mgrRenderActiveTab();
+  }
   function mgrMaybeGenerateIncomingOffer(){
     if(!state.manager.squad.length) return;
     var listed = state.manager.squad.filter(function(p){ return p.forSale && !p.onLoan; });
@@ -8089,10 +8169,11 @@
     var oppRef = iAmA ? match.b : match.a;
     var iWon = match.winner === meRef;
     var oppName = mgrCupRefName(oppRef);
+    var myScore = iAmA ? match.scoreA : match.scoreB, oppScore = iAmA ? match.scoreB : match.scoreA;
     mgrApplyPlayerImpact(iAmA ? sim.ratingsA : sim.ratingsB, true);
     mgrApplyPlayerImpact(iAmA ? sim.ratingsB : sim.ratingsA, false);
     mgrPushInbox('resultado', iWon ? '¡Avanzas en la copa!' : 'Eliminado de la copa',
-      (iWon ? 'Ganaste' : 'Perdiste') + ' ' + match.scoreA + '-' + match.scoreB + (match.penalties ? ' (penales)' : '') + ' vs ' + oppName + ' en la ' + MGR_CUP_NAME + '.');
+      (iWon ? 'Ganaste' : 'Perdiste') + ' ' + myScore + '-' + oppScore + (match.penalties ? ' (penales)' : '') + ' vs ' + oppName + ' en la ' + MGR_CUP_NAME + '.');
     if(!iWon) state.manager.cup.myEliminated = true;
     mgrAutoFixLineup();
     mgrAdvanceCupRoundIfDone();
@@ -8262,8 +8343,10 @@
   }
   function mgrFinalizeMyMatch(fixture, sim, iAmHome){
     fixture.played = true;
-    fixture.scoreHome = iAmHome ? sim.scoreA : sim.scoreB;
-    fixture.scoreAway = iAmHome ? sim.scoreB : sim.scoreA;
+    // sim.scoreA/scoreB siempre corresponden al primer/segundo equipo pasado a careerSimulateFullMatch,
+    // y el primero siempre es el local real (mío si iAmHome, del rival si no) — no depende de iAmHome aquí.
+    fixture.scoreHome = sim.scoreA;
+    fixture.scoreAway = sim.scoreB;
     mgrApplyStandings(fixture.home, fixture.away, fixture.scoreHome, fixture.scoreAway);
     mgrApplyPlayerImpact(iAmHome ? sim.ratingsA : sim.ratingsB, true);
     mgrApplyPlayerImpact(iAmHome ? sim.ratingsB : sim.ratingsA, false);
@@ -8286,6 +8369,7 @@
     if(state.manager.recentForm.length > 5) state.manager.recentForm.shift();
     mgrAutoFixLineup();
     mgrMaybeGenerateIncomingOffer();
+    mgrMaybeGeneratePressConference(oppName);
     mgrCheckSeasonEnd();
   }
 
@@ -8301,7 +8385,7 @@
     var scoreA = 0, scoreB = 0;
     visibleEvents.forEach(function(e){ if(e.type === 'goal'){ if(e.team === 'A') scoreA++; else scoreB++; } });
     var homeName = m.homeName, awayName = m.awayName;
-    var scoreHome = m.iAmHome ? scoreA : scoreB, scoreAway = m.iAmHome ? scoreB : scoreA;
+    var scoreHome = scoreA, scoreAway = scoreB;
 
     el.innerHTML = '';
     var card = document.createElement('div');
@@ -8348,6 +8432,7 @@
     if((pendingToday && !pendingToday.played) || pendingCup){ mgrMsg('Termina el partido de hoy antes de avanzar'); return; }
     state.manager.day += 1;
     mgrMaybeGenerateIncomingOffer();
+    mgrGenerateWorldNewsTick();
     var fixturesToday = mgrFixturesForDay(state.manager.day);
     fixturesToday.forEach(function(f){
       if(f.home !== 0 && f.away !== 0 && !f.played){
@@ -8426,7 +8511,7 @@
       myStats: { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 },
       calendar: [], matchday: 0, day: 0,
       topScorers: {}, topAssists: {}, recentForm: [],
-      inbox: [], negotiations: [], academy: [],
+      inbox: [], negotiations: [], academy: [], social: [], press: [],
       trainingFocus: 'GK',
       tactics: { style: 'equilibrado', pressing: 50, block: 50, width: 50 },
       finances: { seasonIncome: 0, seasonExpenses: 0 }, seasonPromotions: 0, confidenceCrisisSeasons: 0,
@@ -8442,7 +8527,7 @@
     saveState();
   }
 
-  var MGR_INBOX_ICONS = { oferta: '📩', lesion: '🚑', informe: '📊', news: '📰', directiva: '🏛️', renovacion: '✍️', resultado: '⚽', fichaje: '🤝', contrato: '📄' };
+  var MGR_INBOX_ICONS = { oferta: '📩', lesion: '🚑', informe: '📊', news: '📰', directiva: '🏛️', renovacion: '✍️', resultado: '⚽', fichaje: '🤝', contrato: '📄', prensa: '🎙️' };
   function mgrMarkInboxRead(id){
     var msg = (state.manager.inbox || []).filter(function(m){ return m.id === id; })[0];
     if(msg && !msg.read){ msg.read = true; saveState(); mgrRenderActiveTab(); }
@@ -8557,10 +8642,43 @@
           row.appendChild(statusP);
         }
       }
+      if(m.meta && m.meta.pressId){
+        var press = (state.manager.press || []).filter(function(x){ return x.id === m.meta.pressId; })[0];
+        if(press && !press.resolved){
+          var pressActions = document.createElement('div'); pressActions.className = 'career-player-actions';
+          pressActions.style.flexDirection = 'column'; pressActions.style.alignItems = 'stretch';
+          var qP = document.createElement('p'); qP.className = 'career-player-meta'; qP.textContent = press.question;
+          row.appendChild(qP);
+          press.options.forEach(function(opt, idx){
+            var optBtn = document.createElement('button');
+            optBtn.className = 'btn btn-ghost btn-sm'; optBtn.style.textAlign = 'left'; optBtn.style.marginTop = '4px';
+            optBtn.textContent = opt.label;
+            optBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrAnswerPress(press.id, idx); });
+            pressActions.appendChild(optBtn);
+          });
+          row.appendChild(pressActions);
+        } else if(press){
+          var pressDone = document.createElement('p'); pressDone.className = 'career-player-meta';
+          pressDone.textContent = 'Ya respondiste esta rueda de prensa.';
+          row.appendChild(pressDone);
+        }
+      }
 
       row.addEventListener('click', function(){ mgrMarkInboxRead(m.id); });
       inboxEl.appendChild(row);
     });
+
+    var socialEl = document.getElementById('mgrSocialList');
+    if(socialEl){
+      var social = state.manager.social || [];
+      socialEl.innerHTML = '';
+      if(!social.length){ socialEl.innerHTML = '<p class="league-empty">Todavía no hay actividad en redes.</p>'; }
+      social.slice(0, 10).forEach(function(post){
+        var srow = document.createElement('div'); srow.className = 'career-player-row';
+        srow.innerHTML = '<p class="career-player-meta"><b>' + escapeHtml(post.handle) + '</b>: ' + escapeHtml(post.text) + '</p>';
+        socialEl.appendChild(srow);
+      });
+    }
   }
 
   var mgrOpenPlayerId = null;
