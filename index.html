@@ -2186,6 +2186,12 @@
         <div class="field-row" style="margin-top:8px;">
           <input class="text-input" id="mgrCoachNameInput" type="text" maxlength="24" placeholder="Nombre del entrenador">
         </div>
+        <p class="bet-label" style="margin-top:10px;">Dificultad</p>
+        <div class="choice-row" id="mgrDifficultyChips">
+          <button class="choice-btn" data-amount="facil">Fácil</button>
+          <button class="choice-btn active" data-amount="normal">Normal</button>
+          <button class="choice-btn" data-amount="dificil">Difícil</button>
+        </div>
         <label class="bet-label" style="display:flex; align-items:center; gap:8px; margin-top:10px; cursor:pointer;">
           <input type="checkbox" id="mgrNoSackInput"> Carrera sin despido (la directiva nunca te destituye)
         </label>
@@ -2216,6 +2222,8 @@
             <p class="career-player-meta" id="mgrObjective" style="margin-top:8px;"></p>
             <div class="mgr-quick-stats" id="mgrQuickStats"></div>
           </div>
+          <p class="paytable-title" style="margin-top:16px;">✅ Tareas pendientes</p>
+          <div class="career-player-list" id="mgrTaskList"></div>
           <div class="career-player-top" style="margin-top:16px;">
             <p class="paytable-title" id="mgrInboxTitle">Bandeja de entrada</p>
             <button class="btn btn-ghost btn-sm" id="mgrClearReadBtn" hidden>Borrar leídos</button>
@@ -7688,6 +7696,10 @@
 
   // Umbral nunca por debajo del valor real del jugador: evita comprar estrellas por menos de lo que valen.
   // La tensión endurece el umbral (nunca lo ablanda) si la negociación no avanza.
+  function mgrDifficultyFactor(){
+    var d = state.manager.difficulty || 'normal';
+    return d === 'facil' ? 0.93 : (d === 'dificil' ? 1.08 : 1);
+  }
   function mgrNegoBuyThreshold(neg, club, player){
     var importance = mgrPlayerImportanceScore(club, player);
     var needsPosition = mgrClubNeedsPosition(club, player.position);
@@ -7698,14 +7710,14 @@
       + (player.forSale ? -0.12 : 0);
     base = Math.max(0.9, base);
     if(importance > 45) base = Math.max(base, player.forSale ? 1.3 : 1.6);
-    return base * mgrNegoTensionMult(neg.tension);
+    return base * mgrNegoTensionMult(neg.tension) * mgrDifficultyFactor();
   }
   function mgrNegoSellCeiling(neg, club, player){
     var evalScore = mgrEvaluatePlayerForCpu(club, player);
     var importance = mgrPlayerImportanceScore(club, player);
     var base = 0.8 + Math.max(0, evalScore - 40) * 0.007 + (importance > 45 ? 0.25 : 0);
     base = Math.min(1.7, Math.max(0.65, base));
-    return base / mgrNegoTensionMult(neg.tension);
+    return base / mgrNegoTensionMult(neg.tension) / mgrDifficultyFactor();
   }
 
   function mgrNegoStart(kind, clubIdx, playerId, amount){
@@ -8561,7 +8573,7 @@
     }
   }
 
-  function mgrStartCareer(clubName, coachName, noSack){
+  function mgrStartCareer(clubName, coachName, noSack, difficulty){
     state.manager = {
       active: true,
       club: mgrEnrichClubFields({ name: clubName, coachName: coachName, budget: MGR_START_BUDGET, boardConfidence: 60, strength: 3 }),
@@ -8576,7 +8588,7 @@
       trainingFocus: 'GK',
       tactics: { style: 'equilibrado', pressing: 50, block: 50, width: 50 },
       finances: { seasonIncome: 0, seasonExpenses: 0 }, seasonPromotions: 0, confidenceCrisisSeasons: 0,
-      noSack: !!noSack
+      noSack: !!noSack, difficulty: difficulty || 'normal'
     };
     mgrInitWorld();
     mgrAssignInitialLineup();
@@ -8627,6 +8639,28 @@
     return sum;
   }
 
+  function mgrBuildTaskList(){
+    var tasks = [];
+    state.manager.squad.forEach(function(p){
+      if(!p.onLoan && p.contractYears <= 1){
+        tasks.push({ icon: '✍️', text: 'Renovar contrato de ' + p.name + ' (' + p.contractYears + ' año restante)', tab: 'plantilla' });
+      }
+      if(p.injuredUntil && p.injuredUntil > state.manager.matchday){
+        tasks.push({ icon: '🚑', text: 'Revisar la lesión de ' + p.name, tab: 'plantilla' });
+      }
+      if(p.suspendedUntil && p.suspendedUntil > state.manager.matchday){
+        tasks.push({ icon: '🟥', text: p.name + ' está suspendido para el próximo partido', tab: 'plantilla' });
+      }
+    });
+    var activeNegos = mgrNegotiations().filter(function(n){ return n.status === 'active'; });
+    if(activeNegos.length) tasks.push({ icon: '🤝', text: activeNegos.length + ' negociación(es) esperando tu respuesta', tab: 'negociaciones' });
+    var pendingPress = (state.manager.press || []).filter(function(p){ return !p.resolved; });
+    if(pendingPress.length) tasks.push({ icon: '🎙️', text: 'Responder rueda de prensa pendiente', tab: 'oficina' });
+    if((state.manager.academy || []).length) tasks.push({ icon: '🌱', text: state.manager.academy.length + ' juvenil(es) esperando una decisión en la academia', tab: 'plantilla' });
+    var next = mgrNextMyFixture();
+    if(next) tasks.push({ icon: '📅', text: 'Próximo rival: jornada ' + next.matchday + ' (día ' + next.day + ')', tab: 'calendario' });
+    return tasks.slice(0, 8);
+  }
   function mgrRenderOficina(){
     var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
     var leagueName = state.manager.division === 1 ? MGR_DIV1_NAME : MGR_DIV2_NAME;
@@ -8666,6 +8700,20 @@
       formEl.innerHTML = form.length
         ? form.map(function(r){ return '<span class="mgr-form-badge ' + r + '">' + r + '</span>'; }).join('')
         : '<span class="career-player-meta">Aún no has jugado partidos esta temporada.</span>';
+    }
+
+    var taskListEl = document.getElementById('mgrTaskList');
+    if(taskListEl){
+      var tasks = mgrBuildTaskList();
+      taskListEl.innerHTML = '';
+      if(!tasks.length){ taskListEl.innerHTML = '<p class="league-empty">No tienes tareas pendientes por ahora.</p>'; }
+      tasks.forEach(function(task){
+        var trow = document.createElement('div');
+        trow.className = 'career-player-row mgr-clickable-row';
+        trow.innerHTML = '<p class="career-player-meta">' + task.icon + ' ' + escapeHtml(task.text) + '</p>';
+        trow.addEventListener('click', function(){ mgrSwitchTab(task.tab); });
+        taskListEl.appendChild(trow);
+      });
     }
 
     var inboxEl = document.getElementById('mgrInboxList');
@@ -9441,12 +9489,13 @@
     mgrOpenNegoId = null;
     mgrSwitchTab('oficina');
   }
+  var mgrDifficultyChoice = wireChoiceSelect('mgrDifficultyChips', 'normal');
   document.getElementById('mgrStartBtn').addEventListener('click', function(){
     var clubName = document.getElementById('mgrClubNameInput').value.trim().slice(0, 24);
     var coachName = document.getElementById('mgrCoachNameInput').value.trim().slice(0, 24) || state.playerName || 'Entrenador';
     if(!clubName){ mgrMsg('Ponle un nombre a tu club'); return; }
     var noSack = document.getElementById('mgrNoSackInput').checked;
-    mgrStartCareer(clubName, coachName, noSack);
+    mgrStartCareer(clubName, coachName, noSack, mgrDifficultyChoice.get());
     renderManagerEntry();
   });
 
