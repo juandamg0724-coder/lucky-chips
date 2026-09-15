@@ -2162,9 +2162,10 @@
 
       <div class="paytable" id="mgrRulesPanel" hidden>
         <p class="paytable-title">Cómo funciona</p>
-        <p class="rules-text">Modo carrera 100% offline: diriges un club contra 19 clubes de la CPU, con calendario de ida y vuelta (38 jornadas).</p>
+        <p class="rules-text">Modo carrera 100% offline en el mundo inventado de <b>Nortalia</b>: 2 divisiones de 20 clubes (Primera y Segunda), con ascenso/descenso al final de cada temporada y una <b>Copa Nortalia</b> paralela de 16 equipos.</p>
         <ul class="rules-list">
           <li><b>Oficina:</b> presupuesto, confianza de la directiva y buzón de mensajes (ofertas, lesiones, informes, noticias, renovaciones, resultados).</li>
+          <li>Terminar entre los últimos 2 de tu división te <b>desciende</b>; terminar entre los 2 primeros de Segunda te <b>asciende</b>.</li>
           <li><b>Plantilla:</b> toca a un jugador para ver su ficha y sus acciones: titular/banco, ponerlo en venta o a préstamo, cambiarle el dorsal o renovarle el contrato.</li>
           <li><b>Fichajes:</b> toca a un jugador del mercado para ver su ficha completa y ofertar o pedirlo prestado.</li>
           <li><b>Negociaciones:</b> comprar y vender jugadores es una negociación real de varias rondas — ofreces un valor, el club acepta, sube su pedido o se pone más tenso si la negociación no avanza. Si acuerdas un traspaso, todavía falta negociar el contrato con el propio jugador antes de que el fichaje se cierre.</li>
@@ -7149,6 +7150,174 @@
     'Estrella Azul FC', 'Guerreros del Valle', 'Puma Real', 'Marea Roja', 'Vientos del Pacífico',
     'Selva Dorada', 'Cimarrones FC', 'Trueno Andino', 'Fénix Costero'
   ];
+  var MGR_DIV2_CLUB_NAMES = [
+    'Auroras del Este', 'Cardenales FC', 'Unión Portuaria', 'Halcón Serrano', 'Deportivo Central',
+    'Rocas del Norte', 'Alianza Minera', 'Delfines de Bahía', 'Centauros FC', 'Llama Andina',
+    'Real Cordillera', 'Bravos del Istmo', 'Atlético Cañaveral', 'Cóndor Real', 'Furia Tropical',
+    'Independiente Sur', 'Ola Verde FC', 'Titanes del Llano', 'Estrella Fugaz'
+  ];
+
+  /* ================= MUNDO (país, ligas y clubes inventados) ================= */
+  var MGR_COUNTRY_NAME = 'Nortalia';
+  var MGR_DIV1_NAME = 'Liga Primera de Nortalia';
+  var MGR_DIV2_NAME = 'Liga Segunda de Nortalia';
+  var MGR_CUP_NAME = 'Copa Nortalia';
+  var MGR_CITY_NAMES = [
+    'Puerto Alba', 'San Rioseco', 'Valdelmar', 'Cordillera Alta', 'Bahía Serena', 'Monteclaro',
+    'Villa Estero', 'Nueva Esperanza', 'Alto Vientre', 'Costa Dorada', 'Río Tranquilo', 'Sierra Nevada',
+    'Ciudad del Sol', 'Puente Real', 'Loma Verde', 'Salinas del Mar', 'Piedra Larga', 'Vista Hermosa',
+    'El Mirador', 'Cauce Azul', 'Fuente Blanca', 'Llanura Grande', 'Bosque Real', 'Cabo Alegre'
+  ];
+  var MGR_STADIUM_WORDS = ['Estadio Municipal', 'Coliseo', 'Parque Deportivo', 'Estadio Central', 'Arena', 'Templo del Fútbol'];
+  var MGR_SPONSOR_NAMES = ['Aerolíneas Nortalia', 'Banco del Istmo', 'Cervecería Dorada', 'TeleNortalia', 'Grupo Minero Andes', 'Refrescos Costa', 'Seguros del Valle', 'Petroleos Nortalia'];
+  var MGR_HISTORY_LINES = [
+    'Fundado por trabajadores del puerto local, siempre jugó de visitante con orgullo.',
+    'Nació como equipo de barrio y hoy es un referente de su región.',
+    'Su cantera es famosa por formar jugadores técnicos desde muy jóvenes.',
+    'Vivió una época dorada hace algunas décadas y busca recuperar ese nivel.',
+    'Es conocido por su afición fiel incluso en las temporadas más difíciles.',
+    'Se ganó fama de "matagigantes" por sus sorpresas en la copa.',
+    'Mantiene una rivalidad histórica con los clubes vecinos de su ciudad.',
+    'Su directiva es reconocida por apostar siempre por los juveniles.'
+  ];
+  function mgrPick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+  function mgrClubTierBase(strength){ return 45 + strength * 6; }
+  function mgrEnrichClubFields(club){
+    if(club.city) return club; // ya enriquecido
+    club.city = mgrPick(MGR_CITY_NAMES);
+    club.country = MGR_COUNTRY_NAME;
+    club.stadiumName = mgrPick(MGR_STADIUM_WORDS) + ' ' + club.city.split(' ')[0];
+    club.capacity = 8000 + Math.round(club.strength * 4000 + Math.random() * 6000);
+    var palette = ['#d4af37', '#e0503a', '#2f9e6e', '#3b6fd4', '#a04fd0', '#e0a527', '#4bb7c9'];
+    club.colorPrimary = mgrPick(palette);
+    club.colorSecondary = mgrPick(palette);
+    club.history = mgrPick(MGR_HISTORY_LINES);
+    club.reputation = Math.max(1, Math.min(100, Math.round(club.strength * 16 + Math.random() * 14)));
+    club.fans = Math.round(4000 + club.reputation * 900 + Math.random() * 3000);
+    club.popularity = Math.max(1, Math.min(100, Math.round(club.reputation * 0.8 + Math.random() * 15)));
+    club.facilities = Math.max(1, Math.min(5, Math.round(club.strength * 0.8 + Math.random() * 2)));
+    club.academyLevel = Math.max(1, Math.min(5, Math.round(club.strength * 0.7 + Math.random() * 2)));
+    club.scoutingLevel = Math.max(1, Math.min(5, Math.round(club.strength * 0.6 + Math.random() * 2.2)));
+    club.staffLevel = Math.max(1, Math.min(5, Math.round(club.strength * 0.7 + Math.random() * 2)));
+    club.sponsor = { name: mgrPick(MGR_SPONSOR_NAMES), pay: Math.round((2000 + club.reputation * 180) / 100) * 100 };
+    club.wageBudget = Math.round((mgrClubTierBase(club.strength) * 900) / 100) * 100;
+    club.rivalName = null;
+    return club;
+  }
+  function mgrMakeClubStub(name, strength){
+    var club = { name: name, strength: strength, squad: null, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
+    return mgrEnrichClubFields(club);
+  }
+  function mgrMaterializeClub(club){
+    if(!club.squad) club.squad = mgrGenerateSquad(club.strength);
+    return club;
+  }
+  function mgrClubQuickStrength(club){
+    return club.squad ? mgrClubAvgOvr(club) : mgrClubTierBase(club.strength);
+  }
+  function mgrAssignRivalries(pool){
+    pool.forEach(function(club){
+      if(club.rivalName) return;
+      var sameCity = pool.filter(function(c){ return c !== club && c.city === club.city && !c.rivalName; });
+      var pick = sameCity.length ? mgrPick(sameCity) : mgrPick(pool.filter(function(c){ return c !== club && !c.rivalName; }));
+      if(pick){ club.rivalName = pick.name; pick.rivalName = club.name; }
+    });
+  }
+  function mgrRoundRobinPairs(n){
+    var arr = []; for(var i = 0; i < n; i++) arr.push(i);
+    var rounds = [];
+    for(var r = 0; r < n - 1; r++){
+      var round = [];
+      for(var k = 0; k < n / 2; k++) round.push([arr[k], arr[n - 1 - k]]);
+      rounds.push(round);
+      arr.splice(1, 0, arr.pop());
+    }
+    return rounds;
+  }
+  function mgrInitWorld(){
+    var div1Names = LEAGUE_TEAMS.map(function(t){ return t.name; }).concat(MGR_EXTRA_CLUB_NAMES).slice(0, 19);
+    var div2Names = MGR_DIV2_CLUB_NAMES.slice(0, 19);
+    var div1Strengths = LEAGUE_TEAMS.map(function(t){ return t.strength; }).concat(MGR_EXTRA_CLUB_NAMES.map(function(){ return 1 + Math.floor(Math.random() * 5); })).slice(0, 19);
+    state.manager.division1Pool = div1Names.map(function(n, i){ return mgrMaterializeClub(mgrMakeClubStub(n, div1Strengths[i])); });
+    state.manager.division2Pool = div2Names.map(function(n){ return mgrMakeClubStub(n, 1 + Math.floor(Math.random() * 4)); });
+    mgrAssignRivalries(state.manager.division1Pool.concat(state.manager.division2Pool));
+    state.manager.division = 1;
+    state.manager.cpuClubs = state.manager.division1Pool;
+    state.manager.history = { leagueChampions: [], cupChampions: [] };
+  }
+  function mgrSimulateOtherDivisionSeason(){
+    var otherPool = state.manager.division === 1 ? state.manager.division2Pool : state.manager.division1Pool;
+    otherPool.forEach(function(c){ c.pj = 0; c.pg = 0; c.pe = 0; c.pp = 0; c.gf = 0; c.gc = 0; c.pts = 0; });
+    var n = otherPool.length;
+    if(n % 2 !== 0) return;
+    var rounds = mgrRoundRobinPairs(n);
+    rounds.forEach(function(round){
+      round.forEach(function(pair){
+        var a = otherPool[pair[0]], b = otherPool[pair[1]];
+        var la = lambdaFor(Math.max(0.3, (mgrClubQuickStrength(a) - 50) / 10), true);
+        var lb = lambdaFor(Math.max(0.3, (mgrClubQuickStrength(b) - 50) / 10), false);
+        var sa = poissonSample(la), sb = poissonSample(lb);
+        a.pj++; b.pj++; a.gf += sa; a.gc += sb; b.gf += sb; b.gc += sa;
+        if(sa > sb){ a.pg++; a.pts += 3; b.pp++; } else if(sb > sa){ b.pg++; b.pts += 3; a.pp++; } else { a.pe++; b.pe++; a.pts++; b.pts++; }
+      });
+      round.forEach(function(pair){
+        var a = otherPool[pair[1]], b = otherPool[pair[0]];
+        var la = lambdaFor(Math.max(0.3, (mgrClubQuickStrength(a) - 50) / 10), true);
+        var lb = lambdaFor(Math.max(0.3, (mgrClubQuickStrength(b) - 50) / 10), false);
+        var sa = poissonSample(la), sb = poissonSample(lb);
+        a.pj++; b.pj++; a.gf += sa; a.gc += sb; b.gf += sb; b.gc += sa;
+        if(sa > sb){ a.pg++; a.pts += 3; b.pp++; } else if(sb > sa){ b.pg++; b.pts += 3; a.pp++; } else { a.pe++; b.pe++; a.pts++; b.pts++; }
+      });
+    });
+  }
+  function mgrApplyPromotionRelegation(){
+    var iAmDiv1 = state.manager.division === 1;
+    var minePoolKey = iAmDiv1 ? 'division1Pool' : 'division2Pool';
+    var otherPoolKey = iAmDiv1 ? 'division2Pool' : 'division1Pool';
+    var minePool = state.manager[minePoolKey];
+    var otherPool = state.manager[otherPoolKey];
+
+    var table = mgrStandingsTable();
+    var relegatedRows = table.slice(-2);
+    var iAmRelegated = relegatedRows.some(function(r){ return r.idx === 0; });
+    var relegatedClubs = relegatedRows.filter(function(r){ return r.idx !== 0; }).map(function(r){ return minePool[r.idx - 1]; });
+
+    var otherSorted = otherPool.slice().sort(function(a, b){ return b.pts - a.pts; });
+    var promotedClubs = otherSorted.slice(0, 2);
+    promotedClubs.forEach(mgrMaterializeClub);
+    var remainingOther = otherPool.filter(function(c){ return promotedClubs.indexOf(c) === -1; });
+    var remainingMine = minePool.filter(function(c){ return relegatedClubs.indexOf(c) === -1; });
+
+    var champTable = table.slice().sort(function(a, b){ return b.stats.pts - a.stats.pts; });
+    var champName = champTable[0] ? champTable[0].name : null;
+    var leagueName = iAmDiv1 ? MGR_DIV1_NAME : MGR_DIV2_NAME;
+    if(!state.manager.history) state.manager.history = { leagueChampions: [], cupChampions: [] };
+    state.manager.history.leagueChampions.push({ season: state.manager.season, league: leagueName, champion: champName });
+
+    var promotionMsg = null, relegationMsg = null;
+    if(iAmRelegated){
+      state.manager[minePoolKey] = remainingMine.concat(promotedClubs);
+      state.manager[otherPoolKey] = remainingOther.concat(relegatedClubs);
+      state.manager.division = iAmDiv1 ? 2 : 1;
+      relegationMsg = iAmDiv1
+        ? '¡Descenso! Tu equipo baja a la ' + MGR_DIV2_NAME + ' la próxima temporada.'
+        : '¡Ascenso! Tu equipo sube a la ' + MGR_DIV1_NAME + ' la próxima temporada.';
+    } else {
+      state.manager[minePoolKey] = remainingMine.concat(promotedClubs);
+      state.manager[otherPoolKey] = remainingOther.concat(relegatedClubs);
+    }
+    [state.manager.division1Pool, state.manager.division2Pool].forEach(function(pool){
+      pool.forEach(function(c){
+        c.pj = 0; c.pg = 0; c.pe = 0; c.pp = 0; c.gf = 0; c.gc = 0; c.pts = 0;
+        if(c.squad) c.squad.forEach(function(p){ p.age += 1; p.contractYears = Math.max(0, p.contractYears - 1); });
+      });
+    });
+    state.manager.cpuClubs = state.manager[state.manager.division === 1 ? 'division1Pool' : 'division2Pool'];
+    if(champName && champName !== state.manager.club.name){
+      mgrPushInbox('news', 'Campeón de la ' + leagueName, champName + ' se proclamó campeón de la ' + leagueName + ' esta temporada.');
+    }
+    if(relegationMsg) mgrPushInbox('directiva', iAmRelegated && iAmDiv1 ? 'Descenso de categoría' : 'Ascenso de categoría', relegationMsg);
+  }
 
   function mgrGeneratePlayer(position, minOvr, maxOvr){
     var ovr = Math.max(35, Math.min(90, minOvr + Math.floor(Math.random() * (maxOvr - minOvr + 1))));
@@ -7188,13 +7357,6 @@
     saveState();
     mgrMsg('Dorsal actualizado');
     mgrRenderActiveTab();
-  }
-  function mgrGenerateCpuClubs(){
-    var pool = LEAGUE_TEAMS.map(function(t){ return { name: t.name, strength: t.strength }; })
-      .concat(MGR_EXTRA_CLUB_NAMES.map(function(n){ return { name: n, strength: 1 + Math.floor(Math.random() * 5) }; }));
-    return pool.slice(0, 19).map(function(team){
-      return { name: team.name, strength: team.strength, squad: mgrGenerateSquad(team.strength), pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
-    });
   }
 
   function mgrPlayerById(id){
@@ -7725,6 +7887,94 @@
     });
   }
 
+  /* ================= COPA NACIONAL ================= */
+  var MGR_CUP_ROUND_ORDER = ['r16', 'qf', 'sf', 'final'];
+  var MGR_CUP_ROUND_LABELS = { r16: 'octavos', qf: 'cuartos', sf: 'semifinal', final: 'final' };
+  function mgrRefIsMe(ref){ return ref.type === 'me'; }
+  function mgrCupRefClub(ref){ return ref.type === 'me' ? null : state.manager[ref.pool][ref.idx]; }
+  function mgrCupRefName(ref){ return ref.type === 'me' ? state.manager.club.name : mgrCupRefClub(ref).name; }
+  function mgrCupRefStrength(ref){ return ref.type === 'me' ? mgrMySquadAvgOvr() : mgrClubQuickStrength(mgrCupRefClub(ref)); }
+  function mgrGenerateCup(){
+    var pool = state.manager.division1Pool.map(function(c, i){ return { type: 'club', pool: 'division1Pool', idx: i, club: c }; })
+      .concat(state.manager.division2Pool.map(function(c, i){ return { type: 'club', pool: 'division2Pool', idx: i, club: c }; }));
+    pool.sort(function(a, b){ return b.club.reputation - a.club.reputation; });
+    var entrants = pool.slice(0, 15).map(function(e){ return { type: e.type, pool: e.pool, idx: e.idx }; });
+    entrants.push({ type: 'me' });
+    for(var i = entrants.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = entrants[i]; entrants[i] = entrants[j]; entrants[j] = t;
+    }
+    var days = { r16: 13, qf: 53, sf: 93, final: 133 };
+    var r16 = [];
+    for(var k = 0; k < 8; k++){
+      r16.push({ a: entrants[k * 2], b: entrants[k * 2 + 1], day: days.r16, played: false, scoreA: null, scoreB: null, winner: null });
+    }
+    state.manager.cup = { round: 'r16', entrants: entrants, matches: { r16: r16, qf: [], sf: [], final: [] }, days: days, championName: null, myEliminated: false };
+  }
+  function mgrCupPlayoff(match){
+    var sa = mgrCupRefStrength(match.a), sb = mgrCupRefStrength(match.b);
+    var la = lambdaFor(Math.max(0.3, (sa - 50) / 10), true), lb = lambdaFor(Math.max(0.3, (sb - 50) / 10), false);
+    var goalsA = poissonSample(la), goalsB = poissonSample(lb);
+    if(goalsA === goalsB){ if(Math.random() < sa / (sa + sb)) goalsA++; else goalsB++; match.penalties = true; }
+    match.scoreA = goalsA; match.scoreB = goalsB; match.played = true;
+    match.winner = goalsA > goalsB ? match.a : match.b;
+  }
+  function mgrMyCupMatchForDay(day){
+    var cup = state.manager.cup;
+    if(!cup || cup.round === 'done') return null;
+    if(cup.days[cup.round] !== day) return null;
+    return (cup.matches[cup.round] || []).filter(function(m){ return !m.played && (mgrRefIsMe(m.a) || mgrRefIsMe(m.b)); })[0] || null;
+  }
+  function mgrAdvanceCupRoundIfDone(){
+    var cup = state.manager.cup;
+    if(!cup || cup.round === 'done') return;
+    var matches = cup.matches[cup.round];
+    if(!matches.length || !matches.every(function(m){ return m.played; })) return;
+    var winners = matches.map(function(m){ return m.winner; });
+    var curIdx = MGR_CUP_ROUND_ORDER.indexOf(cup.round);
+    if(curIdx === MGR_CUP_ROUND_ORDER.length - 1){
+      cup.round = 'done';
+      cup.championName = mgrCupRefName(winners[0]);
+      if(!state.manager.history) state.manager.history = { leagueChampions: [], cupChampions: [] };
+      state.manager.history.cupChampions.push({ season: state.manager.season, champion: cup.championName });
+      if(cup.championName === state.manager.club.name){
+        mgrPushInbox('resultado', '¡Campeón de la ' + MGR_CUP_NAME + '!', '¡Ganaste la ' + MGR_CUP_NAME + ' esta temporada!');
+        state.manager.club.budget += 40000;
+        state.manager.club.boardConfidence = Math.min(100, state.manager.club.boardConfidence + 15);
+      } else {
+        mgrPushInbox('news', 'Campeón de la ' + MGR_CUP_NAME, cup.championName + ' se coronó campeón de la ' + MGR_CUP_NAME + '.');
+      }
+      return;
+    }
+    var nextRound = MGR_CUP_ROUND_ORDER[curIdx + 1];
+    var nextDay = cup.days[nextRound];
+    var pairs = [];
+    for(var i = 0; i < winners.length; i += 2){
+      pairs.push({ a: winners[i], b: winners[i + 1], day: nextDay, played: false, scoreA: null, scoreB: null, winner: null });
+    }
+    cup.matches[nextRound] = pairs;
+    cup.round = nextRound;
+  }
+  function mgrFinalizeMyCupMatch(match, sim){
+    var iAmA = mgrRefIsMe(match.a);
+    match.played = true;
+    match.scoreA = sim.scoreA; match.scoreB = sim.scoreB;
+    if(match.scoreA === match.scoreB){ if(Math.random() < 0.5) match.scoreA++; else match.scoreB++; match.penalties = true; }
+    match.winner = match.scoreA > match.scoreB ? match.a : match.b;
+    var meRef = iAmA ? match.a : match.b;
+    var oppRef = iAmA ? match.b : match.a;
+    var iWon = match.winner === meRef;
+    var oppName = mgrCupRefName(oppRef);
+    mgrApplyPlayerImpact(iAmA ? sim.ratingsA : sim.ratingsB, true);
+    mgrApplyPlayerImpact(iAmA ? sim.ratingsB : sim.ratingsA, false);
+    mgrPushInbox('resultado', iWon ? '¡Avanzas en la copa!' : 'Eliminado de la copa',
+      (iWon ? 'Ganaste' : 'Perdiste') + ' ' + match.scoreA + '-' + match.scoreB + (match.penalties ? ' (penales)' : '') + ' vs ' + oppName + ' en la ' + MGR_CUP_NAME + '.');
+    if(!iWon) state.manager.cup.myEliminated = true;
+    mgrAutoFixLineup();
+    mgrAdvanceCupRoundIfDone();
+    mgrCheckSeasonEnd();
+  }
+
   function mgrCloseSeason(){
     var table = mgrStandingsTable();
     var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
@@ -7732,7 +7982,8 @@
     state.manager.club.budget += prize;
     state.manager.club.boardConfidence = Math.max(0, Math.min(100,
       state.manager.club.boardConfidence + (myPos <= Math.ceil(table.length / 2) ? 8 : -10)));
-    mgrPushInbox('resultado', 'Fin de temporada', 'Terminaste ' + myPos + 'º de ' + table.length + '. Premio: ' + prize.toLocaleString('es-CO') + ' fichas.');
+    var leagueName = state.manager.division === 1 ? MGR_DIV1_NAME : MGR_DIV2_NAME;
+    mgrPushInbox('resultado', 'Fin de temporada', 'Terminaste ' + myPos + 'º de ' + table.length + ' en la ' + leagueName + '. Premio: ' + prize.toLocaleString('es-CO') + ' fichas.');
 
     state.manager.squad.forEach(function(p){
       var avgRating = p.seasonApps ? (p.seasonRatingSum / p.seasonApps) : 6.0;
@@ -7756,20 +8007,21 @@
       return true;
     });
 
+    mgrSimulateOtherDivisionSeason();
+    mgrApplyPromotionRelegation();
+
     state.manager.season += 1;
     state.manager.matchday = 0;
     state.manager.myStats = { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
-    state.manager.cpuClubs.forEach(function(c){
-      c.pj = 0; c.pg = 0; c.pe = 0; c.pp = 0; c.gf = 0; c.gc = 0; c.pts = 0;
-      c.squad.forEach(function(p){ p.age += 1; p.contractYears = Math.max(0, p.contractYears - 1); });
-    });
     state.manager.topScorers = {}; state.manager.topAssists = {}; state.manager.recentForm = [];
     mgrAutoFixLineup();
     mgrGenerateSeasonCalendar();
+    mgrGenerateCup();
   }
   function mgrCheckSeasonEnd(){
     var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
-    if(state.manager.matchday >= total) mgrCloseSeason();
+    var cupDone = !state.manager.cup || state.manager.cup.round === 'done';
+    if(state.manager.matchday >= total && cupDone) mgrCloseSeason();
   }
 
   function mgrFinalizeMyMatch(fixture, sim, iAmHome){
@@ -7804,7 +8056,7 @@
     var visibleEvents = (m.sim.timeline || []).filter(function(e){ return e.minute <= elapsedMinute; });
     var scoreA = 0, scoreB = 0;
     visibleEvents.forEach(function(e){ if(e.type === 'goal'){ if(e.team === 'A') scoreA++; else scoreB++; } });
-    var homeName = mgrClubName(m.fixture.home), awayName = mgrClubName(m.fixture.away);
+    var homeName = m.homeName, awayName = m.awayName;
     var scoreHome = m.iAmHome ? scoreA : scoreB, scoreAway = m.iAmHome ? scoreB : scoreA;
 
     el.innerHTML = '';
@@ -7831,7 +8083,8 @@
       if(!m.finalized){
         m.finalized = true;
         if(mgrLiveTimer){ clearInterval(mgrLiveTimer); mgrLiveTimer = null; }
-        mgrFinalizeMyMatch(m.fixture, m.sim, m.iAmHome);
+        if(m.kind === 'cup') mgrFinalizeMyCupMatch(m.fixture, m.sim);
+        else mgrFinalizeMyMatch(m.fixture, m.sim, m.iAmHome);
         saveState();
       }
       var closeBtn = document.createElement('button');
@@ -7847,7 +8100,8 @@
   function mgrAdvanceDay(){
     if(!state.manager) return;
     var pendingToday = mgrMyFixtureForDay(state.manager.day);
-    if(pendingToday && !pendingToday.played){ mgrMsg('Termina el partido de hoy antes de avanzar'); return; }
+    var pendingCup = mgrMyCupMatchForDay(state.manager.day);
+    if((pendingToday && !pendingToday.played) || pendingCup){ mgrMsg('Termina el partido de hoy antes de avanzar'); return; }
     state.manager.day += 1;
     mgrMaybeGenerateIncomingOffer();
     var fixturesToday = mgrFixturesForDay(state.manager.day);
@@ -7858,29 +8112,58 @@
         mgrApplyStandings(f.home, f.away, res.scoreHome, res.scoreAway);
       }
     });
+    var cup = state.manager.cup;
+    if(cup && cup.round !== 'done' && cup.days[cup.round] === state.manager.day){
+      (cup.matches[cup.round] || []).forEach(function(m){
+        if(!m.played && !mgrRefIsMe(m.a) && !mgrRefIsMe(m.b)) mgrCupPlayoff(m);
+      });
+      mgrAdvanceCupRoundIfDone();
+    }
+    mgrCheckSeasonEnd();
     saveState();
     mgrRenderActiveTab();
   }
 
+  function mgrTodayMatchInfo(day){
+    var lf = mgrMyFixtureForDay(day);
+    if(lf && !lf.played){
+      var iAmHome = lf.home === 0;
+      var oppIdx = iAmHome ? lf.away : lf.home;
+      return { kind: 'league', fixture: lf, iAmHome: iAmHome, oppName: mgrClubName(oppIdx), oppClub: state.manager.cpuClubs[oppIdx - 1] };
+    }
+    var cm = mgrMyCupMatchForDay(day);
+    if(cm){
+      var iAmA = mgrRefIsMe(cm.a);
+      var oppRef = iAmA ? cm.b : cm.a;
+      var oppClub = mgrCupRefClub(oppRef);
+      if(oppClub) mgrMaterializeClub(oppClub);
+      return { kind: 'cup', fixture: cm, iAmHome: iAmA, oppName: mgrCupRefName(oppRef), oppClub: oppClub };
+    }
+    return null;
+  }
+
   function mgrPlayMatchday(mode){
     if(!state.manager) return;
-    var myFixture = mgrMyFixtureForDay(state.manager.day);
-    if(!myFixture || myFixture.played){ mgrMsg('Hoy no tienes partido. Avanza el día.'); return; }
+    var today = mgrTodayMatchInfo(state.manager.day);
+    if(!today){ mgrMsg('Hoy no tienes partido. Avanza el día.'); return; }
     var myList = mgrLineupList();
     if(myList.length < 7){ mgrMsg('Completa tu alineación titular (7 jugadores) antes de jugar'); return; }
     mgrApplyTraining();
-    var oppIdx = myFixture.home === 0 ? myFixture.away : myFixture.home;
-    var oppClub = state.manager.cpuClubs[oppIdx - 1];
-    var oppList = mgrBestLineupList(oppClub.squad);
-    var iAmHome = myFixture.home === 0;
+    var oppList = mgrBestLineupList(today.oppClub.squad);
+    var iAmHome = today.iAmHome;
     var sim = careerSimulateFullMatch(iAmHome ? myList : oppList, iAmHome ? oppList : myList);
+    var myName = state.manager.club.name;
 
     if(mode === 'sim'){
-      mgrFinalizeMyMatch(myFixture, sim, iAmHome);
+      if(today.kind === 'league') mgrFinalizeMyMatch(today.fixture, sim, iAmHome);
+      else mgrFinalizeMyCupMatch(today.fixture, sim);
       saveState();
       mgrRenderActiveTab();
     } else {
-      mgrLiveMatch = { fixture: myFixture, iAmHome: iAmHome, sim: sim, liveStartAt: Date.now(), finalized: false };
+      mgrLiveMatch = {
+        kind: today.kind, fixture: today.fixture, iAmHome: iAmHome, sim: sim, liveStartAt: Date.now(), finalized: false,
+        homeName: iAmHome ? myName : today.oppName, awayName: iAmHome ? today.oppName : myName
+      };
       document.getElementById('mgrLiveMatch').hidden = false;
       mgrRenderLiveMatch();
       if(mgrLiveTimer) clearInterval(mgrLiveTimer);
@@ -7895,16 +8178,18 @@
       season: 1,
       squad: mgrGenerateSquad(3),
       lineup: {},
-      cpuClubs: mgrGenerateCpuClubs(),
+      cpuClubs: [],
       myStats: { pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 },
       calendar: [], matchday: 0, day: 0,
       topScorers: {}, topAssists: {}, recentForm: [],
       inbox: [], negotiations: [],
       trainingFocus: 'GK'
     };
+    mgrInitWorld();
     mgrAssignInitialLineup();
     mgrGenerateSeasonCalendar();
-    mgrPushInbox('news', 'Bienvenido a ' + clubName, 'La directiva te da la bienvenida y espera un buen torneo. Objetivo: terminar en la mitad superior de la tabla.');
+    mgrGenerateCup();
+    mgrPushInbox('news', 'Bienvenido a ' + clubName, 'La directiva te da la bienvenida y espera un buen torneo en la ' + MGR_DIV1_NAME + '. Objetivo: terminar en la mitad superior de la tabla.');
     saveState();
   }
 
@@ -7949,10 +8234,17 @@
 
   function mgrRenderOficina(){
     var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
-    document.getElementById('mgrOfficeSeason').textContent = 'Temporada ' + state.manager.season + ' · Día ' + state.manager.day + ' · Jornada ' + state.manager.matchday + '/' + total;
+    var leagueName = state.manager.division === 1 ? MGR_DIV1_NAME : MGR_DIV2_NAME;
+    document.getElementById('mgrOfficeSeason').textContent = leagueName + ' · Temporada ' + state.manager.season + ' · Día ' + state.manager.day + ' · Jornada ' + state.manager.matchday + '/' + total;
     var table = mgrStandingsTable();
     var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
-    document.getElementById('mgrOfficePosition').textContent = 'Posición: ' + myPos + 'º de ' + table.length;
+    var cupText = '';
+    if(state.manager.cup){
+      if(state.manager.cup.round === 'done') cupText = ' · ' + MGR_CUP_NAME + ': campeón ' + state.manager.cup.championName;
+      else if(state.manager.cup.myEliminated) cupText = ' · Eliminado de la ' + MGR_CUP_NAME;
+      else cupText = ' · ' + MGR_CUP_NAME + ': ' + MGR_CUP_ROUND_LABELS[state.manager.cup.round];
+    }
+    document.getElementById('mgrOfficePosition').textContent = 'Posición: ' + myPos + 'º de ' + table.length + cupText;
     document.getElementById('mgrConfidenceFill').style.width = Math.max(0, Math.min(100, state.manager.club.boardConfidence)) + '%';
 
     var statsEl = document.getElementById('mgrQuickStats');
@@ -8272,21 +8564,26 @@
     });
   }
 
+  function mgrNextCupInfo(){
+    var cup = state.manager.cup;
+    if(!cup || cup.round === 'done' || cup.myEliminated) return null;
+    return { day: cup.days[cup.round], roundLabel: MGR_CUP_ROUND_LABELS[cup.round] };
+  }
   function mgrRenderCalendario(){
     var card = document.getElementById('mgrNextMatchCard');
     var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
-    var todayFixture = mgrMyFixtureForDay(state.manager.day);
+    var today = mgrTodayMatchInfo(state.manager.day);
     card.innerHTML = '';
     var dayLabel = document.createElement('p');
     dayLabel.className = 'league-card-title';
     dayLabel.textContent = 'Día ' + state.manager.day;
     card.appendChild(dayLabel);
 
-    if(todayFixture && !todayFixture.played){
-      var iAmHome = todayFixture.home === 0;
-      var oppName = mgrClubName(iAmHome ? todayFixture.away : todayFixture.home);
+    if(today){
       var sub = document.createElement('p'); sub.className = 'league-card-sub';
-      sub.textContent = 'Jornada ' + todayFixture.matchday + ' de ' + total + ' · ' + (iAmHome ? 'Local' : 'Visitante') + ' vs ' + oppName;
+      sub.textContent = today.kind === 'league'
+        ? ('Jornada ' + today.fixture.matchday + ' de ' + total + ' · ' + (today.iAmHome ? 'Local' : 'Visitante') + ' vs ' + today.oppName)
+        : (MGR_CUP_NAME + ' · ' + MGR_CUP_ROUND_LABELS[state.manager.cup.round] + ' vs ' + today.oppName);
       card.appendChild(sub);
       var playBtn = document.createElement('button');
       playBtn.className = 'btn btn-primary btn-block'; playBtn.style.marginTop = '10px';
@@ -8299,23 +8596,26 @@
       card.appendChild(playBtn); card.appendChild(simBtn);
     } else {
       var next = mgrNextMyFixture();
+      var nextCup = mgrNextCupInfo();
       var sub2 = document.createElement('p'); sub2.className = 'league-card-sub';
-      sub2.textContent = next
-        ? ('Próximo partido: jornada ' + next.matchday + ' (día ' + next.day + ', faltan ' + (next.day - state.manager.day) + ' día(s))')
-        : 'Temporada terminada, cerrando…';
+      var lines = [];
+      if(next) lines.push('Liga: jornada ' + next.matchday + ' (día ' + next.day + ', faltan ' + (next.day - state.manager.day) + ' día(s))');
+      if(nextCup) lines.push(MGR_CUP_NAME + ': ' + nextCup.roundLabel + ' (día ' + nextCup.day + ', faltan ' + (nextCup.day - state.manager.day) + ' día(s))');
+      sub2.textContent = lines.length ? lines.join(' · ') : 'Temporada terminada, cerrando…';
       card.appendChild(sub2);
       var advBtn = document.createElement('button');
       advBtn.className = 'btn btn-primary btn-block'; advBtn.style.marginTop = '10px';
       advBtn.textContent = '⏩ Avanzar día';
-      advBtn.disabled = !next;
+      advBtn.disabled = !next && !nextCup;
       advBtn.addEventListener('click', mgrAdvanceDay);
       card.appendChild(advBtn);
     }
 
     var upcomingEl = document.getElementById('mgrUpcomingList');
     if(upcomingEl){
+      var todayLeagueFixture = today && today.kind === 'league' ? today.fixture : null;
       var upcoming = state.manager.calendar.filter(function(f){
-        return !f.played && (f.home === 0 || f.away === 0) && f !== todayFixture;
+        return !f.played && (f.home === 0 || f.away === 0) && f !== todayLeagueFixture;
       }).sort(function(a, b){ return a.day - b.day; }).slice(0, 5);
       upcomingEl.innerHTML = '';
       if(!upcoming.length){ upcomingEl.innerHTML = '<p class="league-empty">No hay más partidos programados.</p>'; }
