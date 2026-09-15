@@ -9149,6 +9149,98 @@
     col3.appendChild(radarPanel);
   }
 
+  var MGR_DT_POS_COLOR = { GK: 'var(--dt-ambar)', DEF: 'var(--dt-azul)', MID: 'var(--dt-verde)', FWD: 'var(--dt-rojo)' };
+  var mgrOpenSquadPlayerId = null;
+  function mgrRenderPlantillaDT(){
+    mgrRenderDtChrome();
+    var root = document.querySelector('[data-dt-screen="plantilla"]');
+    root.innerHTML = '';
+    var grid = document.createElement('div');
+    grid.className = 'dt-screen';
+    grid.style.gridTemplateColumns = '1fr 20cqw';
+    root.appendChild(grid);
+
+    var squad = state.manager.squad;
+    if((mgrOpenSquadPlayerId === null || !mgrPlayerById(mgrOpenSquadPlayerId)) && squad.length) mgrOpenSquadPlayerId = squad[0].id;
+
+    var tableCol = document.createElement('div'); tableCol.className = 'dt-panel flex-col'; tableCol.style.cssText += 'padding:0; overflow:hidden;';
+    var colsTemplate = '2.4cqw 1.9fr 2.6cqw 2.6cqw 1fr 1fr 3.4cqw 3.6cqw';
+    var head = document.createElement('div');
+    head.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.5cqw; padding:.55cqw .8cqw; border-bottom:1px solid var(--dt-border);';
+    head.innerHTML = ['#', 'Jugador', 'Pos', 'Edad', 'Forma', 'Moral', 'Media', 'Valor'].map(function(h){ return '<div class="dt-label" style="margin-bottom:0;">' + h + '</div>'; }).join('');
+    tableCol.appendChild(head);
+    var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll'; listWrap.style.flex = '1';
+    tableCol.appendChild(listWrap);
+
+    squad.forEach(function(p, i){
+      var isSel = p.id === mgrOpenSquadPlayerId;
+      var row = document.createElement('div');
+      row.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.5cqw; padding:.42cqw .8cqw; align-items:center; font-size:0.76cqw; cursor:pointer;' +
+        (isSel ? 'background:var(--dt-bg-active); box-shadow:inset .16cqw 0 0 var(--dt-verde);' : (i % 2 ? 'background:oklch(0.175 0.014 250);' : ''));
+      var formaTone = p.form >= 75 ? 'var(--dt-verde)' : p.form >= 60 ? 'var(--dt-ambar)' : 'var(--dt-rojo)';
+      var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
+      var injured = p.injuredUntil && p.injuredUntil > state.manager.matchday;
+      var suspended = p.suspendedUntil && p.suspendedUntil > state.manager.matchday;
+      row.innerHTML =
+        '<div class="dt-mono" style="color:var(--dt-text-mono);">' + p.number + '</div>' +
+        '<div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600;">' + escapeHtml(p.name) + (injured ? ' 🚑' : '') + (suspended ? ' 🟥' : '') + (p.onLoan ? ' (cedido)' : '') + '</div>' +
+        '<div class="dt-mono" style="color:' + posColor + '; font-weight:600;">' + p.position + '</div>' +
+        '<div class="dt-mono" style="color:var(--dt-text-sec);">' + p.age + '</div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + Math.max(0, Math.min(100, p.form)) + '%; background:' + formaTone + ';"></div></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + Math.max(0, Math.min(100, p.morale)) + '%; background:var(--dt-azul);"></div></div>' +
+        '<div class="dt-mono" style="font-weight:600; text-align:right;">' + p.ovr + '</div>' +
+        '<div class="dt-mono" style="text-align:right; color:var(--dt-text-sec);">' + p.value.toLocaleString('es-CO') + '</div>';
+      row.addEventListener('click', function(){ mgrOpenSquadPlayerId = p.id; mgrRenderPlantillaDT(); });
+      listWrap.appendChild(row);
+    });
+    grid.appendChild(tableCol);
+
+    var fichaCol = document.createElement('div'); fichaCol.className = 'dt-panel flex-col'; fichaCol.style.overflowY = 'auto';
+    var p = mgrPlayerById(mgrOpenSquadPlayerId);
+    if(!p){
+      fichaCol.innerHTML = '<p class="dt-row-detail">Todavía no tienes jugadores en la plantilla.</p>';
+    } else {
+      var attrDefs = [['Ritmo', 'velocidad'], ['Tiro', 'tiro'], ['Pase', 'pase'], ['Regate', 'regate'], ['Defensa', 'defensa'], ['Físico', 'fisico']];
+      var dataRows = [
+        ['Salario', p.wage.toLocaleString('es-CO')],
+        ['Valor de mercado', p.value.toLocaleString('es-CO')],
+        ['Partidos / goles', (p.seasonApps || 0) + ' / ' + (p.seasonGoals || 0)],
+        ['Pie · altura', p.foot + ' · ' + p.height + 'cm']
+      ];
+      fichaCol.innerHTML =
+        '<div style="display:flex; gap:.7cqw; align-items:flex-start;">' +
+          '<div style="width:4.6cqw; height:5.6cqw; min-width:56px; min-height:68px; border-radius:4px; background:repeating-linear-gradient(135deg,var(--dt-bg-inset) 0 6px,oklch(0.23 0.016 250) 6px 12px); display:flex; align-items:flex-end; justify-content:center; padding:.3cqw; flex:none;"><span class="dt-mono" style="font-size:0.5cqw; color:var(--dt-text-mono);">FOTO</span></div>' +
+          '<div style="flex:1; min-width:0;">' +
+            '<div style="font-size:1.05cqw; font-weight:800; line-height:1.1;">#' + p.number + ' ' + escapeHtml(p.name) + '</div>' +
+            '<div class="dt-mono" style="font-size:0.64cqw; color:var(--dt-text-sec); margin-top:.2cqw;">' + p.position + ' · ' + p.age + ' años · contrato ' + p.contractYears + ' año(s)' + (p.onLoan ? ' · cedido' : '') + '</div>' +
+            '<div style="display:flex; gap:.4cqw; margin-top:.5cqw;">' +
+              '<div class="dt-chip" style="background:var(--dt-verde); color:var(--dt-ink); font-weight:600;">' + p.ovr + ' MED</div>' +
+              '<div class="dt-chip" style="border:1px solid var(--dt-border-strong);">' + p.potential + ' POT</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex; flex-direction:column; gap:.5cqw; margin-top:.8cqw;">' +
+          attrDefs.map(function(a){
+            var val = p.attrs[a[1]];
+            var tone = val >= 78 ? 'var(--dt-verde)' : val >= 62 ? 'var(--dt-ambar)' : 'var(--dt-rojo)';
+            return '<div><div style="display:flex; justify-content:space-between; font-family:\'IBM Plex Mono\',monospace; font-size:0.64cqw; color:var(--dt-text-sec); margin-bottom:.2cqw;"><span>' + a[0] + '</span><span>' + val + '</span></div><div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + val + '%; background:' + tone + ';"></div></div></div>';
+          }).join('') +
+        '</div>' +
+        '<div style="border-top:1px solid var(--dt-border); margin-top:.7cqw; padding-top:.6cqw; display:flex; flex-direction:column; gap:.35cqw;">' +
+          dataRows.map(function(d){
+            return '<div style="display:flex; justify-content:space-between; font-size:0.72cqw;"><span style="color:var(--dt-text-sec);">' + d[0] + '</span><span class="dt-mono" style="font-weight:600;">' + d[1] + '</span></div>';
+          }).join('') +
+        '</div>' +
+        '<div style="display:flex; gap:.45cqw; margin-top:.8cqw;">' +
+          '<button type="button" class="dt-btn-outline" id="dtFichaRenovarBtn">RENOVAR</button>' +
+          '<button type="button" class="dt-btn-fill" id="dtFichaTransferBtn" style="background:' + (p.forSale ? 'var(--dt-rojo)' : 'var(--dt-border-strong)') + ';">' + (p.forSale ? 'QUITAR DE VENTA' : 'TRANSFERIBLE') + '</button>' +
+        '</div>';
+      fichaCol.querySelector('#dtFichaRenovarBtn').addEventListener('click', function(){ mgrOpenPlayerSheet(p.id); });
+      fichaCol.querySelector('#dtFichaTransferBtn').addEventListener('click', function(){ p.forSale = !p.forSale; saveState(); mgrRenderPlantillaDT(); });
+    }
+    grid.appendChild(fichaCol);
+  }
+
   var mgrOpenPlayerId = null;
   function mgrOpenPlayerSheet(playerId){
     mgrOpenPlayerId = playerId;
@@ -9158,6 +9250,7 @@
   function mgrClosePlayerSheet(){
     mgrOpenPlayerId = null;
     document.getElementById('mgrPlayerSheetOverlay').hidden = true;
+    if(state.manager && state.manager.active) mgrRenderActiveTab();
   }
   function mgrRenderPlayerSheet(){
     var p = mgrPlayerById(mgrOpenPlayerId);
@@ -9790,6 +9883,12 @@
       var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
       return 'temporada ' + state.manager.season + ' · jornada ' + state.manager.matchday + '/' + total;
     }
+    if(tab === 'plantilla'){
+      var squad = state.manager.squad;
+      if(!squad.length) return 'sin fichas todavía';
+      var avgAge = Math.round(squad.reduce(function(s, p){ return s + p.age; }, 0) / squad.length * 10) / 10;
+      return squad.length + ' fichas · media ' + mgrSquadAvgOvr() + ' · edad media ' + String(avgAge).replace('.', ',');
+    }
     return 'próximamente en esta fase del rediseño';
   }
   function mgrRenderDtNav(){
@@ -9820,6 +9919,8 @@
     document.getElementById('dtScreenSub').textContent = mgrDtSubtitle(mgrActiveTab);
     if(mgrActiveTab === 'hub'){
       mgrRenderHub();
+    } else if(mgrActiveTab === 'plantilla'){
+      mgrRenderPlantillaDT();
     } else {
       mgrRenderDtChrome();
       var root = document.querySelector('[data-dt-screen="' + mgrActiveTab + '"]');
