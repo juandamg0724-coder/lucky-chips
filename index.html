@@ -9839,6 +9839,134 @@
     if(mgrLiveMatch) mgrRenderLiveMatch();
   }
 
+  function mgrRenderEntrenoDT(){
+    mgrRenderDtChrome();
+    var root = document.querySelector('[data-dt-screen="entreno"]');
+    root.innerHTML = '';
+    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1fr 1fr 18cqw';
+    root.appendChild(grid);
+
+    var focusPanel = document.createElement('div'); focusPanel.className = 'dt-panel flex-col';
+    focusPanel.innerHTML = '<div class="dt-panel-title">Foco de entrenamiento</div><p class="dt-row-detail" style="white-space:normal; margin-bottom:.6cqw;">Los jóvenes de 26 años o menos en esta posición tienen más chance de mejorar tras cada partido.</p>';
+    var focusList = document.createElement('div');
+    [['GK', 'Porteros'], ['DEF', 'Defensas'], ['MID', 'Mediocampistas'], ['FWD', 'Delanteros']].forEach(function(f){
+      var item = document.createElement('div');
+      item.className = 'dt-style-item' + (state.manager.trainingFocus === f[0] ? ' active' : '');
+      item.innerHTML = '<span class="dt-style-name">' + f[1] + '</span>';
+      item.addEventListener('click', function(){ state.manager.trainingFocus = f[0]; saveState(); mgrRenderEntrenoDT(); });
+      focusList.appendChild(item);
+    });
+    focusPanel.appendChild(focusList);
+    grid.appendChild(focusPanel);
+
+    var devPanel = document.createElement('div'); devPanel.className = 'dt-panel flex-col';
+    devPanel.innerHTML = '<div class="dt-panel-title">Planes de desarrollo</div>';
+    var devWrap = document.createElement('div'); devWrap.className = 'dt-scroll';
+    devPanel.appendChild(devWrap);
+    var prospects = state.manager.squad.filter(function(p){ return p.age <= 26 && p.ovr < p.potential; }).sort(function(a, b){ return (b.potential - b.ovr) - (a.potential - a.ovr); });
+    if(!prospects.length){ devWrap.innerHTML = '<p class="dt-row-detail">Ningún jugador tiene margen de mejora ahora mismo.</p>'; }
+    prospects.slice(0, 10).forEach(function(p){
+      var card = document.createElement('div'); card.style.cssText = 'padding:.65cqw; border-radius:4px; background:var(--dt-bg-inset); margin-bottom:.5cqw;';
+      var pct = Math.round((p.ovr / p.potential) * 100);
+      card.innerHTML =
+        '<div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:0.78cqw; font-weight:600;">' + escapeHtml(p.name) + '</div><div class="dt-mono" style="font-size:0.66cqw; color:var(--dt-verde);">' + p.ovr + '/' + p.potential + '</div></div>' +
+        '<div class="dt-mono" style="font-size:0.62cqw; color:var(--dt-text-mono); margin:.25cqw 0 .35cqw;">' + (MGR_DEV_PLAN_LABELS[p.devPlan] || p.devPlan) + '</div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + pct + '%; background:var(--dt-verde);"></div></div>';
+      var chipsWrap = document.createElement('div'); chipsWrap.style.cssText = 'display:flex; gap:.3cqw; margin-top:.4cqw; flex-wrap:wrap;';
+      (MGR_DEV_PLANS[p.position] || []).forEach(function(plan){
+        var active = plan === p.devPlan;
+        var chip = document.createElement('div'); chip.className = 'dt-chip'; chip.style.cursor = 'pointer';
+        chip.style.cssText += active ? 'background:var(--dt-verde); color:var(--dt-ink);' : 'border:1px solid var(--dt-border-strong); color:var(--dt-text-sec);';
+        chip.textContent = MGR_DEV_PLAN_LABELS[plan];
+        chip.addEventListener('click', function(){ mgrSetDevPlan(p.id, plan); mgrRenderEntrenoDT(); });
+        chipsWrap.appendChild(chip);
+      });
+      card.appendChild(chipsWrap);
+      devWrap.appendChild(card);
+    });
+    grid.appendChild(devPanel);
+
+    var infraPanel = document.createElement('div'); infraPanel.className = 'dt-panel flex-col';
+    infraPanel.innerHTML = '<div class="dt-panel-title">Infraestructura del club</div>';
+    var club = state.manager.club;
+    [['Instalaciones', club.facilities], ['Academia', club.academyLevel], ['Ojeo', club.scoutingLevel], ['Cuerpo técnico', club.staffLevel]].forEach(function(row){
+      var wrap = document.createElement('div'); wrap.style.marginBottom = '.6cqw';
+      wrap.innerHTML =
+        '<div style="display:flex; justify-content:space-between; font-size:0.72cqw; margin-bottom:.25cqw;"><span>' + row[0] + '</span><span class="dt-mono">' + row[1] + '/5</span></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + (row[1] / 5 * 100) + '%; background:var(--dt-verde);"></div></div>';
+      infraPanel.appendChild(wrap);
+    });
+    grid.appendChild(infraPanel);
+  }
+
+  function mgrRenderDirectivaDT(){
+    mgrRenderDtChrome();
+    var root = document.querySelector('[data-dt-screen="objetivos"]');
+    root.innerHTML = '';
+    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1.4fr 1fr';
+    root.appendChild(grid);
+
+    var left = document.createElement('div'); left.className = 'dt-panel flex-col';
+    left.innerHTML = '<div class="dt-panel-title">Encargos de la directiva · Temporada ' + state.manager.season + '</div>';
+    var leftWrap = document.createElement('div'); leftWrap.className = 'dt-scroll';
+    left.appendChild(leftWrap);
+
+    var cards = [];
+    var obj = mgrObjectiveProgress();
+    if(obj) cards.push({ titulo: obj.label + ': ' + obj.text, detalle: 'Objetivo principal de la directiva esta temporada.', pct: obj.pct, tono: obj.tone });
+    mgrBuildTaskList().forEach(function(t){
+      cards.push({ titulo: t.icon + ' ' + t.text, detalle: '', pct: null, tono: 'var(--dt-ambar)', tab: t.tab });
+    });
+    if(!cards.length){ leftWrap.innerHTML = '<p class="dt-row-detail">No hay encargos ni tareas pendientes ahora mismo.</p>'; }
+    cards.forEach(function(c){
+      var card = document.createElement('div');
+      card.style.cssText = 'padding:.7cqw; border-radius:4px; background:var(--dt-bg-inset); border-left:.2cqw solid ' + c.tono + '; margin-bottom:.55cqw;' + (c.tab ? ' cursor:pointer;' : '');
+      card.innerHTML =
+        '<div style="font-size:0.85cqw; font-weight:700;">' + escapeHtml(c.titulo) + '</div>' +
+        (c.detalle ? '<div style="font-size:0.72cqw; color:var(--dt-text-sec); margin:.3cqw 0 .4cqw; line-height:1.4;">' + escapeHtml(c.detalle) + '</div>' : '') +
+        (c.pct != null ? '<div class="dt-bar-track" style="margin-top:.3cqw;"><div class="dt-bar-fill" style="width:' + c.pct + '%; background:' + c.tono + ';"></div></div>' : '');
+      if(c.tab) card.addEventListener('click', function(){ mgrSwitchTab(c.tab); });
+      leftWrap.appendChild(card);
+    });
+    grid.appendChild(left);
+
+    var right = document.createElement('div'); right.className = 'dt-col';
+    grid.appendChild(right);
+
+    var stabilityPanel = document.createElement('div'); stabilityPanel.className = 'dt-panel';
+    stabilityPanel.style.background = 'linear-gradient(155deg,oklch(0.255 0.028 252),var(--dt-bg-panel))';
+    var conf = state.manager.club.boardConfidence;
+    var confLabel = conf >= 60 ? 'sin presión inmediata' : conf >= 30 ? 'bajo observación' : 'en riesgo de destitución';
+    stabilityPanel.innerHTML =
+      '<div class="dt-panel-title">Estabilidad en el cargo</div>' +
+      '<div style="display:flex; align-items:baseline; gap:.6cqw;"><span class="dt-mono" style="font-size:2.2cqw; font-weight:600; color:var(--dt-verde);">' + conf + '</span><span style="font-size:0.76cqw; color:var(--dt-text-sec);">' + confLabel + '</span></div>';
+    var recentResults = mgrCalendarEntries().filter(function(e){ return e.played; }).slice(-10);
+    var barsWrap = document.createElement('div'); barsWrap.style.cssText = 'display:flex; gap:.35cqw; margin-top:.7cqw;';
+    for(var i = 0; i < 10; i++){
+      var e = recentResults[i];
+      var tone = !e ? 'var(--dt-border)' : (e.myScore > e.oppScore ? 'var(--dt-verde)' : e.myScore === e.oppScore ? 'var(--dt-ambar)' : 'var(--dt-rojo)');
+      var b = document.createElement('div'); b.style.cssText = 'flex:1; height:2.4cqw; border-radius:2px; background:' + tone + ';';
+      barsWrap.appendChild(b);
+    }
+    stabilityPanel.appendChild(barsWrap);
+    var barsLabel = document.createElement('div'); barsLabel.className = 'dt-mono'; barsLabel.style.cssText = 'font-size:0.6cqw; color:var(--dt-text-mono); margin-top:.35cqw;'; barsLabel.textContent = 'ÚLTIMOS 10 PARTIDOS';
+    stabilityPanel.appendChild(barsLabel);
+    right.appendChild(stabilityPanel);
+
+    var vocesPanel = document.createElement('div'); vocesPanel.className = 'dt-panel flex-col'; vocesPanel.style.flex = '1';
+    vocesPanel.innerHTML = '<div class="dt-panel-title">Voces del club</div>';
+    var vocesWrap = document.createElement('div'); vocesWrap.className = 'dt-scroll';
+    vocesPanel.appendChild(vocesWrap);
+    var social = state.manager.social || [];
+    if(!social.length){ vocesWrap.innerHTML = '<p class="dt-row-detail">Todavía no hay actividad en redes.</p>'; }
+    social.slice(0, 6).forEach(function(post){
+      var row = document.createElement('div'); row.style.cssText = 'padding:.65cqw; border-radius:4px; background:var(--dt-bg-inset); margin-bottom:.4cqw;';
+      row.innerHTML = '<div style="font-size:0.74cqw; line-height:1.45; color:oklch(0.88 0.008 250);">' + escapeHtml(post.text) + '</div><div class="dt-mono" style="font-size:0.6cqw; color:var(--dt-text-mono); margin-top:.35cqw;">' + escapeHtml(post.handle) + '</div>';
+      vocesWrap.appendChild(row);
+    });
+    right.appendChild(vocesPanel);
+  }
+
   var mgrOpenPlayerId = null;
   function mgrOpenPlayerSheet(playerId){
     mgrOpenPlayerId = playerId;
@@ -10506,6 +10634,12 @@
       var t = mgrTodayMatchInfo(state.manager.day);
       return t ? (t.kind === 'cup' ? MGR_CUP_NAME : 'jornada ' + t.fixture.matchday) + ' · ' + (t.iAmHome ? 'casa' : 'fuera') + ' · ' + t.oppName : 'sin partido hoy';
     }
+    if(tab === 'entreno'){
+      return 'foco en ' + (state.manager.trainingFocus || 'GK').toLowerCase();
+    }
+    if(tab === 'objetivos'){
+      return 'confianza directiva ' + state.manager.club.boardConfidence + '%';
+    }
     return 'próximamente en esta fase del rediseño';
   }
   function mgrRenderDtNav(){
@@ -10548,6 +10682,10 @@
       mgrRenderCalendarioDT();
     } else if(mgrActiveTab === 'previa'){
       mgrRenderPreviaDT();
+    } else if(mgrActiveTab === 'entreno'){
+      mgrRenderEntrenoDT();
+    } else if(mgrActiveTab === 'objetivos'){
+      mgrRenderDirectivaDT();
     } else {
       mgrRenderDtChrome();
       var root = document.querySelector('[data-dt-screen="' + mgrActiveTab + '"]');
