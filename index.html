@@ -2170,6 +2170,7 @@
           <li><b>Fichajes:</b> toca a un jugador del mercado para ver su ficha completa y ofertar o pedirlo prestado.</li>
           <li><b>Negociaciones:</b> comprar y vender jugadores es una negociación real de varias rondas — ofreces un valor, el club acepta, sube su pedido o se pone más tenso si la negociación no avanza. Si acuerdas un traspaso, todavía falta negociar el contrato con el propio jugador antes de que el fichaje se cierre.</li>
           <li><b>FC IQ:</b> cada jugador tiene un rol táctico (organizador, recuperador, extremo, hombre objetivo, etc.). Elige un estilo de juego y ajusta presión/bloque/anchura en Plantilla — los jugadores con rol compatible con tu estilo rinden mejor.</li>
+          <li>Las lesiones varían en tipo y duración según edad, forma e historial; 5 amarillas o una roja te dejan sin ese jugador la siguiente jornada. Cada partido tiene su propio clima, y la lluvia o el viento perjudican un poco a los perfiles más técnicos.</li>
           <li>El calendario avanza <b>día a día</b> con "Avanzar día"; se detiene solo el día que te toca jugar.</li>
           <li>La IA de los clubes CPU nunca vende por debajo del valor real de un jugador, y mucho menos a sus estrellas — no hay forma de comprar barato.</li>
           <li>Al terminar la temporada hay premios según tu posición, evolución de jugadores (más rápida en los jóvenes) y arranca una temporada nueva.</li>
@@ -7262,7 +7263,7 @@
     mgrAssignRivalries(state.manager.division1Pool.concat(state.manager.division2Pool));
     state.manager.division = 1;
     state.manager.cpuClubs = state.manager.division1Pool;
-    state.manager.history = { leagueChampions: [], cupChampions: [] };
+    state.manager.history = { leagueChampions: [], cupChampions: [], seasons: [] };
   }
   function mgrSimulateOtherDivisionSeason(){
     var otherPool = state.manager.division === 1 ? state.manager.division2Pool : state.manager.division1Pool;
@@ -7310,7 +7311,7 @@
     var champTable = table.slice().sort(function(a, b){ return b.stats.pts - a.stats.pts; });
     var champName = champTable[0] ? champTable[0].name : null;
     var leagueName = iAmDiv1 ? MGR_DIV1_NAME : MGR_DIV2_NAME;
-    if(!state.manager.history) state.manager.history = { leagueChampions: [], cupChampions: [] };
+    if(!state.manager.history) state.manager.history = { leagueChampions: [], cupChampions: [], seasons: [] };
     state.manager.history.leagueChampions.push({ season: state.manager.season, league: leagueName, champion: champName });
 
     var promotionMsg = null, relegationMsg = null;
@@ -7533,16 +7534,19 @@
     });
     state.manager.lineup = lineup;
   }
+  function mgrPlayerUnavailable(p){
+    return (p.injuredUntil && p.injuredUntil > state.manager.matchday) || (p.suspendedUntil && p.suspendedUntil > state.manager.matchday);
+  }
   function mgrAutoFixLineup(){
     if(!state.manager.lineup) state.manager.lineup = {};
     CAREER_SLOT_DEFS.forEach(function(def){
       var cur = state.manager.lineup[def.key] ? mgrPlayerById(state.manager.lineup[def.key]) : null;
-      var curBad = !cur || (cur.injuredUntil && cur.injuredUntil > state.manager.matchday);
+      var curBad = !cur || mgrPlayerUnavailable(cur);
       if(curBad){
         var usedIds = {};
         Object.keys(state.manager.lineup).forEach(function(k){ if(state.manager.lineup[k]) usedIds[state.manager.lineup[k]] = true; });
         var candidates = state.manager.squad.filter(function(p){
-          return p.position === def.pos && !usedIds[p.id] && !(p.injuredUntil && p.injuredUntil > state.manager.matchday);
+          return p.position === def.pos && !usedIds[p.id] && !mgrPlayerUnavailable(p);
         }).sort(function(a, b){ return b.ovr - a.ovr; });
         state.manager.lineup[def.key] = candidates.length ? candidates[0].id : null;
       }
@@ -8059,6 +8063,13 @@
       if(p.position === focus && p.age <= 26 && p.ovr < p.potential && Math.random() < 0.2) p.ovr += 1;
     });
   }
+  var MGR_INJURY_TYPES = [
+    { name: 'muscular', min: 1, max: 2 },
+    { name: 'de tobillo', min: 2, max: 4 },
+    { name: 'de rodilla', min: 3, max: 6 },
+    { name: 'de hombro', min: 1, max: 3 },
+    { name: 'por un golpe', min: 1, max: 1 }
+  ];
   function mgrApplyPlayerImpact(ratings, isMine){
     (ratings || []).forEach(function(r){
       var p = isMine ? mgrPlayerById(r.id) : mgrFindCpuPlayerById(r.id);
@@ -8069,10 +8080,17 @@
         p.seasonRatingSum = (p.seasonRatingSum || 0) + r.rating;
         p.morale = Math.max(0, Math.min(100, p.morale + (r.rating >= 7 ? 4 : (r.rating < 5 ? -6 : 0))));
         p.form = Math.max(0, Math.min(100, p.form + (r.rating - 6) * 3));
-        if(Math.random() < 0.035){
-          p.injuredUntil = state.manager.matchday + 1 + Math.floor(Math.random() * 3);
+        var ageRisk = p.age > 30 ? (p.age - 30) * 0.004 : 0;
+        var formRisk = p.form < 40 ? 0.015 : 0;
+        var historyRisk = (p.careerInjuries || 0) * 0.002;
+        var injuryRisk = 0.02 + ageRisk + formRisk + historyRisk;
+        if(Math.random() < injuryRisk){
+          var type = mgrPick(MGR_INJURY_TYPES);
+          var duration = type.min + Math.floor(Math.random() * (type.max - type.min + 1));
+          p.injuredUntil = state.manager.matchday + duration;
           p.seasonInjuries = (p.seasonInjuries || 0) + 1;
-          mgrPushInbox('lesion', 'Lesión', p.name + ' se lesionó y estará fuera unas jornadas.');
+          p.careerInjuries = (p.careerInjuries || 0) + 1;
+          mgrPushInbox('lesion', 'Lesión ' + type.name, p.name + ' sufrió una lesión ' + type.name + ' y estará fuera ' + duration + ' jornada(s).');
         }
       }
     });
@@ -8087,6 +8105,25 @@
         var p = mgrPlayerByName(e.player);
         if(p) p.seasonGoals = (p.seasonGoals || 0) + 1;
         if(e.assist){ var a = mgrPlayerByName(e.assist); if(a) a.seasonAssists = (a.seasonAssists || 0) + 1; }
+      }
+    });
+  }
+  function mgrApplyDisciplineStats(timeline, iAmHome){
+    (timeline || []).forEach(function(e){
+      if(e.type !== 'yellow' && e.type !== 'red') return;
+      var isMyPlayer = (e.team === 'A' && iAmHome) || (e.team === 'B' && !iAmHome);
+      if(!isMyPlayer) return;
+      var p = mgrPlayerByName(e.player);
+      if(!p) return;
+      if(e.type === 'yellow'){
+        p.seasonYellows = (p.seasonYellows || 0) + 1;
+        if(p.seasonYellows % 5 === 0){
+          p.suspendedUntil = state.manager.matchday + 1;
+          mgrPushInbox('lesion', 'Suspensión por acumulación', p.name + ' llega a ' + p.seasonYellows + ' amarillas y se pierde el próximo partido.');
+        }
+      } else {
+        p.suspendedUntil = state.manager.matchday + 1;
+        mgrPushInbox('lesion', 'Tarjeta roja', p.name + ' fue expulsado y se pierde el próximo partido.');
       }
     });
   }
@@ -8139,7 +8176,7 @@
     if(curIdx === MGR_CUP_ROUND_ORDER.length - 1){
       cup.round = 'done';
       cup.championName = mgrCupRefName(winners[0]);
-      if(!state.manager.history) state.manager.history = { leagueChampions: [], cupChampions: [] };
+      if(!state.manager.history) state.manager.history = { leagueChampions: [], cupChampions: [], seasons: [] };
       state.manager.history.cupChampions.push({ season: state.manager.season, champion: cup.championName });
       if(cup.championName === state.manager.club.name){
         mgrPushInbox('resultado', '¡Campeón de la ' + MGR_CUP_NAME + '!', '¡Ganaste la ' + MGR_CUP_NAME + ' esta temporada!');
@@ -8172,6 +8209,7 @@
     var myScore = iAmA ? match.scoreA : match.scoreB, oppScore = iAmA ? match.scoreB : match.scoreA;
     mgrApplyPlayerImpact(iAmA ? sim.ratingsA : sim.ratingsB, true);
     mgrApplyPlayerImpact(iAmA ? sim.ratingsB : sim.ratingsA, false);
+    mgrApplyDisciplineStats(sim.timeline, iAmA);
     mgrPushInbox('resultado', iWon ? '¡Avanzas en la copa!' : 'Eliminado de la copa',
       (iWon ? 'Ganaste' : 'Perdiste') + ' ' + myScore + '-' + oppScore + (match.penalties ? ' (penales)' : '') + ' vs ' + oppName + ' en la ' + MGR_CUP_NAME + '.');
     if(!iWon) state.manager.cup.myEliminated = true;
@@ -8268,6 +8306,14 @@
     mgrPushInbox('directiva', objectiveMet ? 'Objetivo cumplido' : 'Objetivo no cumplido',
       (state.manager.club.objective ? state.manager.club.objective.text : 'Objetivo de la directiva') + (objectiveMet ? ': cumplido. La directiva está satisfecha.' : ': no se cumplió. La directiva está preocupada.'));
 
+    var seasonTopScorer = Object.keys(state.manager.topScorers || {}).sort(function(a, b){ return state.manager.topScorers[b] - state.manager.topScorers[a]; })[0] || null;
+    if(!state.manager.history) state.manager.history = { leagueChampions: [], cupChampions: [], seasons: [] };
+    state.manager.history.seasons.push({
+      season: state.manager.season, division: leagueName, position: myPos, ofClubs: table.length,
+      cupResult: state.manager.cup ? (state.manager.cup.round === 'done' ? (state.manager.cup.championName === state.manager.club.name ? 'campeón' : 'no campeón') : 'eliminado') : '—',
+      topScorer: seasonTopScorer
+    });
+
     state.manager.squad.forEach(function(p){
       mgrFillPlayerTactical(p);
       var avgRating = p.seasonApps ? (p.seasonRatingSum / p.seasonApps) : 6.0;
@@ -8287,7 +8333,7 @@
       p.age += 1;
       p.value = Math.round((p.ovr * p.ovr * 40) / 100) * 100;
       p.contractYears = Math.max(0, p.contractYears - 1);
-      p.seasonApps = 0; p.seasonGoals = 0; p.seasonAssists = 0; p.seasonRatingSum = 0; p.seasonInjuries = 0;
+      p.seasonApps = 0; p.seasonGoals = 0; p.seasonAssists = 0; p.seasonRatingSum = 0; p.seasonInjuries = 0; p.seasonYellows = 0;
       if(p.contractYears === 0) mgrPushInbox('contrato', 'Contrato por vencer', p.name + ' se quedó sin contrato. Renuévalo o podría irse gratis.');
     });
     state.manager.squad = state.manager.squad.filter(function(p){
@@ -8351,6 +8397,7 @@
     mgrApplyPlayerImpact(iAmHome ? sim.ratingsA : sim.ratingsB, true);
     mgrApplyPlayerImpact(iAmHome ? sim.ratingsB : sim.ratingsA, false);
     mgrApplyGoalStats(sim.timeline, iAmHome);
+    mgrApplyDisciplineStats(sim.timeline, iAmHome);
     state.manager.matchday = fixture.matchday;
     var myScore = iAmHome ? sim.scoreA : sim.scoreB, oppScore = iAmHome ? sim.scoreB : sim.scoreA;
     var oppName = mgrClubName(iAmHome ? fixture.away : fixture.home);
@@ -8396,7 +8443,7 @@
         '<span class="score">' + scoreHome + ' - ' + scoreAway + '</span>' +
         '<span class="team">' + escapeHtml(awayName) + '</span>' +
       '</div>' +
-      '<p class="career-live-clock">' + (finished ? 'Partido terminado' : ('Minuto ' + elapsedMinute + "'")) + '</p>';
+      '<p class="career-live-clock">' + (finished ? 'Partido terminado' : ('Minuto ' + elapsedMinute + "'")) + (m.weather ? ' · ' + m.weather : '') + '</p>';
     var eventsWrap = document.createElement('div');
     eventsWrap.className = 'career-live-events';
     visibleEvents.slice().reverse().forEach(function(e){
@@ -8453,12 +8500,26 @@
     mgrRenderActiveTab();
   }
 
+  var MGR_WEATHER_TYPES = ['Día soleado', 'Noche despejada', 'Lluvia', 'Viento fuerte'];
+  function mgrWeatherFor(obj){
+    if(!obj.weather) obj.weather = mgrPick(MGR_WEATHER_TYPES);
+    return obj.weather;
+  }
+  function mgrApplyWeatherToList(list, weather){
+    if(weather !== 'Lluvia' && weather !== 'Viento fuerte') return list;
+    return list.map(function(entry){
+      var player = mgrPlayerById(entry.id) || mgrFindCpuPlayerById(entry.id);
+      var factor = 1;
+      if(player && ['Extremo', 'Extremo inverso', 'Organizador', 'Lateral ofensivo'].indexOf(player.role) !== -1) factor = 0.96;
+      return { id: entry.id, name: entry.name, position: entry.position, grl: Math.max(30, Math.round(entry.grl * factor)) };
+    });
+  }
   function mgrTodayMatchInfo(day){
     var lf = mgrMyFixtureForDay(day);
     if(lf && !lf.played){
       var iAmHome = lf.home === 0;
       var oppIdx = iAmHome ? lf.away : lf.home;
-      return { kind: 'league', fixture: lf, iAmHome: iAmHome, oppName: mgrClubName(oppIdx), oppClub: state.manager.cpuClubs[oppIdx - 1] };
+      return { kind: 'league', fixture: lf, iAmHome: iAmHome, oppName: mgrClubName(oppIdx), oppClub: state.manager.cpuClubs[oppIdx - 1], weather: mgrWeatherFor(lf) };
     }
     var cm = mgrMyCupMatchForDay(day);
     if(cm){
@@ -8466,7 +8527,7 @@
       var oppRef = iAmA ? cm.b : cm.a;
       var oppClub = mgrCupRefClub(oppRef);
       if(oppClub) mgrMaterializeClub(oppClub);
-      return { kind: 'cup', fixture: cm, iAmHome: iAmA, oppName: mgrCupRefName(oppRef), oppClub: oppClub };
+      return { kind: 'cup', fixture: cm, iAmHome: iAmA, oppName: mgrCupRefName(oppRef), oppClub: oppClub, weather: mgrWeatherFor(cm) };
     }
     return null;
   }
@@ -8476,9 +8537,9 @@
     var today = mgrTodayMatchInfo(state.manager.day);
     if(!today){ mgrMsg('Hoy no tienes partido. Avanza el día.'); return; }
     if(mgrLineupList().length < 7){ mgrMsg('Completa tu alineación titular (7 jugadores) antes de jugar'); return; }
-    var myList = mgrTacticalLineupList();
+    var myList = mgrApplyWeatherToList(mgrTacticalLineupList(), today.weather);
     mgrApplyTraining();
-    var oppList = mgrBestLineupList(today.oppClub.squad);
+    var oppList = mgrApplyWeatherToList(mgrBestLineupList(today.oppClub.squad), today.weather);
     var iAmHome = today.iAmHome;
     var sim = careerSimulateFullMatch(iAmHome ? myList : oppList, iAmHome ? oppList : myList);
     var myName = state.manager.club.name;
@@ -8491,7 +8552,7 @@
     } else {
       mgrLiveMatch = {
         kind: today.kind, fixture: today.fixture, iAmHome: iAmHome, sim: sim, liveStartAt: Date.now(), finalized: false,
-        homeName: iAmHome ? myName : today.oppName, awayName: iAmHome ? today.oppName : myName
+        homeName: iAmHome ? myName : today.oppName, awayName: iAmHome ? today.oppName : myName, weather: today.weather
       };
       document.getElementById('mgrLiveMatch').hidden = false;
       mgrRenderLiveMatch();
@@ -8583,7 +8644,11 @@
 
     var objectiveEl = document.getElementById('mgrObjective');
     if(objectiveEl && state.manager.club.objective){
-      objectiveEl.textContent = '🎯 Objetivo (' + (MGR_OBJECTIVE_LABELS[state.manager.club.objective.type] || 'Directiva') + '): ' + state.manager.club.objective.text;
+      var history = state.manager.history || { leagueChampions: [], cupChampions: [] };
+      var myLeagueTitles = history.leagueChampions.filter(function(h){ return h.champion === state.manager.club.name; }).length;
+      var myCupTitles = history.cupChampions.filter(function(h){ return h.champion === state.manager.club.name; }).length;
+      var palmares = (myLeagueTitles || myCupTitles) ? (' · 🏆 Palmarés: ' + myLeagueTitles + ' liga(s), ' + myCupTitles + ' copa(s)') : '';
+      objectiveEl.textContent = '🎯 Objetivo (' + (MGR_OBJECTIVE_LABELS[state.manager.club.objective.type] || 'Directiva') + '): ' + state.manager.club.objective.text + palmares;
     }
 
     var statsEl = document.getElementById('mgrQuickStats');
@@ -8697,13 +8762,14 @@
     if(!p){ mgrClosePlayerSheet(); return; }
     var isStarter = Object.keys(state.manager.lineup).some(function(k){ return state.manager.lineup[k] === p.id; });
     var injured = p.injuredUntil && p.injuredUntil > state.manager.matchday;
+    var suspended = p.suspendedUntil && p.suspendedUntil > state.manager.matchday;
     sheet.innerHTML = '';
 
     var header = document.createElement('div');
     header.className = 'career-player-top';
     header.innerHTML =
       '<span class="career-player-name">#' + p.number + ' <span class="career-pos-badge ' + p.position + '">' + p.position + '</span> ' + escapeHtml(p.name) +
-      (isStarter ? ' ⭐' : '') + (injured ? ' 🚑' : '') + (p.onLoan ? ' (cedido)' : '') + '</span><span class="career-slot-grl">OVR ' + p.ovr + '</span>';
+      (isStarter ? ' ⭐' : '') + (injured ? ' 🚑' : '') + (suspended ? ' 🟥' : '') + (p.onLoan ? ' (cedido)' : '') + '</span><span class="career-slot-grl">OVR ' + p.ovr + '</span>';
     sheet.appendChild(header);
 
     var meta = document.createElement('p');
@@ -8742,7 +8808,7 @@
       var starterBtn = document.createElement('button');
       starterBtn.className = 'btn btn-gold btn-sm';
       starterBtn.textContent = isStarter ? 'Enviar al banco' : 'Poner de titular';
-      starterBtn.disabled = injured && !isStarter;
+      starterBtn.disabled = (injured || suspended) && !isStarter;
       starterBtn.addEventListener('click', function(){
         if(isStarter) Object.keys(state.manager.lineup).forEach(function(k){ if(state.manager.lineup[k] === p.id) state.manager.lineup[k] = null; });
         else mgrSetStarter(p.id);
@@ -8874,9 +8940,10 @@
       row.className = 'career-player-row mgr-clickable-row';
       var isStarter = !!startersIds[p.id];
       var injured = p.injuredUntil && p.injuredUntil > state.manager.matchday;
+      var suspended = p.suspendedUntil && p.suspendedUntil > state.manager.matchday;
       row.innerHTML =
         '<div class="career-player-top"><span class="career-player-name">#' + p.number + ' <span class="career-pos-badge ' + p.position + '">' + p.position + '</span> ' + escapeHtml(p.name) +
-          (isStarter ? ' ⭐' : '') + (injured ? ' 🚑' : '') + (p.onLoan ? ' (cedido)' : '') + (p.forSale ? ' 🏷️' : '') + '</span><span class="career-slot-grl">OVR ' + p.ovr + '</span></div>' +
+          (isStarter ? ' ⭐' : '') + (injured ? ' 🚑' : '') + (suspended ? ' 🟥' : '') + (p.onLoan ? ' (cedido)' : '') + (p.forSale ? ' 🏷️' : '') + '</span><span class="career-slot-grl">OVR ' + p.ovr + '</span></div>' +
         '<p class="career-player-meta">Edad ' + p.age + ' · Potencial ' + p.potential + ' · Contrato ' + p.contractYears + ' año(s) · Valor ' + p.value.toLocaleString('es-CO') + '</p>';
       row.addEventListener('click', function(){ mgrOpenPlayerSheet(p.id); });
       return row;
@@ -9057,9 +9124,9 @@
 
     if(today){
       var sub = document.createElement('p'); sub.className = 'league-card-sub';
-      sub.textContent = today.kind === 'league'
+      sub.textContent = (today.kind === 'league'
         ? ('Jornada ' + today.fixture.matchday + ' de ' + total + ' · ' + (today.iAmHome ? 'Local' : 'Visitante') + ' vs ' + today.oppName)
-        : (MGR_CUP_NAME + ' · ' + MGR_CUP_ROUND_LABELS[state.manager.cup.round] + ' vs ' + today.oppName);
+        : (MGR_CUP_NAME + ' · ' + MGR_CUP_ROUND_LABELS[state.manager.cup.round] + ' vs ' + today.oppName)) + ' · ' + today.weather;
       card.appendChild(sub);
       var playBtn = document.createElement('button');
       playBtn.className = 'btn btn-primary btn-block'; playBtn.style.marginTop = '10px';
