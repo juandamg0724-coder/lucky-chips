@@ -9386,6 +9386,219 @@
       '</div>';
   }
 
+  function mgrTransferInterest(p){
+    var count = state.manager.squad.filter(function(x){ return x.position === p.position; }).length;
+    var minNeeded = { GK: 2, DEF: 5, MID: 4, FWD: 3 }[p.position] || 3;
+    var needed = count <= minNeeded - 1;
+    var base = needed ? 55 : 25;
+    return Math.max(5, Math.min(95, base + (p.ovr - 60)));
+  }
+  function mgrRenderMercadoDT(){
+    mgrRenderDtChrome();
+    var root = document.querySelector('[data-dt-screen="mercado"]');
+    root.innerHTML = '';
+    var grid = document.createElement('div');
+    grid.className = 'dt-screen';
+    grid.style.gridTemplateColumns = '13cqw 1fr';
+    root.appendChild(grid);
+
+    var filtersPanel = document.createElement('div'); filtersPanel.className = 'dt-panel flex-col';
+    filtersPanel.innerHTML = '<div class="dt-panel-title">Filtros</div>';
+    function chipRow(label, options, current, onPick){
+      var wrap = document.createElement('div'); wrap.style.marginBottom = '.7cqw';
+      var lab = document.createElement('div'); lab.style.cssText = 'font-size:0.68cqw; color:var(--dt-text-sec); margin-bottom:.3cqw;'; lab.textContent = label;
+      wrap.appendChild(lab);
+      var row = document.createElement('div'); row.style.cssText = 'display:flex; flex-wrap:wrap; gap:.25cqw;';
+      options.forEach(function(opt){
+        var active = opt.key === current;
+        var chip = document.createElement('div');
+        chip.className = 'dt-chip'; chip.style.cursor = 'pointer';
+        chip.style.cssText += active ? 'background:var(--dt-verde); color:var(--dt-ink); border:1px solid var(--dt-verde);' : 'border:1px solid var(--dt-border-strong); color:var(--dt-text-sec);';
+        chip.textContent = opt.label;
+        chip.addEventListener('click', function(){ onPick(opt.key); mgrRenderMercadoDT(); });
+        row.appendChild(chip);
+      });
+      wrap.appendChild(row);
+      return wrap;
+    }
+    filtersPanel.appendChild(chipRow('Posición', [{ key: 'ALL', label: 'Todos' }, { key: 'GK', label: 'GK' }, { key: 'DEF', label: 'DEF' }, { key: 'MID', label: 'MID' }, { key: 'FWD', label: 'FWD' }], mgrTransferFilter, function(k){ mgrTransferFilter = k; }));
+    filtersPanel.appendChild(chipRow('Ordenar por', [{ key: 'ovr', label: 'Media' }, { key: 'potential', label: 'Potencial' }, { key: 'age', label: 'Edad' }, { key: 'value', label: 'Valor' }], mgrTransferSort, function(k){ mgrTransferSort = k; }));
+    var budgetCard = document.createElement('div'); budgetCard.style.cssText = 'margin-top:auto; padding:.7cqw; border-radius:4px; background:var(--dt-bg-inset);';
+    budgetCard.innerHTML = '<div class="dt-label" style="margin-bottom:.2cqw;">Presupuesto libre</div><div class="dt-mono" style="font-size:1.2cqw; font-weight:600; color:var(--dt-verde);">' + Math.round(state.manager.club.budget).toLocaleString('es-CO') + '</div>';
+    filtersPanel.appendChild(budgetCard);
+    grid.appendChild(filtersPanel);
+
+    var tableCol = document.createElement('div'); tableCol.className = 'dt-panel flex-col'; tableCol.style.cssText += 'padding:0; overflow:hidden;';
+    var colsTemplate = '2.4fr 2.4cqw 2.4cqw 1.6fr 4cqw 4.4cqw 5cqw';
+    var head = document.createElement('div');
+    head.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.5cqw; padding:.55cqw .8cqw; border-bottom:1px solid var(--dt-border);';
+    head.innerHTML = ['Objetivo', 'Pos', 'Ed', 'Club', 'Med/Pot', 'Valor', 'Interés'].map(function(h){ return '<div class="dt-label" style="margin-bottom:0;">' + h + '</div>'; }).join('');
+    tableCol.appendChild(head);
+    var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll'; listWrap.style.flex = '1';
+    tableCol.appendChild(listWrap);
+
+    var list = [];
+    state.manager.cpuClubs.forEach(function(club, idx){
+      club.squad.forEach(function(p){ if(mgrTransferFilter === 'ALL' || p.position === mgrTransferFilter) list.push({ p: p, clubIdx: idx, clubName: club.name }); });
+    });
+    if(mgrTransferSort === 'age') list.sort(function(a, b){ return a.p.age - b.p.age; });
+    else if(mgrTransferSort === 'value') list.sort(function(a, b){ return b.p.value - a.p.value; });
+    else if(mgrTransferSort === 'potential') list.sort(function(a, b){ return b.p.potential - a.p.potential; });
+    else list.sort(function(a, b){ return b.p.ovr - a.p.ovr; });
+
+    if(!list.length){ listWrap.innerHTML = '<p class="dt-row-detail" style="padding:.8cqw;">No hay jugadores en esta posición.</p>'; }
+    list.slice(0, 60).forEach(function(entry){
+      var p = entry.p;
+      var interest = mgrTransferInterest(p);
+      var tone = interest >= 70 ? 'var(--dt-verde)' : interest >= 45 ? 'var(--dt-ambar)' : 'oklch(0.50 0.02 250)';
+      var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
+      var row = document.createElement('div');
+      row.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.5cqw; padding:.45cqw .8cqw; align-items:center; font-size:0.76cqw; cursor:pointer;';
+      row.innerHTML =
+        '<div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</div>' +
+        '<div class="dt-mono" style="color:' + posColor + '; font-weight:600;">' + p.position + '</div>' +
+        '<div class="dt-mono" style="color:var(--dt-text-sec);">' + p.age + '</div>' +
+        '<div style="color:var(--dt-text-sec); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(entry.clubName) + '</div>' +
+        '<div class="dt-mono" style="font-weight:600;">' + p.ovr + ' / ' + p.potential + '</div>' +
+        '<div class="dt-mono" style="text-align:right;">' + p.value.toLocaleString('es-CO') + '</div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + interest + '%; background:' + tone + ';"></div></div>';
+      row.addEventListener('click', function(){ mgrOpenTransferSheet(entry.clubIdx, p.id); });
+      listWrap.appendChild(row);
+    });
+    grid.appendChild(tableCol);
+  }
+
+  function mgrRenderNegoRowDT(neg){
+    var row = document.createElement('div'); row.className = 'dt-row clickable';
+    var label = neg.stage === 'contract' ? 'Contrato' : (neg.kind === 'buy' ? 'Comprando' : 'Te ofrecen');
+    row.innerHTML =
+      '<div style="flex:1; min-width:0;"><div class="dt-row-title">' + escapeHtml(neg.playerName) + '</div><div class="dt-row-detail" style="white-space:normal;">' + escapeHtml(neg.clubName) + ' · ' + label + ' · Ronda ' + neg.rounds + '/' + MGR_NEGO_MAX_ROUNDS + ' · Tensión ' + neg.tension + '%</div></div>' +
+      '<div class="dt-mono" style="font-weight:600; color:var(--dt-verde); flex:none;">' + mgrNegoSummaryAmount(neg).toLocaleString('es-CO') + '</div>';
+    row.addEventListener('click', function(){ mgrOpenNegoId = neg.id; mgrRenderNegociacionDT(); });
+    return row;
+  }
+  function mgrRenderNegociacionDT(){
+    mgrRenderDtChrome();
+    var root = document.querySelector('[data-dt-screen="negociacion"]');
+    root.innerHTML = '';
+    var neg = mgrOpenNegoId ? mgrNegoById(mgrOpenNegoId) : null;
+    if(neg && neg.status !== 'active'){ mgrOpenNegoId = null; neg = null; }
+
+    if(!neg){
+      var wrap = document.createElement('div'); wrap.style.cssText = 'display:flex; flex-direction:column; gap:.85cqw; height:100%; overflow-y:auto;';
+      var all = mgrNegotiations().filter(function(n){ return n.status === 'active'; });
+      var groups = [
+        ['Comprando', all.filter(function(n){ return n.kind === 'buy' && n.stage === 'fee'; }), 'No tienes negociaciones de compra activas.'],
+        ['Te ofrecen', all.filter(function(n){ return n.kind === 'sell'; }), 'Nadie te ha ofertado por tus jugadores.'],
+        ['Contratos pendientes', all.filter(function(n){ return n.stage === 'contract'; }), 'No hay contratos pendientes.']
+      ];
+      groups.forEach(function(g){
+        var panel = document.createElement('div'); panel.className = 'dt-panel';
+        panel.innerHTML = '<div class="dt-panel-title">' + g[0] + '</div>';
+        if(!g[1].length){ panel.innerHTML += '<p class="dt-row-detail">' + g[2] + '</p>'; }
+        else g[1].forEach(function(n){ panel.appendChild(mgrRenderNegoRowDT(n)); });
+        wrap.appendChild(panel);
+      });
+      root.appendChild(wrap);
+      return;
+    }
+
+    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1.25fr 1fr';
+    root.appendChild(grid);
+
+    var rivalName = neg.stage === 'contract' ? neg.playerName : neg.clubName;
+    var rivalTag = neg.stage === 'contract' ? 'Jugador' : (neg.kind === 'buy' ? 'Club vendedor' : 'Club comprador');
+    var currentAmount = neg.aiLastAmount != null ? neg.aiLastAmount : (neg.myLastAmount != null ? neg.myLastAmount : (neg.stage === 'contract' ? neg.playerWageAsk : neg.playerValueSnapshot));
+    var amountLabel = neg.stage === 'contract' ? 'Salario en la mesa' : 'Traspaso en la mesa';
+    var stageLabel = neg.stage === 'contract' ? 'Negociando contrato con ' + neg.playerName : (neg.kind === 'buy' ? 'Negociando el traspaso de ' + neg.playerName : 'Te ofrecen por ' + neg.playerName);
+
+    var left = document.createElement('div'); left.className = 'dt-panel flex-col'; left.style.gap = '.7cqw';
+    left.innerHTML =
+      '<div>' +
+        '<div style="font-size:1.2cqw; font-weight:800;">' + escapeHtml(neg.playerName) + '</div>' +
+        '<div class="dt-mono" style="font-size:0.64cqw; color:var(--dt-text-sec); margin-top:.2cqw;">' + escapeHtml(stageLabel) + '</div>' +
+      '</div>' +
+      '<div>' +
+        '<div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.3cqw;"><span class="dt-label" style="margin-bottom:0;">' + amountLabel + '</span><span class="dt-mono" style="font-size:1.3cqw; font-weight:600; color:var(--dt-verde);">' + currentAmount.toLocaleString('es-CO') + '</span></div>' +
+        '<div style="display:flex; justify-content:space-between; font-size:0.68cqw; color:var(--dt-text-sec);"><span>Mi club: ' + escapeHtml(state.manager.club.name) + '</span><span>' + rivalTag + ': ' + escapeHtml(rivalName) + '</span></div>' +
+      '</div>' +
+      '<div>' +
+        '<div style="display:flex; justify-content:space-between; font-size:0.72cqw; margin-bottom:.25cqw;"><span>Tensión de la negociación</span><span class="dt-mono">' + neg.tension + '%</span></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + neg.tension + '%; background:' + (neg.tension >= 66 ? 'var(--dt-rojo)' : neg.tension >= 33 ? 'var(--dt-ambar)' : 'var(--dt-verde)') + ';"></div></div>' +
+      '</div>';
+
+    var actionsWrap = document.createElement('div'); actionsWrap.style.cssText = 'display:flex; flex-direction:column; gap:.5cqw; margin-top:auto;';
+    if(neg.aiLastAmount != null){
+      var acceptBtn = document.createElement('button'); acceptBtn.type = 'button'; acceptBtn.className = 'dt-btn-fill';
+      acceptBtn.textContent = 'ACEPTAR ' + neg.aiLastAmount.toLocaleString('es-CO');
+      acceptBtn.addEventListener('click', function(){ mgrNegoAcceptAsk(neg.id); });
+      actionsWrap.appendChild(acceptBtn);
+    }
+    var raiseRow = document.createElement('div'); raiseRow.style.cssText = 'display:flex; gap:.5cqw; align-items:center;';
+    var input = document.createElement('input'); input.type = 'number'; input.min = '1000'; input.step = '1000';
+    input.style.cssText = "flex:1; background:var(--dt-bg-inset); border:1px solid var(--dt-border-strong); border-radius:4px; color:var(--dt-text); padding:.5cqw .6cqw; font-family:'IBM Plex Mono',monospace; font-size:0.76cqw;";
+    var actionBtn = document.createElement('button'); actionBtn.type = 'button'; actionBtn.className = 'dt-btn-outline'; actionBtn.style.flex = 'none'; actionBtn.style.width = 'auto'; actionBtn.style.padding = '.5cqw 1cqw';
+    if(neg.stage === 'contract'){
+      input.value = String(neg.myLastAmount || neg.playerWageAsk);
+      actionBtn.textContent = 'PROPONER';
+      actionBtn.addEventListener('click', function(){ mgrNegoWageRound(neg.id, parseInt(input.value, 10)); });
+    } else if(neg.kind === 'buy'){
+      input.value = String(neg.myLastAmount ? Math.round(neg.myLastAmount * 1.05) : neg.playerValueSnapshot);
+      actionBtn.textContent = 'SUBIR OFERTA';
+      actionBtn.addEventListener('click', function(){ mgrNegoUserRound(neg.id, parseInt(input.value, 10)); });
+    } else {
+      input.value = String(neg.myLastAmount ? Math.round(neg.myLastAmount * 1.1) : Math.round((neg.aiLastAmount || neg.playerValueSnapshot) * 1.15));
+      actionBtn.textContent = 'PEDIR MÁS';
+      actionBtn.addEventListener('click', function(){ mgrNegoUserAsk(neg.id, parseInt(input.value, 10)); });
+    }
+    raiseRow.appendChild(input); raiseRow.appendChild(actionBtn);
+    actionsWrap.appendChild(raiseRow);
+
+    var bottomRow = document.createElement('div'); bottomRow.style.cssText = 'display:flex; gap:.5cqw;';
+    var withdrawBtn = document.createElement('button'); withdrawBtn.type = 'button'; withdrawBtn.className = 'dt-btn-outline';
+    withdrawBtn.textContent = neg.kind === 'sell' ? 'RECHAZAR' : 'RETIRARSE';
+    withdrawBtn.addEventListener('click', function(){ mgrNegoWithdraw(neg.id); });
+    var backBtn = document.createElement('button'); backBtn.type = 'button'; backBtn.className = 'dt-btn-outline';
+    backBtn.textContent = 'VOLVER A LA LISTA';
+    backBtn.addEventListener('click', function(){ mgrOpenNegoId = null; mgrRenderNegociacionDT(); });
+    bottomRow.appendChild(withdrawBtn); bottomRow.appendChild(backBtn);
+    actionsWrap.appendChild(bottomRow);
+    left.appendChild(actionsWrap);
+    grid.appendChild(left);
+
+    var right = document.createElement('div'); right.className = 'dt-col';
+    var prob = Math.max(4, Math.min(96, 100 - neg.tension));
+    var probTone = prob >= 65 ? 'var(--dt-verde)' : prob >= 40 ? 'var(--dt-ambar)' : 'var(--dt-rojo)';
+    var probLabel = prob >= 65 ? 'muy probable' : prob >= 40 ? 'negociable' : 'poco probable';
+    var probPanel = document.createElement('div'); probPanel.className = 'dt-panel';
+    probPanel.innerHTML =
+      '<div class="dt-panel-title">Probabilidad de acuerdo</div>' +
+      '<div style="display:flex; align-items:baseline; gap:.5cqw;"><span class="dt-mono" style="font-size:2cqw; font-weight:600; color:' + probTone + ';">' + prob + '%</span><span style="font-size:0.72cqw; color:var(--dt-text-sec);">' + probLabel + '</span></div>' +
+      '<div class="dt-bar-track" style="margin-top:.5cqw;"><div class="dt-bar-fill" style="width:' + prob + '%; background:' + probTone + ';"></div></div>' +
+      '<div style="font-size:0.72cqw; color:oklch(0.82 0.01 250); margin-top:.5cqw; line-height:1.5;">' + (prob >= 65 ? 'La otra parte está cerca de aceptar. Una oferta razonable debería cerrar el acuerdo.' : 'La negociación está tensa. Subir la oferta ayudará, pero forzar demasiado puede hacer que se levanten de la mesa.') + '</div>';
+    right.appendChild(probPanel);
+
+    var histPanel = document.createElement('div'); histPanel.className = 'dt-panel flex-col'; histPanel.style.flex = '1';
+    histPanel.innerHTML = '<div class="dt-panel-title">Hilo de negociación</div>';
+    var histWrap = document.createElement('div'); histWrap.className = 'dt-scroll';
+    histPanel.appendChild(histWrap);
+    (neg.history || []).slice(-8).forEach(function(h){
+      var who = h.by === 'user' ? state.manager.club.name : rivalName;
+      var text;
+      if(h.action === 'walk') text = who + ' se retira de la mesa';
+      else if(h.action === 'accept') text = who + ' acepta ' + (h.amount || 0).toLocaleString('es-CO');
+      else if(h.action === 'reject' || h.action === 'withdraw') text = who + ' se retira de la negociación';
+      else text = who + ' propone ' + (h.amount || 0).toLocaleString('es-CO');
+      var tone = h.by === 'user' ? 'var(--dt-verde)' : 'var(--dt-border-strong)';
+      var row = document.createElement('div');
+      row.style.cssText = 'padding:.5cqw .6cqw; border-radius:4px; background:var(--dt-bg-inset); border-left:.2cqw solid ' + tone + '; margin-bottom:.4cqw;';
+      row.innerHTML = '<div class="dt-mono" style="font-size:0.6cqw; color:var(--dt-text-mono); margin-bottom:.15cqw;">' + escapeHtml(who) + '</div><div style="font-size:0.74cqw;">' + escapeHtml(text) + '</div>';
+      histWrap.appendChild(row);
+    });
+    right.appendChild(histPanel);
+    grid.appendChild(right);
+  }
+
   var mgrOpenPlayerId = null;
   function mgrOpenPlayerSheet(playerId){
     mgrOpenPlayerId = playerId;
@@ -10038,6 +10251,13 @@
       var tactics = mgrEnsureTactics();
       return 'estilo ' + (MGR_STYLE_LABELS[tactics.style] || tactics.style).toLowerCase() + ' · presión ' + tactics.pressing + '%';
     }
+    if(tab === 'mercado'){
+      return 'presupuesto libre ' + Math.round(state.manager.club.budget).toLocaleString('es-CO');
+    }
+    if(tab === 'negociacion'){
+      var activeCount = mgrNegotiations().filter(function(n){ return n.status === 'active'; }).length;
+      return activeCount ? (activeCount + ' negociación(es) activa(s)') : 'sin negociaciones activas';
+    }
     return 'próximamente en esta fase del rediseño';
   }
   function mgrRenderDtNav(){
@@ -10072,6 +10292,10 @@
       mgrRenderPlantillaDT();
     } else if(mgrActiveTab === 'tactica'){
       mgrRenderTacticaDT();
+    } else if(mgrActiveTab === 'mercado'){
+      mgrRenderMercadoDT();
+    } else if(mgrActiveTab === 'negociacion'){
+      mgrRenderNegociacionDT();
     } else {
       mgrRenderDtChrome();
       var root = document.querySelector('[data-dt-screen="' + mgrActiveTab + '"]');
