@@ -1328,6 +1328,22 @@
   .dt-prompt-txt{ font-size:0.68cqw; color:var(--dt-text-sec); white-space:nowrap; }
   .dt-saved{ font-family:'IBM Plex Mono',monospace; font-size:0.62cqw; color:oklch(0.58 0.014 250); letter-spacing:.08cqw; white-space:nowrap; }
 
+  .dt-style-item{ display:flex; justify-content:space-between; align-items:center; padding:.5cqw .6cqw; border-radius:3px; cursor:pointer; background:var(--dt-bg-inset); border:1px solid transparent; margin-bottom:.3cqw; }
+  .dt-style-item:last-child{ margin-bottom:0; }
+  .dt-style-item.active{ background:var(--dt-bg-active); border-color:var(--dt-verde); }
+  .dt-style-name{ font-family:'IBM Plex Mono',monospace; font-size:0.8cqw; font-weight:600; color:var(--dt-text-sec); }
+  .dt-style-item.active .dt-style-name{ color:var(--dt-verde); }
+  .dt-slider-label{ display:flex; justify-content:space-between; font-size:0.72cqw; margin-bottom:.3cqw; }
+  .dt-slider{ width:100%; -webkit-appearance:none; appearance:none; background:transparent; }
+  .dt-slider::-webkit-slider-runnable-track{ height:6px; background:oklch(0.28 0.016 250); border-radius:99px; }
+  .dt-slider::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; margin-top:-5px; border-radius:50%; background:var(--dt-verde); cursor:pointer; }
+  .dt-pitch{ border:1px solid var(--dt-border); border-radius:5px; position:relative; overflow:hidden; height:100%; min-height:220px; background:linear-gradient(180deg,oklch(0.235 0.035 155) 0%,oklch(0.195 0.028 155) 100%); }
+  .dt-pitch-line{ position:absolute; border:1px solid rgba(255,255,255,.18); }
+  .dt-pitch-slot{ position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:.2cqw; cursor:pointer; }
+  .dt-pitch-badge{ width:2.5cqw; height:2.5cqw; min-width:30px; min-height:30px; border-radius:50%; background:oklch(0.16 0.015 250); border:.16cqw solid var(--dt-verde); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:0.78cqw; font-weight:600; box-shadow:0 .3cqw .8cqw rgba(0,0,0,.4); }
+  .dt-pitch-slot.empty .dt-pitch-badge{ border-color:rgba(255,255,255,.35); border-style:dashed; color:rgba(255,255,255,.6); }
+  .dt-pitch-name{ font-size:0.64cqw; font-weight:600; background:rgba(0,0,0,.45); padding:.1cqw .3cqw; border-radius:2px; white-space:nowrap; color:#fff; }
+
   @media (max-width:640px){
     .dt-metrics{ display:none; }
     .dt-sidebar{ width:9.5cqw; }
@@ -9241,6 +9257,135 @@
     grid.appendChild(fichaCol);
   }
 
+  function mgrRenderTacticaDT(){
+    mgrRenderDtChrome();
+    var root = document.querySelector('[data-dt-screen="tactica"]');
+    root.innerHTML = '';
+    var grid = document.createElement('div');
+    grid.className = 'dt-screen';
+    grid.style.gridTemplateColumns = '15cqw 1fr 17cqw';
+    root.appendChild(grid);
+    var tactics = mgrEnsureTactics();
+
+    /* --- Columna izquierda: estilo + instrucciones --- */
+    var col1 = document.createElement('div'); col1.className = 'dt-col';
+    grid.appendChild(col1);
+
+    var stylePanel = document.createElement('div'); stylePanel.className = 'dt-panel';
+    stylePanel.innerHTML = '<div class="dt-panel-title">Estilo de juego</div>';
+    var styleList = document.createElement('div');
+    Object.keys(MGR_STYLE_LABELS).forEach(function(key){
+      var item = document.createElement('div');
+      item.className = 'dt-style-item' + (tactics.style === key ? ' active' : '');
+      item.innerHTML = '<span class="dt-style-name">' + MGR_STYLE_LABELS[key] + '</span>';
+      item.addEventListener('click', function(){ tactics.style = key; saveState(); mgrRenderTacticaDT(); });
+      styleList.appendChild(item);
+    });
+    stylePanel.appendChild(styleList);
+    col1.appendChild(stylePanel);
+
+    var instrPanel = document.createElement('div'); instrPanel.className = 'dt-panel flex-col'; instrPanel.style.flex = '1';
+    instrPanel.innerHTML = '<div class="dt-panel-title">Instrucciones</div>';
+    [['pressing', 'Presión'], ['block', 'Bloque defensivo'], ['width', 'Anchura']].forEach(function(def){
+      var wrap = document.createElement('div'); wrap.style.marginTop = '.7cqw';
+      var label = document.createElement('div'); label.className = 'dt-slider-label';
+      label.innerHTML = '<span>' + def[1] + '</span><span class="dt-mono" style="color:var(--dt-verde);">' + tactics[def[0]] + '</span>';
+      var input = document.createElement('input');
+      input.type = 'range'; input.min = '0'; input.max = '100'; input.value = String(tactics[def[0]]); input.className = 'dt-slider';
+      input.addEventListener('input', function(){
+        tactics[def[0]] = parseInt(input.value, 10);
+        label.querySelector('span:last-child').textContent = tactics[def[0]];
+        mgrRenderTacticaCenterRight(tactics);
+      });
+      input.addEventListener('change', function(){ saveState(); });
+      wrap.appendChild(label); wrap.appendChild(input);
+      instrPanel.appendChild(wrap);
+    });
+    col1.appendChild(instrPanel);
+
+    /* --- Columna central: cancha --- */
+    var pitch = document.createElement('div'); pitch.className = 'dt-pitch'; pitch.id = 'dtPitch';
+    grid.appendChild(pitch);
+    pitch.innerHTML =
+      '<div class="dt-pitch-line" style="inset:1.2cqw; border-radius:2px;"></div>' +
+      '<div class="dt-pitch-line" style="left:1.2cqw; right:1.2cqw; top:50%; height:0;"></div>' +
+      '<div class="dt-pitch-line" style="left:50%; top:50%; width:9cqw; height:9cqw; transform:translate(-50%,-50%); border-radius:50%;"></div>' +
+      '<div class="dt-pitch-line" style="left:28%; right:28%; top:1.2cqw; height:22%; border-top:none;"></div>' +
+      '<div class="dt-pitch-line" style="left:28%; right:28%; bottom:1.2cqw; height:22%; border-bottom:none;"></div>';
+    CAREER_SLOT_DEFS.forEach(function(def){
+      var pid = state.manager.lineup[def.key];
+      var p = pid ? mgrPlayerById(pid) : null;
+      var pos = CAREER_PITCH_LAYOUT[def.key];
+      var slot = document.createElement('div');
+      slot.className = 'dt-pitch-slot' + (p ? '' : ' empty');
+      slot.style.left = pos.x + '%'; slot.style.top = pos.y + '%';
+      if(p){
+        var shortName = p.name.split(' ').slice(-1)[0];
+        slot.innerHTML = '<div class="dt-pitch-badge">' + p.ovr + '</div><div class="dt-pitch-name">#' + p.number + ' ' + escapeHtml(shortName) + '</div>';
+        slot.addEventListener('click', function(){ mgrOpenPlayerSheet(p.id); });
+      } else {
+        slot.innerHTML = '<div class="dt-pitch-badge">+</div><div class="dt-pitch-name">' + def.label + '</div>';
+        slot.addEventListener('click', function(){ mgrAutoFixLineup(); saveState(); mgrRenderTacticaDT(); });
+      }
+      pitch.appendChild(slot);
+    });
+
+    /* --- Columna derecha: química + banquillo --- */
+    var col3 = document.createElement('div'); col3.className = 'dt-col';
+    grid.appendChild(col3);
+    var chemPanel = document.createElement('div'); chemPanel.className = 'dt-panel'; chemPanel.id = 'dtChemPanel';
+    col3.appendChild(chemPanel);
+    var benchPanel = document.createElement('div'); benchPanel.className = 'dt-panel flex-col'; benchPanel.style.flex = '1';
+    benchPanel.innerHTML = '<div class="dt-panel-title">Banquillo</div>';
+    var benchWrap = document.createElement('div'); benchWrap.className = 'dt-scroll';
+    benchPanel.appendChild(benchWrap);
+    var startersIds = {};
+    Object.keys(state.manager.lineup).forEach(function(k){ if(state.manager.lineup[k]) startersIds[state.manager.lineup[k]] = true; });
+    var bench = state.manager.squad.filter(function(p){ return !startersIds[p.id]; });
+    if(!bench.length){ benchWrap.innerHTML = '<p class="dt-row-detail">Sin suplentes disponibles.</p>'; }
+    bench.forEach(function(p){
+      var row = document.createElement('div'); row.className = 'dt-row clickable';
+      var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
+      row.innerHTML =
+        '<span class="dt-mono" style="color:' + posColor + '; width:1.8cqw; font-weight:600;">' + p.position + '</span>' +
+        '<span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</span>' +
+        '<span class="dt-mono" style="font-weight:600;">' + p.ovr + '</span>';
+      row.addEventListener('click', function(){ mgrOpenPlayerSheet(p.id); });
+      benchWrap.appendChild(row);
+    });
+    col3.appendChild(benchPanel);
+
+    mgrRenderTacticaCenterRight(tactics);
+  }
+  function mgrRenderTacticaCenterRight(tactics){
+    var chemPanel = document.getElementById('dtChemPanel');
+    if(!chemPanel) return;
+    var starters = mgrLineupList().map(function(l){ return mgrPlayerById(l.id); }).filter(Boolean);
+    var avisos = [];
+    var factorSum = 0;
+    starters.forEach(function(p){
+      var factor = mgrPlayerTacticalFactor(p, tactics);
+      factorSum += factor;
+      if(factor >= 1.05) avisos.push({ texto: p.name.split(' ').slice(-1)[0] + ' encaja muy bien en el ' + tactics.style + ' como ' + p.role.toLowerCase(), tono: 'var(--dt-verde)' });
+      else if(factor <= 0.98) avisos.push({ texto: p.name.split(' ').slice(-1)[0] + ' (' + p.role + ') no encaja del todo con este estilo', tono: 'var(--dt-ambar)' });
+    });
+    CAREER_SLOT_DEFS.forEach(function(def){
+      if(!state.manager.lineup[def.key]) avisos.push({ texto: 'Falta titular en ' + def.label.toLowerCase(), tono: 'var(--dt-rojo)' });
+    });
+    var avgFactor = starters.length ? factorSum / starters.length : 1;
+    var chemistry = Math.max(0, Math.min(100, Math.round(50 + (avgFactor - 1) * 500)));
+    var chemLabel = chemistry >= 70 ? 'buen encaje' : chemistry >= 45 ? 'encaje mejorable' : 'encaje pobre';
+    avisos.sort(function(a, b){ var order = { 'var(--dt-rojo)': 0, 'var(--dt-ambar)': 1, 'var(--dt-verde)': 2 }; return order[a.tono] - order[b.tono]; });
+    chemPanel.innerHTML =
+      '<div class="dt-panel-title">Química del bloque</div>' +
+      '<div style="display:flex; align-items:baseline; gap:.5cqw;"><span class="dt-mono" style="font-size:2.2cqw; font-weight:600; color:var(--dt-verde);">' + chemistry + '</span><span style="font-size:0.72cqw; color:var(--dt-text-sec);">/100 · ' + chemLabel + '</span></div>' +
+      '<div style="margin-top:.6cqw; display:flex; flex-direction:column; gap:.4cqw;">' +
+        avisos.slice(0, 3).map(function(a){
+          return '<div style="display:flex; gap:.45cqw; align-items:center; font-size:0.72cqw;"><div style="width:.45cqw; height:.45cqw; border-radius:50%; background:' + a.tono + '; flex:none;"></div><span style="color:oklch(0.82 0.01 250);">' + escapeHtml(a.texto) + '</span></div>';
+        }).join('') +
+      '</div>';
+  }
+
   var mgrOpenPlayerId = null;
   function mgrOpenPlayerSheet(playerId){
     mgrOpenPlayerId = playerId;
@@ -9889,6 +10034,10 @@
       var avgAge = Math.round(squad.reduce(function(s, p){ return s + p.age; }, 0) / squad.length * 10) / 10;
       return squad.length + ' fichas · media ' + mgrSquadAvgOvr() + ' · edad media ' + String(avgAge).replace('.', ',');
     }
+    if(tab === 'tactica'){
+      var tactics = mgrEnsureTactics();
+      return 'estilo ' + (MGR_STYLE_LABELS[tactics.style] || tactics.style).toLowerCase() + ' · presión ' + tactics.pressing + '%';
+    }
     return 'próximamente en esta fase del rediseño';
   }
   function mgrRenderDtNav(){
@@ -9921,6 +10070,8 @@
       mgrRenderHub();
     } else if(mgrActiveTab === 'plantilla'){
       mgrRenderPlantillaDT();
+    } else if(mgrActiveTab === 'tactica'){
+      mgrRenderTacticaDT();
     } else {
       mgrRenderDtChrome();
       var root = document.querySelector('[data-dt-screen="' + mgrActiveTab + '"]');
