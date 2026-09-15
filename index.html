@@ -9967,6 +9967,141 @@
     right.appendChild(vocesPanel);
   }
 
+  function mgrRenderCanteraDT(){
+    mgrRenderDtChrome();
+    var root = document.querySelector('[data-dt-screen="cantera"]');
+    root.innerHTML = '';
+    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1.3fr 1fr';
+    root.appendChild(grid);
+
+    var club = state.manager.club;
+    var certeza = Math.round((club.scoutingLevel || 3) / 5 * 100);
+    var academy = state.manager.academy || [];
+
+    var listPanel = document.createElement('div'); listPanel.className = 'dt-panel flex-col'; listPanel.style.cssText += 'padding:0; overflow:hidden;';
+    var head = document.createElement('div'); head.style.cssText = 'padding:.8cqw .9cqw .6cqw;'; head.innerHTML = '<div class="dt-panel-title" style="margin-bottom:0;">Promesas en seguimiento</div>';
+    listPanel.appendChild(head);
+    var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll'; listWrap.style.cssText = 'flex:1; padding:0 .9cqw .9cqw;';
+    listPanel.appendChild(listWrap);
+    if(!academy.length){ listWrap.innerHTML = '<p class="dt-row-detail">No hay juveniles en la academia esta temporada.</p>'; }
+    academy.forEach(function(p){
+      var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
+      var row = document.createElement('div');
+      row.style.cssText = 'display:grid; grid-template-columns:2.2cqw 1fr 5cqw 6cqw auto; gap:.5cqw; align-items:center; padding:.55cqw; border-radius:4px; background:var(--dt-bg-inset); margin-bottom:.4cqw;';
+      row.innerHTML =
+        '<div class="dt-mono" style="color:' + posColor + '; font-weight:600;">' + p.position + '</div>' +
+        '<div><div style="font-size:0.8cqw; font-weight:600;">' + escapeHtml(p.name) + '</div><div class="dt-mono" style="font-size:0.6cqw; color:var(--dt-text-mono);">' + p.age + ' años</div></div>' +
+        '<div class="dt-mono" style="font-size:0.72cqw; text-align:center;">' + p.ovr + ' / ' + p.potential + '</div>' +
+        '<div><div class="dt-mono" style="font-size:0.58cqw; color:var(--dt-text-mono); margin-bottom:.15cqw;">CERTEZA ' + certeza + '%</div><div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + certeza + '%; background:var(--dt-verde);"></div></div></div>' +
+        '<div style="display:flex; flex-direction:column; gap:.2cqw;"></div>';
+      var actionsWrap = row.lastElementChild;
+      var promBtn = document.createElement('button'); promBtn.type = 'button'; promBtn.className = 'dt-btn-outline'; promBtn.style.cssText = 'padding:.2cqw .5cqw; font-size:0.6cqw; width:auto;'; promBtn.textContent = 'Promover';
+      promBtn.addEventListener('click', function(){ mgrPromoteYouth(p.id); });
+      var relBtn = document.createElement('button'); relBtn.type = 'button'; relBtn.className = 'dt-btn-outline'; relBtn.style.cssText = 'padding:.2cqw .5cqw; font-size:0.6cqw; width:auto; color:var(--dt-rojo); border-color:var(--dt-rojo);'; relBtn.textContent = 'Liberar';
+      relBtn.addEventListener('click', function(){ mgrReleaseYouth(p.id); });
+      actionsWrap.appendChild(promBtn); actionsWrap.appendChild(relBtn);
+      listWrap.appendChild(row);
+    });
+    grid.appendChild(listPanel);
+
+    var right = document.createElement('div'); right.className = 'dt-col';
+    grid.appendChild(right);
+
+    var levelPanel = document.createElement('div'); levelPanel.className = 'dt-panel';
+    levelPanel.innerHTML = '<div class="dt-panel-title">Nivel de la academia</div>';
+    [['Academia', club.academyLevel], ['Ojeo', club.scoutingLevel]].forEach(function(row){
+      var wrap = document.createElement('div'); wrap.style.marginBottom = '.6cqw';
+      wrap.innerHTML =
+        '<div style="display:flex; justify-content:space-between; font-size:0.72cqw; margin-bottom:.25cqw;"><span>' + row[0] + '</span><span class="dt-mono">' + row[1] + '/5</span></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + (row[1] / 5 * 100) + '%; background:var(--dt-verde);"></div></div>';
+      levelPanel.appendChild(wrap);
+    });
+    right.appendChild(levelPanel);
+
+    var notePanel = document.createElement('div'); notePanel.className = 'dt-panel flex-col'; notePanel.style.flex = '1';
+    var bestProspect = academy.slice().sort(function(a, b){ return b.potential - a.potential; })[0];
+    var promCount = state.manager.seasonPromotions || 0;
+    notePanel.innerHTML =
+      '<div class="dt-panel-title">Resumen</div>' +
+      '<div style="font-size:0.74cqw; line-height:1.6; color:oklch(0.82 0.01 250);">' +
+        'La academia ha aportado <strong style="color:var(--dt-verde);">' + promCount + ' ficha' + (promCount === 1 ? '' : 's') + '</strong> al primer equipo esta temporada.' +
+        (bestProspect ? ' ' + escapeHtml(bestProspect.name) + ' (' + bestProspect.position + ', potencial ' + bestProspect.potential + ') es la promesa más firme del informe actual.' : '') +
+      '</div>';
+    right.appendChild(notePanel);
+  }
+
+  function mgrRenderFinanzasDT(){
+    mgrRenderDtChrome();
+    var root = document.querySelector('[data-dt-screen="finanzas"]');
+    root.innerHTML = '';
+    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1fr 1fr 1fr';
+    root.appendChild(grid);
+
+    var club = state.manager.club;
+    var finances = mgrEnsureFinances();
+    var net = finances.seasonIncome - finances.seasonExpenses;
+    var sponsorPay = (club.sponsor && club.sponsor.pay) || 0;
+    var otherIncome = Math.max(0, finances.seasonIncome - sponsorPay);
+    var wageBill = state.manager.squad.reduce(function(s, p){ return s + (p.wage || 0); }, 0);
+    var otherExpenses = Math.max(0, finances.seasonExpenses - wageBill);
+    var wagePct = club.wageBudget ? Math.round(Math.min(999, wageBill / club.wageBudget * 100)) : 0;
+
+    var col1 = document.createElement('div'); col1.className = 'dt-col';
+    grid.appendChild(col1);
+    var balancePanel = document.createElement('div'); balancePanel.className = 'dt-panel';
+    balancePanel.style.background = 'linear-gradient(155deg,oklch(0.255 0.028 252),var(--dt-bg-panel))';
+    balancePanel.innerHTML =
+      '<div class="dt-panel-title">Balance del ejercicio</div>' +
+      '<div class="dt-mono" style="font-size:2cqw; font-weight:600; color:' + (net >= 0 ? 'var(--dt-verde)' : 'var(--dt-rojo)') + '; margin-top:.3cqw;">' + (net >= 0 ? '+' : '') + Math.round(net).toLocaleString('es-CO') + '</div>' +
+      '<div style="font-size:0.72cqw; color:var(--dt-text-sec);">temporada ' + state.manager.season + '</div>';
+    col1.appendChild(balancePanel);
+    var incomePanel = document.createElement('div'); incomePanel.className = 'dt-panel flex-col'; incomePanel.style.flex = '1';
+    incomePanel.innerHTML = '<div class="dt-panel-title">Ingresos de temporada</div>';
+    [['Patrocinio', sponsorPay], ['Taquilla, premios y ventas', otherIncome]].forEach(function(row){
+      var pct = finances.seasonIncome ? Math.round(row[1] / finances.seasonIncome * 100) : 0;
+      var wrap = document.createElement('div'); wrap.style.marginBottom = '.55cqw';
+      wrap.innerHTML =
+        '<div style="display:flex; justify-content:space-between; font-size:0.74cqw; margin-bottom:.22cqw;"><span>' + row[0] + '</span><span class="dt-mono" style="font-weight:600;">' + Math.round(row[1]).toLocaleString('es-CO') + '</span></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + pct + '%; background:var(--dt-verde);"></div></div>';
+      incomePanel.appendChild(wrap);
+    });
+    col1.appendChild(incomePanel);
+
+    var col2 = document.createElement('div'); col2.className = 'dt-col';
+    grid.appendChild(col2);
+    var expPanel = document.createElement('div'); expPanel.className = 'dt-panel flex-col';
+    expPanel.innerHTML = '<div class="dt-panel-title">Gastos de temporada</div>';
+    [['Salarios de plantilla', wageBill], ['Otros gastos', otherExpenses]].forEach(function(row){
+      var pct = finances.seasonExpenses ? Math.round(row[1] / finances.seasonExpenses * 100) : 0;
+      var wrap = document.createElement('div'); wrap.style.marginBottom = '.55cqw';
+      wrap.innerHTML =
+        '<div style="display:flex; justify-content:space-between; font-size:0.74cqw; margin-bottom:.22cqw;"><span>' + row[0] + '</span><span class="dt-mono" style="font-weight:600;">' + Math.round(row[1]).toLocaleString('es-CO') + '</span></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + pct + '%; background:oklch(0.72 0.14 40);"></div></div>';
+      expPanel.appendChild(wrap);
+    });
+    var wageGauge = document.createElement('div'); wageGauge.style.cssText = 'margin-top:auto; padding:.7cqw; border-radius:4px; background:var(--dt-bg-inset);';
+    wageGauge.innerHTML =
+      '<div style="display:flex; justify-content:space-between; font-size:0.74cqw; margin-bottom:.3cqw;"><span>Masa salarial / tope</span><span class="dt-mono" style="color:' + (wagePct >= 90 ? 'var(--dt-rojo)' : 'var(--dt-ambar)') + ';">' + wagePct + '%</span></div>' +
+      '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + Math.min(100, wagePct) + '%; background:' + (wagePct >= 90 ? 'var(--dt-rojo)' : 'var(--dt-ambar)') + ';"></div></div>';
+    expPanel.appendChild(wageGauge);
+    col2.appendChild(expPanel);
+
+    var col3 = document.createElement('div'); col3.className = 'dt-col';
+    grid.appendChild(col3);
+    var budgetPanel = document.createElement('div'); budgetPanel.className = 'dt-panel';
+    budgetPanel.innerHTML =
+      '<div class="dt-panel-title">Presupuesto disponible</div>' +
+      '<div class="dt-mono" style="font-size:1.8cqw; font-weight:600; color:var(--dt-verde);">' + Math.round(club.budget).toLocaleString('es-CO') + '</div>';
+    col3.appendChild(budgetPanel);
+    var allocPanel = document.createElement('div'); allocPanel.className = 'dt-panel flex-col'; allocPanel.style.flex = '1';
+    var wageShare = Math.max(0, Math.min(100, wagePct));
+    allocPanel.innerHTML =
+      '<div class="dt-panel-title">Reparto del presupuesto salarial</div>' +
+      '<div style="display:flex; height:1cqw; border-radius:3px; overflow:hidden;"><div style="width:' + wageShare + '%; background:oklch(0.72 0.14 40);"></div><div style="width:' + (100 - wageShare) + '%; background:var(--dt-verde);"></div></div>' +
+      '<div style="display:flex; justify-content:space-between; font-family:\'IBM Plex Mono\',monospace; font-size:0.6cqw; color:var(--dt-text-sec); margin-top:.35cqw;"><span>SALARIOS ' + wageShare + '%</span><span>LIBRE ' + (100 - wageShare) + '%</span></div>';
+    col3.appendChild(allocPanel);
+  }
+
   var mgrOpenPlayerId = null;
   function mgrOpenPlayerSheet(playerId){
     mgrOpenPlayerId = playerId;
@@ -10640,6 +10775,12 @@
     if(tab === 'objetivos'){
       return 'confianza directiva ' + state.manager.club.boardConfidence + '%';
     }
+    if(tab === 'cantera'){
+      return (state.manager.academy || []).length + ' juvenil(es) en seguimiento';
+    }
+    if(tab === 'finanzas'){
+      return 'ejercicio ' + state.manager.season;
+    }
     return 'próximamente en esta fase del rediseño';
   }
   function mgrRenderDtNav(){
@@ -10686,6 +10827,10 @@
       mgrRenderEntrenoDT();
     } else if(mgrActiveTab === 'objetivos'){
       mgrRenderDirectivaDT();
+    } else if(mgrActiveTab === 'cantera'){
+      mgrRenderCanteraDT();
+    } else if(mgrActiveTab === 'finanzas'){
+      mgrRenderFinanzasDT();
     } else {
       mgrRenderDtChrome();
       var root = document.querySelector('[data-dt-screen="' + mgrActiveTab + '"]');
