@@ -9108,6 +9108,7 @@
 
   var MGR_DT_POS_COLOR = { GK: 'var(--dt-ambar)', DEF: 'var(--dt-azul)', MID: 'var(--dt-verde)', FWD: 'var(--dt-rojo)' };
   var mgrOpenSquadPlayerId = null;
+  var mgrOpenCanteraId = null;
   function mgrFormaLabel(form){
     if(form >= 75) return { txt: 'En racha', tone: 'var(--dt-verde)' };
     if(form >= 60) return { txt: 'Estable', tone: 'var(--dt-oro-suave)' };
@@ -9630,71 +9631,85 @@
     var root = document.querySelector('[data-dt-screen="calendario"]');
     root.innerHTML = '';
     root.style.overflowY = 'auto';
-    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1fr 19cqw'; grid.style.height = 'auto'; grid.style.minHeight = '100%';
-    root.appendChild(grid);
+    var col = document.createElement('div'); col.className = 'dt-screen'; col.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw; height:auto; min-height:100%;';
+    root.appendChild(col);
 
     var entries = mgrCalendarEntries();
     var nextEntry = entries.filter(function(e){ return !e.played; })[0];
 
-    var gridPanel = document.createElement('div'); gridPanel.className = 'dt-panel';
-    gridPanel.innerHTML =
-      '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.7cqw;">' +
-        '<div class="dt-panel-title" style="margin-bottom:0;">Calendario de temporada</div>' +
-        '<div style="display:flex; gap:.6cqw;">' +
-          '<span class="dt-mono" style="font-size:0.6cqw; color:var(--dt-text-sec);"><span style="display:inline-block; width:.5cqw; height:.5cqw; background:var(--dt-verde); border-radius:2px; margin-right:.25cqw;"></span>LIGA</span>' +
-          '<span class="dt-mono" style="font-size:0.6cqw; color:var(--dt-text-sec);"><span style="display:inline-block; width:.5cqw; height:.5cqw; background:var(--dt-azul); border-radius:2px; margin-right:.25cqw;"></span>COPA</span>' +
-        '</div>' +
-      '</div>';
-    var cardsWrap = document.createElement('div'); cardsWrap.style.cssText = 'display:grid; grid-template-columns:repeat(4,1fr); gap:.5cqw;';
-    entries.forEach(function(e){
+    var proximos = entries.filter(function(e){ return !e.played; }).slice(0, 5);
+    var stripRow = document.createElement('div'); stripRow.style.cssText = 'flex:none; display:grid; grid-template-columns:repeat(' + Math.max(1, proximos.length) + ',1fr); gap:.7cqw;';
+    if(!proximos.length){ stripRow.innerHTML = '<p class="dt-row-detail">No hay más partidos programados.</p>'; }
+    proximos.forEach(function(e){
       var isNext = e === nextEntry;
-      var resTone = !e.played ? 'oklch(0.60 0.014 250)' : (e.myScore > e.oppScore ? 'var(--dt-verde)' : e.myScore === e.oppScore ? 'oklch(0.85 0.01 250)' : 'var(--dt-rojo)');
       var card = document.createElement('div');
-      card.style.cssText = 'border-radius:4px; padding:.6cqw; background:' + (isNext ? 'oklch(0.26 0.024 250)' : 'var(--dt-bg-inset)') + '; border:1px solid ' + (isNext ? 'var(--dt-verde)' : 'transparent') + '; display:flex; flex-direction:column; gap:.3cqw; min-height:6.5cqh;';
+      card.style.cssText = 'border-radius:.9cqw; padding:1cqw; display:flex; flex-direction:column; gap:.35cqw;' +
+        (isNext ? 'background:linear-gradient(140deg,oklch(0.90 0.16 88),oklch(0.78 0.16 72)); color:var(--dt-tinta);' : 'background:rgba(255,255,255,.07); color:var(--dt-text); border:2px solid rgba(255,255,255,.14);');
       card.innerHTML =
-        '<div style="display:flex; justify-content:space-between; font-family:\'IBM Plex Mono\',monospace; font-size:0.58cqw; color:var(--dt-text-mono);"><span>Día ' + e.day + '</span><span style="color:' + (e.comp === 'COPA' ? 'var(--dt-azul)' : 'var(--dt-verde)') + ';">' + e.comp + '</span></div>' +
-        '<div style="font-size:0.78cqw; font-weight:600; line-height:1.2;">' + escapeHtml(e.rival) + '</div>' +
-        '<div style="margin-top:auto; display:flex; justify-content:space-between; align-items:center;">' +
-          '<span class="dt-mono" style="font-size:0.6cqw; color:var(--dt-text-mono);">' + escapeHtml(e.sede || e.label) + '</span>' +
-          '<span class="dt-mono" style="font-size:0.82cqw; font-weight:600; color:' + resTone + ';">' + (e.played ? (e.myScore + '-' + e.oppScore) : '—') + '</span>' +
-        '</div>';
-      cardsWrap.appendChild(card);
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.07cqw; opacity:.85;">Día ' + e.day + ' · ' + e.comp + '</div>' +
+        '<div style="font-size:1.25cqw; font-weight:800; line-height:1.1;">' + escapeHtml(e.rival) + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; opacity:.8;">' + escapeHtml(e.sede || e.label) + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.9cqw; font-weight:700; line-height:1; margin-top:auto;">—</div>';
+      stripRow.appendChild(card);
     });
-    gridPanel.appendChild(cardsWrap);
-    grid.appendChild(gridPanel);
+    col.appendChild(stripRow);
 
-    var sideCol = document.createElement('div'); sideCol.className = 'dt-col';
-    grid.appendChild(sideCol);
+    var body = document.createElement('div'); body.style.cssText = 'flex:1; display:grid; grid-template-columns:1fr 24cqw; gap:.8cqw; min-height:0;';
+    col.appendChild(body);
+
+    var resultsPanel = document.createElement('div'); resultsPanel.className = 'dt-panel flex-col';
+    resultsPanel.innerHTML = '<div class="dt-panel-title">RESULTADOS RECIENTES</div>';
+    var resultsWrap = document.createElement('div'); resultsWrap.className = 'dt-scroll';
+    resultsPanel.appendChild(resultsWrap);
+    var jugados = entries.filter(function(e){ return e.played; }).slice(-8).reverse();
+    if(!jugados.length){ resultsWrap.innerHTML = '<p class="dt-row-detail">Todavía no has jugado partidos esta temporada.</p>'; }
+    jugados.forEach(function(e){
+      var tone = e.myScore > e.oppScore ? 'var(--dt-verde)' : e.myScore === e.oppScore ? 'var(--dt-text)' : 'var(--dt-rojo)';
+      var row = document.createElement('div');
+      row.style.cssText = 'display:grid; grid-template-columns:5cqw 1fr 6cqw 5cqw; gap:.8cqw; align-items:center; padding:.7cqw .9cqw; border-radius:.7cqw; background:rgba(255,255,255,.06); margin-bottom:.45cqw;';
+      row.innerHTML =
+        '<span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; color:var(--dt-text-sec);">Día ' + e.day + '</span>' +
+        '<span style="font-weight:700;">' + escapeHtml(e.rival) + '</span>' +
+        '<span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; opacity:.8;">' + escapeHtml(e.sede || e.label) + '</span>' +
+        '<span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.5cqw; font-weight:700; text-align:right; color:' + tone + ';">' + e.myScore + '-' + e.oppScore + '</span>';
+      resultsWrap.appendChild(row);
+    });
+    body.appendChild(resultsPanel);
+
+    var sideCol = document.createElement('div'); sideCol.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw;';
     var myStats = state.manager.myStats;
     var balancePanel = document.createElement('div'); balancePanel.className = 'dt-panel';
     balancePanel.innerHTML =
-      '<div class="dt-panel-title">Balance de temporada</div>' +
-      '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:.5cqw;">' +
-        [['GANADOS', myStats.pg, 'var(--dt-verde)'], ['EMPATES', myStats.pe, 'oklch(0.90 0.008 250)'], ['PERDIDOS', myStats.pp, 'var(--dt-rojo)']].map(function(b){
-          return '<div style="padding:.6cqw; border-radius:4px; background:var(--dt-bg-inset); text-align:center;"><div class="dt-mono" style="font-size:1.4cqw; font-weight:600; color:' + b[2] + ';">' + b[1] + '</div><div class="dt-mono" style="font-size:0.58cqw; color:var(--dt-text-mono); letter-spacing:.06cqw;">' + b[0] + '</div></div>';
+      '<div class="dt-panel-title">BALANCE</div>' +
+      '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:.6cqw;">' +
+        [['GANADOS', myStats.pg, 'var(--dt-verde)'], ['EMPATES', myStats.pe, 'var(--dt-text)'], ['PERDIDOS', myStats.pp, 'var(--dt-rojo)']].map(function(b){
+          return '<div style="text-align:center; padding:.8cqw .3cqw; border-radius:.7cqw; background:rgba(255,255,255,.07);"><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:2.4cqw; font-weight:700; line-height:1; color:' + b[2] + ';">' + b[1] + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.9cqw; text-transform:uppercase; letter-spacing:.07cqw; color:var(--dt-text-sec);">' + b[0] + '</div></div>';
         }).join('') +
       '</div>';
     sideCol.appendChild(balancePanel);
 
-    var upcomingPanel = document.createElement('div'); upcomingPanel.className = 'dt-panel flex-col'; upcomingPanel.style.flex = '1';
-    upcomingPanel.innerHTML = '<div class="dt-panel-title">Próximos partidos</div>';
-    var upcomingWrap = document.createElement('div'); upcomingWrap.className = 'dt-scroll';
-    upcomingPanel.appendChild(upcomingWrap);
-    var upcoming = entries.filter(function(e){ return !e.played; }).slice(0, 6);
-    if(!upcoming.length){ upcomingWrap.innerHTML = '<p class="dt-row-detail">No hay más partidos programados.</p>'; }
-    upcoming.forEach(function(e){
-      var row = document.createElement('div'); row.className = 'dt-row';
-      row.innerHTML = '<div style="flex:1; min-width:0;"><div class="dt-row-title">' + escapeHtml(e.rival) + '</div><div class="dt-row-detail">' + e.comp + ' · ' + escapeHtml(e.sede || e.label) + '</div></div><div class="dt-mono" style="color:var(--dt-text-sec); flex:none;">Día ' + e.day + '</div>';
-      upcomingWrap.appendChild(row);
-    });
-    sideCol.appendChild(upcomingPanel);
+    var table = mgrStandingsTable();
+    var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
+    var myRow = table[myPos - 1];
+    var leader = table[0];
+    var posCard = document.createElement('div'); posCard.className = 'dt-gold-card'; posCard.style.flex = '1';
+    posCard.innerHTML =
+      '<div>' +
+        '<div class="dt-gold-label">Puesto actual</div>' +
+        '<div class="dt-gold-big" style="font-size:4.4cqw;">' + myPos + 'º</div>' +
+        '<div style="font-size:1.05cqw; font-weight:700;">' + myRow.stats.pts + ' puntos' + (myPos > 1 ? ' · a ' + (leader.stats.pts - myRow.stats.pts) + ' del líder' : ' · líder') + '</div>' +
+      '</div>' +
+      (nextEntry ? '<button type="button" id="dtCalGoPrevia" class="dt-btn-dark" style="display:block; width:100%; margin-top:.9cqw;">IR AL PRÓXIMO PARTIDO</button>' : '<div></div>');
+    if(nextEntry) posCard.querySelector('#dtCalGoPrevia').addEventListener('click', function(){ mgrSwitchTab('previa'); });
+    sideCol.appendChild(posCard);
+    body.appendChild(sideCol);
 
-    var extraWrap = document.createElement('div'); extraWrap.style.cssText = 'margin-top:.85cqw; display:grid; grid-template-columns:1fr 1fr 1fr; gap:.85cqw;';
-    root.appendChild(extraWrap);
+    var extraWrap = document.createElement('div'); extraWrap.style.cssText = 'flex:none; display:grid; grid-template-columns:1fr 1fr 1fr; gap:.8cqw;';
+    col.appendChild(extraWrap);
 
     var standingsPanel = document.createElement('div'); standingsPanel.className = 'dt-panel';
-    standingsPanel.innerHTML = '<div class="dt-panel-title">Tabla completa</div>';
-    mgrStandingsTable().forEach(function(row, i){
+    standingsPanel.innerHTML = '<div class="dt-panel-title">TABLA COMPLETA</div>';
+    table.forEach(function(row, i){
       var r = document.createElement('div');
       r.className = 'dt-table-row' + (row.idx === 0 ? ' me' : '');
       r.innerHTML =
@@ -9707,7 +9722,7 @@
     extraWrap.appendChild(standingsPanel);
 
     var scorersPanel = document.createElement('div'); scorersPanel.className = 'dt-panel';
-    scorersPanel.innerHTML = '<div class="dt-panel-title">Goleadores</div>';
+    scorersPanel.innerHTML = '<div class="dt-panel-title">GOLEADORES</div>';
     var scorers = Object.keys(state.manager.topScorers || {}).map(function(name){ return { name: name, goals: state.manager.topScorers[name] }; })
       .sort(function(a, b){ return b.goals - a.goals; }).slice(0, 8);
     if(!scorers.length){ scorersPanel.innerHTML += '<p class="dt-row-detail">Aún no hay goleadores.</p>'; }
@@ -9719,7 +9734,7 @@
     extraWrap.appendChild(scorersPanel);
 
     var assistsPanel = document.createElement('div'); assistsPanel.className = 'dt-panel';
-    assistsPanel.innerHTML = '<div class="dt-panel-title">Asistencias</div>';
+    assistsPanel.innerHTML = '<div class="dt-panel-title">ASISTENCIAS</div>';
     var assisters = Object.keys(state.manager.topAssists || {}).map(function(name){ return { name: name, assists: state.manager.topAssists[name] }; })
       .sort(function(a, b){ return b.assists - a.assists; }).slice(0, 8);
     if(!assisters.length){ assistsPanel.innerHTML += '<p class="dt-row-detail">Aún no hay asistencias.</p>'; }
@@ -9751,86 +9766,76 @@
       return;
     }
     mgrMaterializeClub(today.oppClub);
-    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1fr 1.15fr';
-    root.appendChild(grid);
+    var col = document.createElement('div'); col.className = 'dt-screen'; col.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw;';
+    root.appendChild(col);
 
     var myClub = state.manager.club;
     var myStats = state.manager.myStats;
     var oppStats = today.oppClub;
     var myOvr = Math.round(mgrMySquadAvgOvr()), oppOvr = Math.round(mgrClubQuickStrength(today.oppClub));
     var probs = mgrMatchWDL(myOvr, oppOvr);
+    var table = mgrStandingsTable();
+    var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
+    var oppPos = table.map(function(r){ return r.stats; }).indexOf(today.oppClub) + 1;
+
+    var headerPanel = document.createElement('div'); headerPanel.className = 'dt-panel'; headerPanel.style.cssText += 'flex:none; display:flex; align-items:center; gap:1.5cqw;';
+    headerPanel.innerHTML =
+      '<div style="flex:1; text-align:center;"><div style="font-size:1.7cqw; font-weight:800;">' + escapeHtml(myClub.name) + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; color:var(--dt-text-sec);">' + myPos + 'º · ' + myStats.pts + ' puntos · ' + (today.iAmHome ? 'local' : 'visitante') + '</div></div>' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:2.2cqw; font-weight:700; color:var(--dt-oro-suave);">VS</div>' +
+      '<div style="flex:1; text-align:center;"><div style="font-size:1.7cqw; font-weight:800;">' + escapeHtml(today.oppName) + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; color:var(--dt-text-sec);">' + (oppPos || '—') + 'º · ' + oppStats.pts + ' puntos · ' + (today.iAmHome ? 'visitante' : 'local') + '</div></div>';
+    col.appendChild(headerPanel);
+
+    var body = document.createElement('div'); body.style.cssText = 'flex:1; display:grid; grid-template-columns:1fr 1.15fr; gap:.8cqw; min-height:0;';
+    col.appendChild(body);
 
     var left = document.createElement('div'); left.className = 'dt-col';
-    grid.appendChild(left);
+    body.appendChild(left);
 
-    var headerPanel = document.createElement('div'); headerPanel.className = 'dt-panel';
-    headerPanel.innerHTML =
-      '<div style="display:flex; align-items:center; justify-content:space-between; gap:.6cqw;">' +
-        '<div style="text-align:center; flex:1; min-width:0;"><div style="font-size:1.05cqw; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(myClub.name) + '</div><div class="dt-mono" style="font-size:0.62cqw; color:var(--dt-text-sec);">' + myStats.pts + ' PTS</div></div>' +
-        '<div class="dt-mono" style="font-size:0.9cqw; color:var(--dt-text-mono); flex:none;">VS</div>' +
-        '<div style="text-align:center; flex:1; min-width:0;"><div style="font-size:1.05cqw; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(today.oppName) + '</div><div class="dt-mono" style="font-size:0.62cqw; color:var(--dt-text-sec);">' + oppStats.pts + ' PTS</div></div>' +
-      '</div>' +
-      '<div style="display:flex; height:.55cqw; border-radius:99px; overflow:hidden; margin-top:.8cqw;">' +
-        '<div style="width:' + probs.win + '%; background:var(--dt-verde);"></div>' +
-        '<div style="width:' + probs.draw + '%; background:var(--dt-border-strong);"></div>' +
-        '<div style="width:' + probs.loss + '%; background:var(--dt-rojo);"></div>' +
-      '</div>' +
-      '<div style="display:flex; justify-content:space-between; font-family:\'IBM Plex Mono\',monospace; font-size:0.6cqw; color:var(--dt-text-sec); margin-top:.3cqw;"><span>VICTORIA ' + probs.win + '%</span><span>EMPATE ' + probs.draw + '%</span><span>DERROTA ' + probs.loss + '%</span></div>';
-    left.appendChild(headerPanel);
-
-    var compPanel = document.createElement('div'); compPanel.className = 'dt-panel flex-col'; compPanel.style.flex = '1';
-    compPanel.innerHTML = '<div class="dt-panel-title">Comparativa</div>';
-    var compWrap = document.createElement('div'); compWrap.className = 'dt-scroll';
-    compPanel.appendChild(compWrap);
-    var myGpp = myStats.pj ? Math.round(myStats.gf / myStats.pj * 10) / 10 : 0;
-    var oppGpp = oppStats.pj ? Math.round(oppStats.gf / oppStats.pj * 10) / 10 : 0;
-    [
-      ['MEDIA DE PLANTILLA', myOvr, oppOvr, 100],
-      ['GOLES / PARTIDO', myGpp, oppGpp, 4],
-      ['PUNTOS EN LA TABLA', myStats.pts, oppStats.pts, Math.max(myStats.pts, oppStats.pts, 10)]
-    ].forEach(function(row){
-      var pa = Math.max(2, Math.round(Math.min(100, (row[1] / row[3]) * 100)));
-      var pb = Math.max(2, Math.round(Math.min(100, (row[2] / row[3]) * 100)));
-      var rowEl = document.createElement('div'); rowEl.style.marginBottom = '.6cqw';
-      rowEl.innerHTML =
-        '<div style="display:flex; justify-content:space-between; font-family:\'IBM Plex Mono\',monospace; font-size:0.66cqw; margin-bottom:.22cqw;"><span style="color:var(--dt-verde);">' + row[1] + '</span><span style="color:var(--dt-text-mono); letter-spacing:.06cqw;">' + row[0] + '</span><span style="color:var(--dt-rojo);">' + row[2] + '</span></div>' +
-        '<div style="display:flex; gap:.2cqw; height:.35cqw;">' +
-          '<div style="flex:1; display:flex; justify-content:flex-end; background:oklch(0.26 0.016 250); border-radius:99px; overflow:hidden;"><div style="background:var(--dt-verde); width:' + pa + '%;"></div></div>' +
-          '<div style="flex:1; background:oklch(0.26 0.016 250); border-radius:99px; overflow:hidden;"><div style="background:var(--dt-rojo); height:100%; width:' + pb + '%;"></div></div>' +
-        '</div>';
-      compWrap.appendChild(rowEl);
+    var pronosticoRow = document.createElement('div'); pronosticoRow.style.cssText = 'flex:none; display:grid; grid-template-columns:repeat(3,1fr); gap:.7cqw;';
+    [['VICTORIA', probs.win, 'var(--dt-verde)'], ['EMPATE', probs.draw, 'var(--dt-text)'], ['DERROTA', probs.loss, 'var(--dt-rojo)']].forEach(function(p){
+      var card = document.createElement('div');
+      card.style.cssText = 'border-radius:.9cqw; padding:1cqw; text-align:center; background:rgba(255,255,255,.07); border:2px solid rgba(255,255,255,.14);';
+      card.innerHTML = '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:2.6cqw; font-weight:700; line-height:1; color:' + p[2] + ';">' + p[1] + '%</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.08cqw; font-weight:600;">' + p[0] + '</div>';
+      pronosticoRow.appendChild(card);
     });
-    left.appendChild(compPanel);
-
-    var right = document.createElement('div'); right.className = 'dt-col';
-    grid.appendChild(right);
+    left.appendChild(pronosticoRow);
 
     var informePanel = document.createElement('div'); informePanel.className = 'dt-panel flex-col'; informePanel.style.flex = '1';
-    informePanel.innerHTML = '<div class="dt-panel-title">Informe del analista</div>';
+    informePanel.innerHTML = '<div class="dt-panel-title">CLAVES DEL PARTIDO</div>';
     var informeWrap = document.createElement('div'); informeWrap.className = 'dt-scroll';
     informePanel.appendChild(informeWrap);
     var informe = [];
-    informe.push({ tono: myOvr >= oppOvr ? 'var(--dt-verde)' : 'var(--dt-ambar)', texto: 'Tu plantilla tiene media ' + myOvr + ' frente a ' + oppOvr + ' de ' + today.oppName + '.' });
+    informe.push({ tono: myOvr >= oppOvr ? 'var(--dt-verde)' : 'var(--dt-oro-suave)', titulo: 'Media de plantilla', texto: 'Tu plantilla tiene media ' + myOvr + ' frente a ' + oppOvr + ' de ' + today.oppName + '.' });
     var form = state.manager.recentForm || [];
-    if(form.length) informe.push({ tono: 'var(--dt-azul)', texto: 'Tu forma reciente: ' + form.join('-') + '.' });
-    if(today.weather) informe.push({ tono: 'var(--dt-ambar)', texto: 'Clima: ' + today.weather + ((today.weather === 'Lluvia' || today.weather === 'Viento fuerte') ? '. Puede perjudicar a los perfiles más técnicos.' : '.') });
+    if(form.length) informe.push({ tono: 'var(--dt-azul)', titulo: 'Forma reciente', texto: 'Tus últimos resultados: ' + form.join('-') + '.' });
+    if(today.weather) informe.push({ tono: 'var(--dt-oro-suave)', titulo: 'Clima', texto: today.weather + ((today.weather === 'Lluvia' || today.weather === 'Viento fuerte') ? '. Puede perjudicar a los perfiles más técnicos.' : '.') });
     var bajas = state.manager.squad.filter(function(p){ return mgrPlayerUnavailable(p); });
-    if(bajas.length) informe.push({ tono: 'var(--dt-rojo)', texto: bajas.length + ' jugador(es) no disponible(s): ' + bajas.map(function(p){ return p.name; }).join(', ') + '.' });
-    else informe.push({ tono: 'var(--dt-verde)', texto: 'No tienes bajas por lesión o sanción para este partido.' });
+    if(bajas.length) informe.push({ tono: 'var(--dt-rojo)', titulo: 'Parte médico', texto: bajas.length + ' jugador(es) no disponible(s): ' + bajas.map(function(p){ return p.name; }).join(', ') + '.' });
+    else informe.push({ tono: 'var(--dt-verde)', titulo: 'Parte médico', texto: 'No tienes bajas por lesión o sanción para este partido.' });
     informe.forEach(function(item){
-      var row = document.createElement('div'); row.style.cssText = 'display:flex; gap:.6cqw; padding:.65cqw; border-radius:4px; background:var(--dt-bg-inset); margin-bottom:.5cqw;';
-      row.innerHTML = '<div style="width:.25cqw; border-radius:99px; background:' + item.tono + '; flex:none;"></div><div style="font-size:0.74cqw; color:oklch(0.88 0.008 250); line-height:1.45;">' + escapeHtml(item.texto) + '</div>';
+      var row = document.createElement('div'); row.style.cssText = 'display:flex; gap:.8cqw; padding:.85cqw; border-radius:.8cqw; background:rgba(255,255,255,.06); margin-bottom:.55cqw;';
+      row.innerHTML = '<div style="width:.35cqw; border-radius:99px; background:' + item.tono + '; flex:none;"></div><div><div style="font-size:1.08cqw; font-weight:700;">' + escapeHtml(item.titulo) + '</div><div style="font-size:1cqw; line-height:1.45; color:var(--dt-text); margin-top:.15cqw;">' + escapeHtml(item.texto) + '</div></div>';
       informeWrap.appendChild(row);
     });
-    right.appendChild(informePanel);
+    left.appendChild(informePanel);
 
-    var actionsPanel = document.createElement('div'); actionsPanel.className = 'dt-panel'; actionsPanel.style.cssText += 'display:flex; gap:.6cqw; align-items:center;';
-    var playBtn = document.createElement('button'); playBtn.type = 'button'; playBtn.className = 'dt-btn-fill'; playBtn.style.flex = '1.3'; playBtn.textContent = 'JUGAR PARTIDO';
-    playBtn.addEventListener('click', function(){ mgrPlayMatchday('play'); });
-    var simBtn = document.createElement('button'); simBtn.type = 'button'; simBtn.className = 'dt-btn-outline'; simBtn.textContent = 'SIMULAR';
-    simBtn.addEventListener('click', function(){ mgrPlayMatchday('sim'); });
-    actionsPanel.appendChild(playBtn); actionsPanel.appendChild(simBtn);
-    right.appendChild(actionsPanel);
+    var right = document.createElement('div'); right.className = 'dt-col';
+    body.appendChild(right);
+
+    var heroPanel = document.createElement('div'); heroPanel.className = 'dt-gold-card'; heroPanel.style.cssText += 'flex:1; display:flex; flex-direction:column; justify-content:space-between;';
+    var lineupCount = Object.keys(state.manager.lineup).filter(function(k){ return state.manager.lineup[k]; }).length;
+    heroPanel.innerHTML =
+      '<div>' +
+        '<div style="font-size:2.4cqw; font-weight:800; line-height:.95;">TODO LISTO,<br>MÍSTER</div>' +
+        '<div style="font-size:1.1cqw; font-weight:700; margin-top:.6cqw;">' + (lineupCount === 7 ? 'Once titular confirmado.' : 'Faltan titulares por definir en el once (' + lineupCount + '/7).') + '</div>' +
+      '</div>' +
+      '<div style="display:flex; gap:.7cqw;">' +
+        '<button type="button" id="dtPreviaPlay" class="dt-btn-dark" style="flex:1.4;">JUGAR PARTIDO</button>' +
+        '<button type="button" id="dtPreviaSim" class="dt-btn-outline" style="flex:1; border-color:var(--dt-tinta); color:var(--dt-tinta);">SIMULAR</button>' +
+      '</div>';
+    heroPanel.querySelector('#dtPreviaPlay').addEventListener('click', function(){ mgrPlayMatchday('play'); });
+    heroPanel.querySelector('#dtPreviaSim').addEventListener('click', function(){ mgrPlayMatchday('sim'); });
+    right.appendChild(heroPanel);
 
     var liveWrap = document.createElement('div'); liveWrap.id = 'mgrLiveMatch'; liveWrap.hidden = !mgrLiveMatch;
     right.appendChild(liveWrap);
@@ -9841,40 +9846,44 @@
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="entreno"]');
     root.innerHTML = '';
-    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1fr 1fr 18cqw';
-    root.appendChild(grid);
+    var col = document.createElement('div'); col.className = 'dt-screen'; col.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw;';
+    root.appendChild(col);
 
-    var focusPanel = document.createElement('div'); focusPanel.className = 'dt-panel flex-col';
-    focusPanel.innerHTML = '<div class="dt-panel-title">Foco de entrenamiento</div><p class="dt-row-detail" style="white-space:normal; margin-bottom:.6cqw;">Los jóvenes de 26 años o menos en esta posición tienen más chance de mejorar tras cada partido.</p>';
-    var focusList = document.createElement('div');
+    var focusRow = document.createElement('div'); focusRow.style.cssText = 'flex:none; display:grid; grid-template-columns:repeat(4,1fr); gap:.7cqw;';
     [['GK', 'Porteros'], ['DEF', 'Defensas'], ['MID', 'Mediocampistas'], ['FWD', 'Delanteros']].forEach(function(f){
+      var active = state.manager.trainingFocus === f[0];
       var item = document.createElement('div');
-      item.className = 'dt-style-item' + (state.manager.trainingFocus === f[0] ? ' active' : '');
-      item.innerHTML = '<span class="dt-style-name">' + f[1] + '</span>';
+      item.style.cssText = 'border-radius:.9cqw; padding:1cqw; text-align:center; cursor:pointer; font-weight:800; font-size:1.05cqw;' +
+        (active ? 'background:var(--dt-oro); color:var(--dt-tinta);' : 'background:rgba(255,255,255,.07); border:2px solid rgba(255,255,255,.14);');
+      item.textContent = f[1].toUpperCase();
       item.addEventListener('click', function(){ state.manager.trainingFocus = f[0]; saveState(); mgrRenderEntrenoDT(); });
-      focusList.appendChild(item);
+      focusRow.appendChild(item);
     });
-    focusPanel.appendChild(focusList);
-    grid.appendChild(focusPanel);
+    col.appendChild(focusRow);
+
+    var body = document.createElement('div'); body.style.cssText = 'flex:1; display:grid; grid-template-columns:1fr 24cqw; gap:.8cqw; min-height:0;';
+    col.appendChild(body);
 
     var devPanel = document.createElement('div'); devPanel.className = 'dt-panel flex-col';
-    devPanel.innerHTML = '<div class="dt-panel-title">Planes de desarrollo</div>';
+    devPanel.innerHTML = '<div class="dt-panel-title">PLANES DE DESARROLLO</div>';
     var devWrap = document.createElement('div'); devWrap.className = 'dt-scroll';
     devPanel.appendChild(devWrap);
     var prospects = state.manager.squad.filter(function(p){ return p.age <= 26 && p.ovr < p.potential; }).sort(function(a, b){ return (b.potential - b.ovr) - (a.potential - a.ovr); });
     if(!prospects.length){ devWrap.innerHTML = '<p class="dt-row-detail">Ningún jugador tiene margen de mejora ahora mismo.</p>'; }
     prospects.slice(0, 10).forEach(function(p){
-      var card = document.createElement('div'); card.style.cssText = 'padding:.65cqw; border-radius:4px; background:var(--dt-bg-inset); margin-bottom:.5cqw;';
-      var pct = Math.round((p.ovr / p.potential) * 100);
+      var card = document.createElement('div'); card.style.cssText = 'padding:.85cqw 1cqw; border-radius:.8cqw; background:rgba(255,255,255,.06); margin-bottom:.5cqw;';
+      var delta = p.potential - p.ovr;
       card.innerHTML =
-        '<div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:0.78cqw; font-weight:600;">' + escapeHtml(p.name) + '</div><div class="dt-mono" style="font-size:0.66cqw; color:var(--dt-verde);">' + p.ovr + '/' + p.potential + '</div></div>' +
-        '<div class="dt-mono" style="font-size:0.62cqw; color:var(--dt-text-mono); margin:.25cqw 0 .35cqw;">' + (MGR_DEV_PLAN_LABELS[p.devPlan] || p.devPlan) + '</div>' +
-        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + pct + '%; background:var(--dt-verde);"></div></div>';
-      var chipsWrap = document.createElement('div'); chipsWrap.style.cssText = 'display:flex; gap:.3cqw; margin-top:.4cqw; flex-wrap:wrap;';
+        '<div style="display:flex; align-items:center; gap:1cqw;">' +
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:2cqw; font-weight:700; color:var(--dt-oro-suave); width:4cqw;">+' + delta + '</div>' +
+          '<div style="flex:1; min-width:0;"><div style="font-size:1.1cqw; font-weight:700;">' + escapeHtml(p.name) + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.04cqw; color:var(--dt-text-sec);">' + (MGR_DEV_PLAN_LABELS[p.devPlan] || p.devPlan) + '</div></div>' +
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.15cqw; font-weight:700; color:var(--dt-oro-suave);">' + p.ovr + '/' + p.potential + '</div>' +
+        '</div>';
+      var chipsWrap = document.createElement('div'); chipsWrap.style.cssText = 'display:flex; gap:.35cqw; margin-top:.55cqw; flex-wrap:wrap;';
       (MGR_DEV_PLANS[p.position] || []).forEach(function(plan){
         var active = plan === p.devPlan;
-        var chip = document.createElement('div'); chip.className = 'dt-chip'; chip.style.cursor = 'pointer';
-        chip.style.cssText += active ? 'background:var(--dt-verde); color:var(--dt-ink);' : 'border:1px solid var(--dt-border-strong); color:var(--dt-text-sec);';
+        var chip = document.createElement('div'); chip.style.cssText = 'padding:.25cqw .7cqw; border-radius:99px; cursor:pointer; font-size:0.85cqw; font-weight:600;' +
+          (active ? 'background:var(--dt-oro); color:var(--dt-tinta);' : 'border:1px solid rgba(255,255,255,.3); color:var(--dt-text-sec);');
         chip.textContent = MGR_DEV_PLAN_LABELS[plan];
         chip.addEventListener('click', function(){ mgrSetDevPlan(p.id, plan); mgrRenderEntrenoDT(); });
         chipsWrap.appendChild(chip);
@@ -9882,84 +9891,75 @@
       card.appendChild(chipsWrap);
       devWrap.appendChild(card);
     });
-    grid.appendChild(devPanel);
+    body.appendChild(devPanel);
 
     var infraPanel = document.createElement('div'); infraPanel.className = 'dt-panel flex-col';
-    infraPanel.innerHTML = '<div class="dt-panel-title">Infraestructura del club</div>';
+    infraPanel.innerHTML = '<div class="dt-panel-title">INFRAESTRUCTURA DEL CLUB</div>';
     var club = state.manager.club;
     [['Instalaciones', club.facilities], ['Academia', club.academyLevel], ['Ojeo', club.scoutingLevel], ['Cuerpo técnico', club.staffLevel]].forEach(function(row){
-      var wrap = document.createElement('div'); wrap.style.marginBottom = '.6cqw';
+      var wrap = document.createElement('div'); wrap.style.cssText = 'margin-bottom:.8cqw; padding:.75cqw .9cqw; border-radius:.7cqw; background:rgba(255,255,255,.06);';
       wrap.innerHTML =
-        '<div style="display:flex; justify-content:space-between; font-size:0.72cqw; margin-bottom:.25cqw;"><span>' + row[0] + '</span><span class="dt-mono">' + row[1] + '/5</span></div>' +
-        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + (row[1] / 5 * 100) + '%; background:var(--dt-verde);"></div></div>';
+        '<div style="display:flex; justify-content:space-between; font-size:1.02cqw; font-weight:700; margin-bottom:.3cqw;"><span>' + row[0] + '</span><span style="font-family:\'Barlow Condensed\',sans-serif; color:var(--dt-oro-suave);">' + row[1] + '/5</span></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + (row[1] / 5 * 100) + '%; background:var(--dt-oro-suave);"></div></div>';
       infraPanel.appendChild(wrap);
     });
-    grid.appendChild(infraPanel);
+    body.appendChild(infraPanel);
   }
 
   function mgrRenderDirectivaDT(){
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="objetivos"]');
     root.innerHTML = '';
-    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1.4fr 1fr';
+    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1.35fr 1fr';
     root.appendChild(grid);
 
-    var left = document.createElement('div'); left.className = 'dt-panel flex-col';
-    left.innerHTML = '<div class="dt-panel-title">Encargos de la directiva · Temporada ' + state.manager.season + '</div>';
-    var leftWrap = document.createElement('div'); leftWrap.className = 'dt-scroll';
-    left.appendChild(leftWrap);
+    var left = document.createElement('div'); left.style.cssText = 'display:flex; flex-direction:column; gap:.7cqw; min-height:0; overflow-y:auto; padding-right:.2cqw;';
+    left.innerHTML = '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.06cqw; color:var(--dt-text-sec);">Encargos de la directiva · Temporada ' + state.manager.season + '</div>';
 
     var cards = [];
     var obj = mgrObjectiveProgress();
-    if(obj) cards.push({ titulo: obj.label + ': ' + obj.text, detalle: 'Objetivo principal de la directiva esta temporada.', pct: obj.pct, tono: obj.tone });
+    if(obj) cards.push({ titulo: obj.label, detalle: obj.text, pct: obj.pct, tono: obj.tone, estado: obj.pct >= 100 ? 'CUMPLIDO' : 'EN CURSO' });
     mgrBuildTaskList().forEach(function(t){
-      cards.push({ titulo: t.icon + ' ' + t.text, detalle: '', pct: null, tono: 'var(--dt-ambar)', tab: t.tab });
+      cards.push({ titulo: t.icon + ' ' + t.text, detalle: '', pct: null, tono: 'var(--dt-oro-suave)', tab: t.tab, estado: 'PENDIENTE' });
     });
-    if(!cards.length){ leftWrap.innerHTML = '<p class="dt-row-detail">No hay encargos ni tareas pendientes ahora mismo.</p>'; }
+    if(!cards.length){ left.innerHTML += '<p class="dt-row-detail">No hay encargos ni tareas pendientes ahora mismo.</p>'; }
     cards.forEach(function(c){
       var card = document.createElement('div');
-      card.style.cssText = 'padding:.7cqw; border-radius:4px; background:var(--dt-bg-inset); border-left:.2cqw solid ' + c.tono + '; margin-bottom:.55cqw;' + (c.tab ? ' cursor:pointer;' : '');
+      card.style.cssText = 'border-radius:.9cqw; background:rgba(10,14,32,.4); border:1px solid rgba(255,255,255,.14); border-left:.45cqw solid ' + c.tono + '; padding:1.1cqw; display:flex; align-items:center; gap:1.2cqw;' + (c.tab ? ' cursor:pointer;' : '');
       card.innerHTML =
-        '<div style="font-size:0.85cqw; font-weight:700;">' + escapeHtml(c.titulo) + '</div>' +
-        (c.detalle ? '<div style="font-size:0.72cqw; color:var(--dt-text-sec); margin:.3cqw 0 .4cqw; line-height:1.4;">' + escapeHtml(c.detalle) + '</div>' : '') +
-        (c.pct != null ? '<div class="dt-bar-track" style="margin-top:.3cqw;"><div class="dt-bar-fill" style="width:' + c.pct + '%; background:' + c.tono + ';"></div></div>' : '');
+        '<div style="flex:1; min-width:0;">' +
+          '<div style="font-size:1.2cqw; font-weight:800; line-height:1.15;">' + escapeHtml(c.titulo) + '</div>' +
+          (c.detalle ? '<div style="font-size:1cqw; line-height:1.45; color:var(--dt-text); margin-top:.3cqw;">' + escapeHtml(c.detalle) + '</div>' : '') +
+        '</div>' +
+        '<div style="text-align:center; flex:none;">' +
+          (c.pct != null ? '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:2.4cqw; font-weight:700; line-height:1; color:' + c.tono + ';">' + c.pct + '%</div>' : '') +
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.9cqw; text-transform:uppercase; letter-spacing:.07cqw; color:var(--dt-text-sec);">' + c.estado + '</div>' +
+        '</div>';
       if(c.tab) card.addEventListener('click', function(){ mgrSwitchTab(c.tab); });
-      leftWrap.appendChild(card);
+      left.appendChild(card);
     });
     grid.appendChild(left);
 
     var right = document.createElement('div'); right.className = 'dt-col';
     grid.appendChild(right);
 
-    var stabilityPanel = document.createElement('div'); stabilityPanel.className = 'dt-panel';
-    stabilityPanel.style.background = 'linear-gradient(155deg,oklch(0.255 0.028 252),var(--dt-bg-panel))';
     var conf = state.manager.club.boardConfidence;
     var confLabel = conf >= 60 ? 'sin presión inmediata' : conf >= 30 ? 'bajo observación' : 'en riesgo de destitución';
+    var stabilityPanel = document.createElement('div'); stabilityPanel.className = 'dt-gold-card';
     stabilityPanel.innerHTML =
-      '<div class="dt-panel-title">Estabilidad en el cargo</div>' +
-      '<div style="display:flex; align-items:baseline; gap:.6cqw;"><span class="dt-mono" style="font-size:2.2cqw; font-weight:600; color:var(--dt-verde);">' + conf + '</span><span style="font-size:0.76cqw; color:var(--dt-text-sec);">' + confLabel + '</span></div>';
-    var recentResults = mgrCalendarEntries().filter(function(e){ return e.played; }).slice(-10);
-    var barsWrap = document.createElement('div'); barsWrap.style.cssText = 'display:flex; gap:.35cqw; margin-top:.7cqw;';
-    for(var i = 0; i < 10; i++){
-      var e = recentResults[i];
-      var tone = !e ? 'var(--dt-border)' : (e.myScore > e.oppScore ? 'var(--dt-verde)' : e.myScore === e.oppScore ? 'var(--dt-ambar)' : 'var(--dt-rojo)');
-      var b = document.createElement('div'); b.style.cssText = 'flex:1; height:2.4cqw; border-radius:2px; background:' + tone + ';';
-      barsWrap.appendChild(b);
-    }
-    stabilityPanel.appendChild(barsWrap);
-    var barsLabel = document.createElement('div'); barsLabel.className = 'dt-mono'; barsLabel.style.cssText = 'font-size:0.6cqw; color:var(--dt-text-mono); margin-top:.35cqw;'; barsLabel.textContent = 'ÚLTIMOS 10 PARTIDOS';
-    stabilityPanel.appendChild(barsLabel);
+      '<div class="dt-gold-label">Confianza de la directiva</div>' +
+      '<div style="display:flex; align-items:baseline; gap:.6cqw;"><span class="dt-gold-big" style="font-size:4.4cqw;">' + conf + '</span><span style="font-size:1.1cqw; font-weight:700;">' + confLabel + '</span></div>';
     right.appendChild(stabilityPanel);
 
     var vocesPanel = document.createElement('div'); vocesPanel.className = 'dt-panel flex-col'; vocesPanel.style.flex = '1';
-    vocesPanel.innerHTML = '<div class="dt-panel-title">Voces del club</div>';
+    vocesPanel.innerHTML = '<div class="dt-panel-title">VOCES DEL CLUB</div>';
     var vocesWrap = document.createElement('div'); vocesWrap.className = 'dt-scroll';
     vocesPanel.appendChild(vocesWrap);
     var social = state.manager.social || [];
     if(!social.length){ vocesWrap.innerHTML = '<p class="dt-row-detail">Todavía no hay actividad en redes.</p>'; }
     social.slice(0, 6).forEach(function(post){
-      var row = document.createElement('div'); row.style.cssText = 'padding:.65cqw; border-radius:4px; background:var(--dt-bg-inset); margin-bottom:.4cqw;';
-      row.innerHTML = '<div style="font-size:0.74cqw; line-height:1.45; color:oklch(0.88 0.008 250);">' + escapeHtml(post.text) + '</div><div class="dt-mono" style="font-size:0.6cqw; color:var(--dt-text-mono); margin-top:.35cqw;">' + escapeHtml(post.handle) + '</div>';
+      var row = document.createElement('div'); row.style.cssText = 'padding:.9cqw; border-radius:.8cqw; background:rgba(255,255,255,.06); margin-bottom:.6cqw;';
+      row.innerHTML = '<div style="font-size:1.05cqw; line-height:1.45; font-weight:600;">' + escapeHtml(post.text) + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.98cqw; text-transform:uppercase; letter-spacing:.06cqw; color:var(--dt-text-sec); margin-top:.4cqw;">' + escapeHtml(post.handle) + '</div>';
       vocesWrap.appendChild(row);
     });
     right.appendChild(vocesPanel);
@@ -9969,35 +9969,31 @@
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="cantera"]');
     root.innerHTML = '';
-    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1.3fr 1fr';
+    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1fr 26cqw';
     root.appendChild(grid);
 
     var club = state.manager.club;
     var certeza = Math.round((club.scoutingLevel || 3) / 5 * 100);
     var academy = state.manager.academy || [];
+    if((mgrOpenCanteraId === null || !academy.some(function(p){ return p.id === mgrOpenCanteraId; })) && academy.length) mgrOpenCanteraId = academy[0].id;
 
-    var listPanel = document.createElement('div'); listPanel.className = 'dt-panel flex-col'; listPanel.style.cssText += 'padding:0; overflow:hidden;';
-    var head = document.createElement('div'); head.style.cssText = 'padding:.8cqw .9cqw .6cqw;'; head.innerHTML = '<div class="dt-panel-title" style="margin-bottom:0;">Promesas en seguimiento</div>';
-    listPanel.appendChild(head);
-    var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll'; listWrap.style.cssText = 'flex:1; padding:0 .9cqw .9cqw;';
+    var listPanel = document.createElement('div'); listPanel.className = 'dt-panel flex-col';
+    listPanel.innerHTML = '<div class="dt-panel-title">PROMESAS EN SEGUIMIENTO</div>';
+    var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll'; listWrap.style.flex = '1';
     listPanel.appendChild(listWrap);
     if(!academy.length){ listWrap.innerHTML = '<p class="dt-row-detail">No hay juveniles en la academia esta temporada.</p>'; }
     academy.forEach(function(p){
-      var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
+      var isSel = p.id === mgrOpenCanteraId;
+      var posColor = isSel ? 'var(--dt-tinta)' : (MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)');
       var row = document.createElement('div');
-      row.style.cssText = 'display:grid; grid-template-columns:2.2cqw 1fr 5cqw 6cqw auto; gap:.5cqw; align-items:center; padding:.55cqw; border-radius:4px; background:var(--dt-bg-inset); margin-bottom:.4cqw;';
+      row.style.cssText = 'display:grid; grid-template-columns:3.4cqw 1fr 6cqw 6cqw; gap:.9cqw; align-items:center; padding:.8cqw .9cqw; border-radius:.8cqw; cursor:pointer; margin-bottom:.4cqw;' +
+        (isSel ? 'background:var(--dt-oro); color:var(--dt-tinta);' : 'background:rgba(255,255,255,.06);');
       row.innerHTML =
-        '<div class="dt-mono" style="color:' + posColor + '; font-weight:600;">' + p.position + '</div>' +
-        '<div><div style="font-size:0.8cqw; font-weight:600;">' + escapeHtml(p.name) + '</div><div class="dt-mono" style="font-size:0.6cqw; color:var(--dt-text-mono);">' + p.age + ' años</div></div>' +
-        '<div class="dt-mono" style="font-size:0.72cqw; text-align:center;">' + p.ovr + ' / ' + p.potential + '</div>' +
-        '<div><div class="dt-mono" style="font-size:0.58cqw; color:var(--dt-text-mono); margin-bottom:.15cqw;">CERTEZA ' + certeza + '%</div><div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + certeza + '%; background:var(--dt-verde);"></div></div></div>' +
-        '<div style="display:flex; flex-direction:column; gap:.2cqw;"></div>';
-      var actionsWrap = row.lastElementChild;
-      var promBtn = document.createElement('button'); promBtn.type = 'button'; promBtn.className = 'dt-btn-outline'; promBtn.style.cssText = 'padding:.2cqw .5cqw; font-size:0.6cqw; width:auto;'; promBtn.textContent = 'Promover';
-      promBtn.addEventListener('click', function(){ mgrPromoteYouth(p.id); });
-      var relBtn = document.createElement('button'); relBtn.type = 'button'; relBtn.className = 'dt-btn-outline'; relBtn.style.cssText = 'padding:.2cqw .5cqw; font-size:0.6cqw; width:auto; color:var(--dt-rojo); border-color:var(--dt-rojo);'; relBtn.textContent = 'Liberar';
-      relBtn.addEventListener('click', function(){ mgrReleaseYouth(p.id); });
-      actionsWrap.appendChild(promBtn); actionsWrap.appendChild(relBtn);
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700; color:' + posColor + ';">' + p.position + '</div>' +
+        '<div><div style="font-size:1.1cqw; font-weight:700;">' + escapeHtml(p.name) + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.04cqw; opacity:.8;">' + p.age + ' años</div></div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.35cqw; font-weight:700; text-align:center;">' + p.ovr + '/' + p.potential + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.2cqw; font-weight:700; text-align:right; color:' + (isSel ? 'var(--dt-tinta)' : 'var(--dt-verde)') + ';">' + certeza + '%</div>';
+      row.addEventListener('click', function(){ mgrOpenCanteraId = p.id; mgrRenderCanteraDT(); });
       listWrap.appendChild(row);
     });
     grid.appendChild(listPanel);
@@ -10005,13 +10001,36 @@
     var right = document.createElement('div'); right.className = 'dt-col';
     grid.appendChild(right);
 
+    var promesa = academy.filter(function(p){ return p.id === mgrOpenCanteraId; })[0];
+    var detailPanel = document.createElement('div'); detailPanel.className = 'dt-panel';
+    if(!promesa){
+      detailPanel.innerHTML = '<p class="dt-row-detail">No hay juveniles en la academia esta temporada.</p>';
+    } else {
+      detailPanel.innerHTML =
+        '<div style="display:flex; gap:1cqw; align-items:center;">' +
+          '<div style="width:5cqw; height:6.2cqw; min-width:48px; min-height:60px; border-radius:.8cqw; background:repeating-linear-gradient(135deg, rgba(255,255,255,.09) 0 8px, rgba(255,255,255,.03) 8px 16px); flex:none; display:flex; align-items:flex-end; justify-content:center; padding-bottom:.4cqw;"><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.78cqw; color:rgba(255,255,255,.5); text-transform:uppercase;">Foto</span></div>' +
+          '<div>' +
+            '<div style="font-size:1.35cqw; font-weight:800; line-height:1.1;">' + escapeHtml(promesa.name) + '</div>' +
+            '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; color:var(--dt-text-sec);">' + promesa.position + ' · ' + promesa.age + ' años</div>' +
+            '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:2cqw; font-weight:700; color:var(--dt-oro-suave); line-height:1.1;">' + promesa.ovr + '/' + promesa.potential + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex; gap:.6cqw; margin-top:.9cqw;">' +
+          '<button type="button" id="dtCanteraProm" class="dt-btn-fill" style="flex:1;">SUBIR AL PRIMER EQUIPO</button>' +
+          '<button type="button" id="dtCanteraRel" class="dt-btn-outline" style="flex:none; color:var(--dt-rojo); border-color:var(--dt-rojo);">LIBERAR</button>' +
+        '</div>';
+      detailPanel.querySelector('#dtCanteraProm').addEventListener('click', function(){ mgrPromoteYouth(promesa.id); mgrOpenCanteraId = null; mgrRenderCanteraDT(); });
+      detailPanel.querySelector('#dtCanteraRel').addEventListener('click', function(){ mgrReleaseYouth(promesa.id); mgrOpenCanteraId = null; mgrRenderCanteraDT(); });
+    }
+    right.appendChild(detailPanel);
+
     var levelPanel = document.createElement('div'); levelPanel.className = 'dt-panel';
-    levelPanel.innerHTML = '<div class="dt-panel-title">Nivel de la academia</div>';
+    levelPanel.innerHTML = '<div class="dt-panel-title">NIVEL DE LA ACADEMIA</div>';
     [['Academia', club.academyLevel], ['Ojeo', club.scoutingLevel]].forEach(function(row){
       var wrap = document.createElement('div'); wrap.style.marginBottom = '.6cqw';
       wrap.innerHTML =
-        '<div style="display:flex; justify-content:space-between; font-size:0.72cqw; margin-bottom:.25cqw;"><span>' + row[0] + '</span><span class="dt-mono">' + row[1] + '/5</span></div>' +
-        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + (row[1] / 5 * 100) + '%; background:var(--dt-verde);"></div></div>';
+        '<div style="display:flex; justify-content:space-between; font-size:1cqw; font-weight:600; margin-bottom:.3cqw;"><span>' + row[0] + '</span><span style="font-family:\'Barlow Condensed\',sans-serif; color:var(--dt-oro-suave);">' + row[1] + '/5</span></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + (row[1] / 5 * 100) + '%; background:var(--dt-oro-suave);"></div></div>';
       levelPanel.appendChild(wrap);
     });
     right.appendChild(levelPanel);
@@ -10020,8 +10039,8 @@
     var bestProspect = academy.slice().sort(function(a, b){ return b.potential - a.potential; })[0];
     var promCount = state.manager.seasonPromotions || 0;
     notePanel.innerHTML =
-      '<div class="dt-panel-title">Resumen</div>' +
-      '<div style="font-size:0.74cqw; line-height:1.6; color:oklch(0.82 0.01 250);">' +
+      '<div class="dt-panel-title">RESUMEN</div>' +
+      '<div style="font-size:1cqw; line-height:1.55;">' +
         'La academia ha aportado <strong style="color:var(--dt-verde);">' + promCount + ' ficha' + (promCount === 1 ? '' : 's') + '</strong> al primer equipo esta temporada.' +
         (bestProspect ? ' ' + escapeHtml(bestProspect.name) + ' (' + bestProspect.position + ', potencial ' + bestProspect.potential + ') es la promesa más firme del informe actual.' : '') +
       '</div>';
@@ -10032,8 +10051,8 @@
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="finanzas"]');
     root.innerHTML = '';
-    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1fr 1fr 1fr';
-    root.appendChild(grid);
+    var col = document.createElement('div'); col.className = 'dt-screen'; col.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw;';
+    root.appendChild(col);
 
     var club = state.manager.club;
     var finances = mgrEnsureFinances();
@@ -10044,60 +10063,70 @@
     var otherExpenses = Math.max(0, finances.seasonExpenses - wageBill);
     var wagePct = club.wageBudget ? Math.round(Math.min(999, wageBill / club.wageBudget * 100)) : 0;
 
-    var col1 = document.createElement('div'); col1.className = 'dt-col';
-    grid.appendChild(col1);
-    var balancePanel = document.createElement('div'); balancePanel.className = 'dt-panel';
-    balancePanel.style.background = 'linear-gradient(155deg,oklch(0.255 0.028 252),var(--dt-bg-panel))';
-    balancePanel.innerHTML =
-      '<div class="dt-panel-title">Balance del ejercicio</div>' +
-      '<div class="dt-mono" style="font-size:2cqw; font-weight:600; color:' + (net >= 0 ? 'var(--dt-verde)' : 'var(--dt-rojo)') + '; margin-top:.3cqw;">' + (net >= 0 ? '+' : '') + Math.round(net).toLocaleString('es-CO') + '</div>' +
-      '<div style="font-size:0.72cqw; color:var(--dt-text-sec);">temporada ' + state.manager.season + '</div>';
-    col1.appendChild(balancePanel);
-    var incomePanel = document.createElement('div'); incomePanel.className = 'dt-panel flex-col'; incomePanel.style.flex = '1';
-    incomePanel.innerHTML = '<div class="dt-panel-title">Ingresos de temporada</div>';
+    var cifrasRow = document.createElement('div'); cifrasRow.style.cssText = 'flex:none; display:grid; grid-template-columns:repeat(4,1fr); gap:.7cqw;';
+    [
+      ['PRESUPUESTO', Math.round(club.budget).toLocaleString('es-CO'), 'disponible ahora'],
+      ['INGRESOS TEMPORADA', Math.round(finances.seasonIncome).toLocaleString('es-CO'), 'temporada ' + state.manager.season],
+      ['MASA SALARIAL', Math.round(wageBill).toLocaleString('es-CO'), wagePct + '% del tope'],
+      ['BALANCE', (net >= 0 ? '+' : '') + Math.round(net).toLocaleString('es-CO'), net >= 0 ? 'superávit' : 'déficit']
+    ].forEach(function(c){
+      var card = document.createElement('div');
+      card.style.cssText = 'border-radius:.9cqw; padding:1.1cqw; background:rgba(255,255,255,.07); border:2px solid rgba(255,255,255,.14);';
+      card.innerHTML = '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.08cqw; font-weight:600; opacity:.9;">' + c[0] + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:2.4cqw; font-weight:700; line-height:1.1; color:var(--dt-oro-suave);">' + c[1] + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; opacity:.8;">' + c[2] + '</div>';
+      cifrasRow.appendChild(card);
+    });
+    col.appendChild(cifrasRow);
+
+    var body = document.createElement('div'); body.style.cssText = 'flex:1; display:grid; grid-template-columns:1fr 1fr; gap:.8cqw; min-height:0;';
+    col.appendChild(body);
+
+    var leftCol = document.createElement('div'); leftCol.className = 'dt-col';
+    body.appendChild(leftCol);
+    var incomePanel = document.createElement('div'); incomePanel.className = 'dt-panel flex-col';
+    incomePanel.innerHTML = '<div class="dt-panel-title">INGRESOS DE TEMPORADA</div>';
     [['Patrocinio', sponsorPay], ['Taquilla, premios y ventas', otherIncome]].forEach(function(row){
       var pct = finances.seasonIncome ? Math.round(row[1] / finances.seasonIncome * 100) : 0;
       var wrap = document.createElement('div'); wrap.style.marginBottom = '.55cqw';
       wrap.innerHTML =
-        '<div style="display:flex; justify-content:space-between; font-size:0.74cqw; margin-bottom:.22cqw;"><span>' + row[0] + '</span><span class="dt-mono" style="font-weight:600;">' + Math.round(row[1]).toLocaleString('es-CO') + '</span></div>' +
+        '<div style="display:flex; justify-content:space-between; font-size:1cqw; font-weight:600; margin-bottom:.25cqw;"><span>' + row[0] + '</span><span>' + Math.round(row[1]).toLocaleString('es-CO') + '</span></div>' +
         '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + pct + '%; background:var(--dt-verde);"></div></div>';
       incomePanel.appendChild(wrap);
     });
-    col1.appendChild(incomePanel);
-
-    var col2 = document.createElement('div'); col2.className = 'dt-col';
-    grid.appendChild(col2);
-    var expPanel = document.createElement('div'); expPanel.className = 'dt-panel flex-col';
-    expPanel.innerHTML = '<div class="dt-panel-title">Gastos de temporada</div>';
+    leftCol.appendChild(incomePanel);
+    var expPanel = document.createElement('div'); expPanel.className = 'dt-panel flex-col'; expPanel.style.flex = '1';
+    expPanel.innerHTML = '<div class="dt-panel-title">GASTOS DE TEMPORADA</div>';
     [['Salarios de plantilla', wageBill], ['Otros gastos', otherExpenses]].forEach(function(row){
       var pct = finances.seasonExpenses ? Math.round(row[1] / finances.seasonExpenses * 100) : 0;
       var wrap = document.createElement('div'); wrap.style.marginBottom = '.55cqw';
       wrap.innerHTML =
-        '<div style="display:flex; justify-content:space-between; font-size:0.74cqw; margin-bottom:.22cqw;"><span>' + row[0] + '</span><span class="dt-mono" style="font-weight:600;">' + Math.round(row[1]).toLocaleString('es-CO') + '</span></div>' +
-        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + pct + '%; background:oklch(0.72 0.14 40);"></div></div>';
+        '<div style="display:flex; justify-content:space-between; font-size:1cqw; font-weight:600; margin-bottom:.25cqw;"><span>' + row[0] + '</span><span>' + Math.round(row[1]).toLocaleString('es-CO') + '</span></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + pct + '%; background:oklch(0.65 0.16 30);"></div></div>';
       expPanel.appendChild(wrap);
     });
-    var wageGauge = document.createElement('div'); wageGauge.style.cssText = 'margin-top:auto; padding:.7cqw; border-radius:4px; background:var(--dt-bg-inset);';
-    wageGauge.innerHTML =
-      '<div style="display:flex; justify-content:space-between; font-size:0.74cqw; margin-bottom:.3cqw;"><span>Masa salarial / tope</span><span class="dt-mono" style="color:' + (wagePct >= 90 ? 'var(--dt-rojo)' : 'var(--dt-ambar)') + ';">' + wagePct + '%</span></div>' +
-      '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + Math.min(100, wagePct) + '%; background:' + (wagePct >= 90 ? 'var(--dt-rojo)' : 'var(--dt-ambar)') + ';"></div></div>';
-    expPanel.appendChild(wageGauge);
-    col2.appendChild(expPanel);
+    leftCol.appendChild(expPanel);
 
-    var col3 = document.createElement('div'); col3.className = 'dt-col';
-    grid.appendChild(col3);
-    var budgetPanel = document.createElement('div'); budgetPanel.className = 'dt-panel';
-    budgetPanel.innerHTML =
-      '<div class="dt-panel-title">Presupuesto disponible</div>' +
-      '<div class="dt-mono" style="font-size:1.8cqw; font-weight:600; color:var(--dt-verde);">' + Math.round(club.budget).toLocaleString('es-CO') + '</div>';
-    col3.appendChild(budgetPanel);
-    var allocPanel = document.createElement('div'); allocPanel.className = 'dt-panel flex-col'; allocPanel.style.flex = '1';
+    var rightCol = document.createElement('div'); rightCol.className = 'dt-col';
+    body.appendChild(rightCol);
+    var allocPanel = document.createElement('div'); allocPanel.className = 'dt-panel';
     var wageShare = Math.max(0, Math.min(100, wagePct));
     allocPanel.innerHTML =
-      '<div class="dt-panel-title">Reparto del presupuesto salarial</div>' +
-      '<div style="display:flex; height:1cqw; border-radius:3px; overflow:hidden;"><div style="width:' + wageShare + '%; background:oklch(0.72 0.14 40);"></div><div style="width:' + (100 - wageShare) + '%; background:var(--dt-verde);"></div></div>' +
-      '<div style="display:flex; justify-content:space-between; font-family:\'IBM Plex Mono\',monospace; font-size:0.6cqw; color:var(--dt-text-sec); margin-top:.35cqw;"><span>SALARIOS ' + wageShare + '%</span><span>LIBRE ' + (100 - wageShare) + '%</span></div>';
-    col3.appendChild(allocPanel);
+      '<div class="dt-panel-title">REPARTO DEL PRESUPUESTO</div>' +
+      '<div style="display:flex; height:2.2cqw; border-radius:.5cqw; overflow:hidden;"><div style="width:' + wageShare + '%; background:oklch(0.65 0.16 30);"></div><div style="width:' + (100 - wageShare) + '%; background:var(--dt-verde);"></div></div>' +
+      '<div style="display:flex; justify-content:space-between; font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.05cqw; color:var(--dt-text-sec); margin-top:.45cqw;"><span>Salarios ' + wageShare + '%</span><span>Libre ' + (100 - wageShare) + '%</span></div>';
+    rightCol.appendChild(allocPanel);
+
+    var advicePanel = document.createElement('div'); advicePanel.className = 'dt-gold-card'; advicePanel.style.cssText += 'flex:1; display:flex; flex-direction:column; justify-content:space-between;';
+    var adviceText = wagePct >= 90
+      ? 'La masa salarial está al límite del tope. Vender a alguna ficha alta liberaría margen antes de fichar.'
+      : (net >= 0 ? 'Con este margen puedes fichar sin vender. Las cuentas están sanas esta temporada.' : 'El ejercicio va en pérdidas. Revisa gastos o busca ingresos extra antes de reforzar la plantilla.');
+    advicePanel.innerHTML =
+      '<div>' +
+        '<div class="dt-gold-label">La directiva dice</div>' +
+        '<div style="font-size:1.25cqw; font-weight:700; line-height:1.4; margin-top:.4cqw;">' + escapeHtml(adviceText) + '</div>' +
+      '</div>' +
+      '<button type="button" id="dtFinIrMercado" class="dt-btn-dark" style="display:block; width:100%; margin-top:.9cqw;">IR AL MERCADO</button>';
+    advicePanel.querySelector('#dtFinIrMercado').addEventListener('click', function(){ mgrSwitchTab('mercado'); });
+    rightCol.appendChild(advicePanel);
   }
 
   var mgrOpenPlayerId = null;
