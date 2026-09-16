@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lucky Chips</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -1209,145 +1209,137 @@
   .career-rating-val.up{ color:var(--neon-green-bright); }
   .career-rating-val.down{ color:var(--ruby-bright); }
 
-  /* ================= DIRECTOR TÉCNICO — SALA DE MANDO ================= */
+  /* ================= DIRECTOR TÉCNICO — SALA DE MANDO (v2) ================= */
   body.dt-cockpit-mode #app{ max-width:none; width:100%; }
   body.dt-cockpit-mode .topbar{ display:none; }
   body.dt-cockpit-mode .bottomnav{ display:none; }
 
   .dt-cockpit{
-    --dt-verde:oklch(0.86 0.17 140); --dt-ambar:oklch(0.80 0.15 75); --dt-rojo:oklch(0.70 0.15 25); --dt-azul:oklch(0.72 0.13 250);
-    --dt-verde-t:oklch(0.30 0.07 140); --dt-ambar-t:oklch(0.30 0.05 75); --dt-rojo-t:oklch(0.30 0.06 25);
-    --dt-bg-page:oklch(0.11 0.012 250); --dt-bg-frame:oklch(0.155 0.013 250); --dt-bg-panel:oklch(0.185 0.015 250);
-    --dt-bg-sidebar:oklch(0.175 0.014 250); --dt-bg-inset:oklch(0.21 0.016 250); --dt-bg-active:oklch(0.255 0.022 250);
-    --dt-border:oklch(0.30 0.017 250); --dt-border-strong:oklch(0.36 0.017 250);
-    --dt-text:oklch(0.96 0.005 250); --dt-text-sec:oklch(0.80 0.012 250); --dt-text-mono:oklch(0.68 0.014 250); --dt-ink:oklch(0.17 0.02 250);
+    --dt-oro:oklch(0.88 0.16 86); --dt-oro-suave:oklch(0.85 0.16 85); --dt-tinta:oklch(0.18 0.05 265);
+    --dt-verde:oklch(0.80 0.17 148); --dt-rojo:oklch(0.70 0.17 25); --dt-azul:oklch(0.75 0.13 250);
+    --dt-panel:rgba(10,14,32,.7); --dt-panel-hi:rgba(255,255,255,.06); --dt-panel-hi2:rgba(255,255,255,.12);
+    --dt-border:rgba(255,255,255,.14); --dt-border-strong:rgba(255,255,255,.35);
+    --dt-text:oklch(0.97 0.01 265); --dt-text-sec:oklch(0.82 0.02 265); --dt-text-mono:oklch(0.84 0.02 265);
+    --dt-ambar:var(--dt-oro-suave); --dt-verde-t:oklch(0.80 0.17 148 / .25); --dt-ambar-t:oklch(0.85 0.16 85 / .25); --dt-rojo-t:oklch(0.70 0.17 25 / .25);
+    --dt-ink:var(--dt-tinta); --dt-border-strong:rgba(255,255,255,.35);
     display:flex; justify-content:center; padding:10px 0 18px; border-radius:8px;
-    background:radial-gradient(130% 100% at 50% -10%, oklch(0.21 0.025 252) 0%, oklch(0.11 0.012 250) 68%);
+    background:oklch(0.12 0.045 265);
   }
   .dt-frame{
-    container-type:size; width:100%; max-width:1760px; aspect-ratio:16/9;
-    background:var(--dt-bg-frame); color:var(--dt-text); border:1px solid var(--dt-border); border-radius:6px;
-    overflow:hidden; display:flex; flex-direction:column; box-shadow:0 30px 90px rgba(0,0,0,.6);
+    container-type:size; width:100%; max-width:1760px; aspect-ratio:16/9; position:relative;
+    color:var(--dt-text); border-radius:8px; overflow:hidden; box-shadow:0 30px 90px rgba(0,0,0,.6);
     font-family:'Archivo',system-ui,sans-serif;
+    background:
+      radial-gradient(70% 55% at 18% 0%, oklch(0.42 0.13 258) 0%, rgba(0,0,0,0) 62%),
+      radial-gradient(60% 50% at 88% 6%, oklch(0.38 0.12 262) 0%, rgba(0,0,0,0) 60%),
+      linear-gradient(178deg, oklch(0.22 0.075 265) 0%, oklch(0.15 0.05 265) 68%, oklch(0.18 0.06 262) 100%);
   }
   .dt-frame *{ box-sizing:border-box; }
-  .dt-mono{ font-family:'IBM Plex Mono',monospace; }
-  .dt-label{ font-family:'IBM Plex Mono',monospace; font-size:0.6cqw; letter-spacing:.09cqw; color:var(--dt-text-mono); text-transform:uppercase; }
+  .dt-frame-texture{ position:absolute; inset:0; background:repeating-linear-gradient(94deg, rgba(255,255,255,.035) 0 2px, rgba(0,0,0,0) 2px 26px); pointer-events:none; }
+  .dt-frame-inner{ position:relative; height:100%; display:flex; flex-direction:column; }
+  .dt-mono{ font-family:'Barlow Condensed',sans-serif; }
+  .dt-label{ font-family:'Barlow Condensed',sans-serif; font-size:0.9cqw; letter-spacing:.06cqw; color:var(--dt-text-mono); text-transform:uppercase; }
 
-  .dt-topbar{ display:flex; align-items:center; gap:1.1cqw; padding:0 1.4cqw; height:7.6cqh; flex:none; border-bottom:1px solid var(--dt-border); background:var(--dt-bg-panel); }
-  .dt-crest{ width:1.9cqw; height:1.9cqw; min-width:16px; min-height:16px; transform:rotate(45deg); border-radius:3px; background:linear-gradient(135deg,var(--dt-verde),oklch(0.62 0.14 150)); flex:none; }
-  .dt-club-name{ font-size:1.05cqw; font-weight:800; letter-spacing:.05cqw; text-transform:uppercase; white-space:nowrap; }
-  .dt-club-meta{ font-family:'IBM Plex Mono',monospace; font-size:0.62cqw; color:var(--dt-text-mono); letter-spacing:.06cqw; white-space:nowrap; }
-  .dt-divider{ width:1px; height:3.4cqh; background:var(--dt-border); flex:none; }
-  .dt-metrics{ display:flex; gap:1.4cqw; flex-wrap:wrap; }
-  .dt-metric-label{ font-family:'IBM Plex Mono',monospace; font-size:0.58cqw; color:var(--dt-text-mono); letter-spacing:.08cqw; text-transform:uppercase; white-space:nowrap; }
-  .dt-metric-value{ font-family:'IBM Plex Mono',monospace; font-size:0.9cqw; font-weight:600; margin-top:.1cqw; white-space:nowrap; }
+  .dt-topbar{ flex:none; display:flex; align-items:center; gap:1cqw; padding:1.1cqw 1.5cqw 0; }
+  .dt-pill{ display:flex; align-items:center; gap:.6cqw; padding:.45cqw 1cqw; border-radius:99px; background:rgba(10,14,32,.72); border:1px solid var(--dt-border); flex:none; }
+  .dt-crest{ width:2.6cqw; height:2.6cqw; min-width:28px; min-height:28px; border-radius:50%; background:linear-gradient(150deg,oklch(0.88 0.15 85),oklch(0.62 0.14 60)); display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:1.3cqw; color:var(--dt-tinta); flex:none; }
+  .dt-club-name{ font-size:1.05cqw; font-weight:800; letter-spacing:.03cqw; text-transform:uppercase; line-height:1.1; white-space:nowrap; }
+  .dt-club-meta{ font-family:'Barlow Condensed',sans-serif; font-size:.86cqw; letter-spacing:.06cqw; color:var(--dt-text-sec); text-transform:uppercase; white-space:nowrap; }
   .dt-spacer{ flex:1; }
-  .dt-clock-pill{ display:flex; align-items:center; gap:.5cqw; padding:.4cqw .8cqw; border:1px solid var(--dt-border-strong); border-radius:99px; flex:none; }
-  .dt-clock-dot{ width:.45cqw; height:.45cqw; min-width:5px; min-height:5px; border-radius:50%; background:var(--dt-verde); animation:dtPulso 2.4s infinite; }
-  @keyframes dtPulso{ 0%,100%{opacity:1} 50%{opacity:.3} }
-  .dt-clock-txt{ font-family:'IBM Plex Mono',monospace; font-size:0.66cqw; letter-spacing:.05cqw; white-space:nowrap; }
-  .dt-btn-avanzar{ padding:.5cqw 1cqw; border-radius:4px; background:var(--dt-verde); color:var(--dt-ink); font-weight:800; font-size:0.76cqw; letter-spacing:.04cqw; cursor:pointer; border:none; font-family:inherit; white-space:nowrap; }
-  .dt-btn-avanzar:hover{ filter:brightness(1.08); }
-  .dt-profile{ display:flex; align-items:center; gap:.6cqw; flex:none; }
-  .dt-profile-name{ font-size:0.74cqw; font-weight:600; white-space:nowrap; }
-  .dt-profile-role{ font-family:'IBM Plex Mono',monospace; font-size:0.58cqw; color:var(--dt-text-mono); white-space:nowrap; }
-  .dt-avatar{ width:1.9cqw; height:1.9cqw; min-width:24px; min-height:24px; border-radius:4px; background:var(--dt-border-strong); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.78cqw; flex:none; }
+  .dt-clock-dot{ width:.6cqw; height:.6cqw; min-width:6px; min-height:6px; border-radius:50%; background:var(--dt-oro-suave); animation:dtPulso 2.4s infinite; flex:none; }
+  @keyframes dtPulso{ 0%,100%{opacity:1} 50%{opacity:.35} }
+  .dt-clock-txt{ font-family:'Barlow Condensed',sans-serif; font-size:1cqw; letter-spacing:.05cqw; text-transform:uppercase; white-space:nowrap; }
+  .dt-profile-name{ font-size:1cqw; font-weight:700; line-height:1.1; white-space:nowrap; }
+  .dt-profile-role{ font-family:'Barlow Condensed',sans-serif; font-size:.84cqw; color:var(--dt-text-sec); text-transform:uppercase; letter-spacing:.05cqw; white-space:nowrap; }
+  .dt-avatar{ width:2.6cqw; height:2.6cqw; min-width:28px; min-height:28px; border-radius:50%; background:oklch(0.32 0.05 265); border:2px solid var(--dt-oro-suave); display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-size:1.25cqw; font-weight:700; flex:none; }
+  .dt-btn-avanzar{ padding:.45cqw 1.1cqw; border-radius:99px; background:var(--dt-oro); color:var(--dt-tinta); font-weight:800; font-size:0.95cqw; letter-spacing:.03cqw; text-transform:uppercase; cursor:pointer; border:none; font-family:'Archivo',sans-serif; white-space:nowrap; }
+  .dt-btn-avanzar:hover{ filter:brightness(1.1); }
 
-  .dt-body{ flex:1; display:flex; min-height:0; }
-  .dt-sidebar{ width:12.4cqw; min-width:132px; flex:none; border-right:1px solid var(--dt-border); background:var(--dt-bg-sidebar); display:flex; flex-direction:column; padding:.8cqw .55cqw; gap:.12cqw; overflow-y:auto; }
-  .dt-nav-item{ display:flex; align-items:center; gap:.6cqw; padding:.5cqw .55cqw; border-radius:3px; cursor:pointer; background:transparent; box-shadow:inset .18cqw 0 0 transparent; border:none; font-family:inherit; text-align:left; width:100%; }
-  .dt-nav-item:hover{ background:oklch(0.235 0.016 250); }
-  .dt-nav-item.active{ background:var(--dt-bg-active); box-shadow:inset .18cqw 0 0 var(--dt-verde); }
-  .dt-nav-num{ font-family:'IBM Plex Mono',monospace; font-size:0.6cqw; min-width:14px; color:oklch(0.56 0.014 250); }
-  .dt-nav-item.active .dt-nav-num{ color:var(--dt-verde); }
-  .dt-nav-label{ font-size:0.76cqw; font-weight:600; letter-spacing:.02cqw; color:var(--dt-text-sec); }
-  .dt-nav-item.active .dt-nav-label{ color:oklch(0.97 0.005 250); }
-  .dt-sidebar-spacer{ flex:1; }
-  .dt-confidence-card{ padding:.7cqw; border:1px solid var(--dt-border); border-radius:4px; background:oklch(0.195 0.015 250); }
-  .dt-confidence-track{ height:.5cqw; min-height:5px; background:oklch(0.26 0.016 250); border-radius:99px; overflow:hidden; }
-  .dt-confidence-fill{ height:100%; background:var(--dt-verde); }
-  .dt-confidence-row{ display:flex; justify-content:space-between; margin-top:.35cqw; font-family:'IBM Plex Mono',monospace; font-size:0.6cqw; color:var(--dt-text-sec); }
+  .dt-tabs{ flex:none; display:flex; gap:.55cqw; padding:1cqw 1.5cqw .4cqw; flex-wrap:wrap; }
+  .dt-tab{ flex:1; min-width:6cqw; text-align:center; padding:.82cqw .4cqw; border-radius:99px; cursor:pointer; font-size:1cqw; font-weight:800; letter-spacing:.04cqw; text-transform:uppercase; background:rgba(255,255,255,.92); color:var(--dt-tinta); border:1px solid rgba(255,255,255,.92); }
+  .dt-tab:hover{ filter:brightness(1.1); }
+  .dt-tab.active{ background:var(--dt-oro); border-color:var(--dt-oro); }
+  .dt-subtabbar{ flex:none; display:flex; align-items:center; gap:1.2cqw; padding:.35cqw 1.5cqw .7cqw; flex-wrap:wrap; }
+  .dt-breadcrumb{ font-family:'Barlow Condensed',sans-serif; font-size:1.05cqw; letter-spacing:.07cqw; text-transform:uppercase; color:var(--dt-text-sec); }
+  .dt-subtab{ cursor:pointer; font-size:1cqw; font-weight:700; padding-bottom:.2cqw; color:oklch(0.78 0.02 265); box-shadow:inset 0 -.22cqw 0 transparent; }
+  .dt-subtab.active{ color:var(--dt-text); box-shadow:inset 0 -.22cqw 0 var(--dt-oro); }
 
   .dt-content{ flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden; }
-  .dt-content-head{ display:flex; align-items:baseline; gap:.9cqw; padding:.9cqw 1.3cqw .5cqw; flex:none; flex-wrap:wrap; }
-  .dt-screen-title{ font-size:1.5cqw; font-weight:800; letter-spacing:-.02cqw; text-transform:uppercase; }
-  .dt-screen-sub{ font-family:'IBM Plex Mono',monospace; font-size:0.68cqw; color:var(--dt-text-mono); letter-spacing:.05cqw; }
-  .dt-screen-body{ flex:1; min-height:0; padding:0 1.3cqw .9cqw; overflow-y:auto; }
-  .dt-screen{ display:grid; gap:.85cqw; height:100%; }
-  .dt-col{ display:flex; flex-direction:column; gap:.85cqw; min-height:0; }
-  .dt-panel{ border:1px solid var(--dt-border); border-radius:5px; background:var(--dt-bg-panel); padding:.9cqw; min-height:0; }
+  .dt-screen-body{ flex:1; min-height:0; padding:0 1.5cqw 1.1cqw; overflow-y:auto; }
+  .dt-screen{ display:grid; gap:.8cqw; height:100%; }
+  .dt-col{ display:flex; flex-direction:column; gap:.8cqw; min-height:0; }
+  .dt-panel{ border-radius:1cqw; background:var(--dt-panel); border:1px solid var(--dt-border); padding:1.1cqw; min-height:0; }
   .dt-panel.flex-col{ display:flex; flex-direction:column; }
-  .dt-panel-title{ font-family:'IBM Plex Mono',monospace; font-size:0.6cqw; letter-spacing:.1cqw; color:var(--dt-text-mono); text-transform:uppercase; margin-bottom:.55cqw; }
+  .dt-panel-title{ font-size:1.1cqw; font-weight:800; letter-spacing:.02cqw; margin-bottom:.6cqw; }
+  .dt-panel-title.gold{ color:var(--dt-oro-suave); }
   .dt-scroll{ overflow-y:auto; }
-  .dt-placeholder{ height:100%; display:flex; align-items:center; justify-content:center; color:var(--dt-text-mono); font-size:0.85cqw; text-align:center; padding:2cqw; }
+  .dt-placeholder{ height:100%; display:flex; align-items:center; justify-content:center; color:var(--dt-text-sec); font-size:1.05cqw; text-align:center; padding:2cqw; }
 
-  .dt-hero{ border:1px solid var(--dt-border); border-radius:5px; padding:1cqw; display:flex; flex-direction:column; justify-content:space-between; gap:.6cqw; background:linear-gradient(155deg,oklch(0.255 0.028 252) 0%,var(--dt-bg-panel) 62%); }
-  .dt-hero-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:.6cqw; }
-  .dt-hero-kicker{ font-family:'IBM Plex Mono',monospace; font-size:0.62cqw; letter-spacing:.11cqw; color:var(--dt-verde); text-transform:uppercase; }
-  .dt-hero-rival{ font-size:1.6cqw; font-weight:800; margin-top:.3cqw; letter-spacing:-.02cqw; }
-  .dt-hero-meta{ font-family:'IBM Plex Mono',monospace; font-size:0.66cqw; color:var(--dt-text-sec); margin-top:.2cqw; }
-  .dt-hero-num{ font-family:'IBM Plex Mono',monospace; font-size:1.5cqw; font-weight:600; letter-spacing:-.02cqw; text-align:right; white-space:nowrap; }
-  .dt-hero-num-label{ font-family:'IBM Plex Mono',monospace; font-size:0.58cqw; color:var(--dt-text-mono); letter-spacing:.08cqw; text-align:right; }
-  .dt-form-row{ display:flex; align-items:center; gap:.45cqw; flex-wrap:wrap; }
-  .dt-form-badge{ width:1.25cqw; height:1.25cqw; min-width:16px; min-height:16px; border-radius:3px; display:flex; align-items:center; justify-content:center; font-size:0.66cqw; font-weight:800; }
-  .dt-form-badge.w{ background:oklch(0.34 0.09 140); color:var(--dt-verde); }
-  .dt-form-badge.d{ background:var(--dt-border); color:oklch(0.85 0.01 250); }
-  .dt-form-badge.l{ background:oklch(0.32 0.08 25); color:var(--dt-rojo); }
-  .dt-hero-actions{ display:flex; gap:.55cqw; }
-  .dt-btn-fill{ flex:1; text-align:center; padding:.62cqw; border-radius:4px; background:var(--dt-verde); color:var(--dt-ink); font-weight:800; font-size:0.8cqw; cursor:pointer; border:none; font-family:inherit; }
-  .dt-btn-fill:hover{ filter:brightness(1.08); }
-  .dt-btn-outline{ flex:1; text-align:center; padding:.62cqw; border-radius:4px; border:1px solid var(--dt-border-strong); font-weight:700; font-size:0.8cqw; cursor:pointer; background:transparent; color:var(--dt-text); font-family:inherit; }
-  .dt-btn-outline:hover{ background:oklch(0.24 0.016 250); }
+  .dt-gold-card{ border-radius:1cqw; background:linear-gradient(140deg,oklch(0.90 0.16 88),oklch(0.78 0.16 72)); color:var(--dt-tinta); padding:1.15cqw; position:relative; overflow:hidden; }
+  .dt-gold-label{ font-family:'Barlow Condensed',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.08cqw; font-weight:600; }
+  .dt-gold-big{ font-family:'Barlow Condensed',sans-serif; font-size:3cqw; font-weight:700; line-height:1.05; }
 
-  .dt-row{ display:flex; gap:.6cqw; align-items:center; padding:.5cqw .6cqw; border-radius:3px; background:var(--dt-bg-inset); margin-bottom:.35cqw; cursor:default; }
+  .dt-btn-fill{ flex:1; text-align:center; padding:.9cqw; border-radius:99px; background:var(--dt-oro); color:var(--dt-tinta); font-weight:800; font-size:1.05cqw; cursor:pointer; border:none; font-family:'Archivo',sans-serif; letter-spacing:.03cqw; }
+  .dt-btn-fill:hover{ filter:brightness(1.07); }
+  .dt-btn-outline{ flex:1; text-align:center; padding:.9cqw; border-radius:99px; border:2px solid var(--dt-border-strong); font-weight:800; font-size:1.05cqw; cursor:pointer; background:transparent; color:var(--dt-text); font-family:'Archivo',sans-serif; letter-spacing:.03cqw; }
+  .dt-btn-outline:hover{ background:rgba(255,255,255,.12); }
+  .dt-btn-dark{ text-align:center; padding:.9cqw; border-radius:99px; background:var(--dt-tinta); color:oklch(0.95 0.02 85); font-weight:800; font-size:1.05cqw; cursor:pointer; border:none; font-family:'Archivo',sans-serif; letter-spacing:.03cqw; }
+  .dt-btn-dark:hover{ filter:brightness(1.3); }
+
+  .dt-row{ display:flex; gap:.7cqw; align-items:center; padding:.6cqw .75cqw; border-radius:.7cqw; background:var(--dt-panel-hi); margin-bottom:.4cqw; cursor:default; }
   .dt-row:last-child{ margin-bottom:0; }
   .dt-row.clickable{ cursor:pointer; }
-  .dt-row.clickable:hover{ background:oklch(0.245 0.017 250); }
-  .dt-row-tone{ width:.4cqw; min-width:4px; height:1.8cqw; min-height:16px; border-radius:99px; flex:none; }
-  .dt-row-title{ font-size:0.76cqw; font-weight:600; }
-  .dt-row-detail{ font-family:'IBM Plex Mono',monospace; font-size:0.62cqw; color:var(--dt-text-mono); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .dt-row-time{ font-family:'IBM Plex Mono',monospace; font-size:0.6cqw; color:oklch(0.62 0.014 250); flex:none; }
+  .dt-row.clickable:hover{ background:var(--dt-panel-hi2); }
+  .dt-row-tone{ width:.45cqw; min-width:4px; height:2.2cqw; min-height:18px; border-radius:99px; flex:none; }
+  .dt-row-title{ font-size:0.95cqw; font-weight:700; }
+  .dt-row-detail{ font-family:'Barlow Condensed',sans-serif; font-size:0.9cqw; color:var(--dt-text-sec); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-transform:uppercase; letter-spacing:.03cqw; }
 
-  .dt-table-row{ display:grid; grid-template-columns:1.4cqw 1fr auto auto; gap:.55cqw; align-items:center; padding:.32cqw .35cqw; border-radius:3px; font-size:0.74cqw; }
-  .dt-table-row.me{ background:var(--dt-bg-active); font-weight:700; }
-  .dt-table-pos{ font-family:'IBM Plex Mono',monospace; color:var(--dt-text-mono); }
-  .dt-table-pj{ font-family:'IBM Plex Mono',monospace; color:var(--dt-text-sec); }
-  .dt-table-pts{ font-family:'IBM Plex Mono',monospace; font-weight:600; text-align:right; }
+  .dt-table-row{ display:grid; grid-template-columns:1.6cqw 1fr auto auto; gap:.6cqw; align-items:center; padding:.42cqw .8cqw; border-radius:99px; font-size:0.95cqw; background:var(--dt-panel-hi); margin-bottom:.3cqw; }
+  .dt-table-row.me{ background:var(--dt-oro); color:var(--dt-tinta); font-weight:800; }
+  .dt-table-pos{ font-family:'Barlow Condensed',sans-serif; font-weight:600; }
+  .dt-table-pj{ font-family:'Barlow Condensed',sans-serif; opacity:.75; }
+  .dt-table-pts{ font-family:'Barlow Condensed',sans-serif; font-weight:700; text-align:right; width:2cqw; }
 
-  .dt-chip{ font-family:'IBM Plex Mono',monospace; font-size:0.66cqw; padding:.2cqw .45cqw; border-radius:3px; white-space:nowrap; }
-  .dt-bar-track{ height:.38cqw; min-height:4px; background:oklch(0.26 0.016 250); border-radius:99px; overflow:hidden; }
+  .dt-chip{ font-family:'Barlow Condensed',sans-serif; font-size:0.9cqw; font-weight:700; padding:.25cqw .6cqw; border-radius:99px; white-space:nowrap; }
+  .dt-bar-track{ height:.4cqw; min-height:4px; background:rgba(255,255,255,.14); border-radius:99px; overflow:hidden; }
   .dt-bar-fill{ height:100%; }
 
-  .dt-radar-icon{ width:1.7cqw; height:1.7cqw; min-width:20px; min-height:20px; border-radius:3px; background:var(--dt-border); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:0.64cqw; font-weight:600; flex:none; }
-  .dt-radar-value{ font-family:'IBM Plex Mono',monospace; font-size:0.7cqw; color:var(--dt-verde); flex:none; }
+  .dt-stat-card{ border-radius:.9cqw; padding:1cqw; text-align:center; background:var(--dt-panel); border:2px solid var(--dt-border); }
+  .dt-stat-card.active{ background:rgba(255,255,255,.94); color:var(--dt-tinta); border-color:rgba(255,255,255,.94); }
+  .dt-stat-card.gold{ background:var(--dt-oro); color:var(--dt-tinta); border-color:var(--dt-oro); }
+  .dt-form-badge{ width:1.35cqw; height:1.35cqw; min-width:16px; min-height:16px; border-radius:3px; display:flex; align-items:center; justify-content:center; font-size:0.7cqw; font-weight:800; }
+  .dt-form-badge.w{ background:oklch(0.36 0.10 148); color:var(--dt-verde); }
+  .dt-form-badge.d{ background:var(--dt-border); color:oklch(0.85 0.01 250); }
+  .dt-form-badge.l{ background:oklch(0.34 0.10 25); color:var(--dt-rojo); }
 
-  .dt-promptbar{ flex:none; height:4.6cqh; border-top:1px solid var(--dt-border); background:var(--dt-bg-panel); display:flex; align-items:center; gap:1.2cqw; padding:0 1.3cqw; flex-wrap:wrap; }
-  .dt-prompt{ display:flex; align-items:center; gap:.4cqw; }
-  .dt-key{ min-width:1.3cqw; height:1.3cqw; padding:0 .3cqw; border-radius:3px; background:var(--dt-border); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:0.6cqw; font-weight:600; }
-  .dt-prompt-txt{ font-size:0.68cqw; color:var(--dt-text-sec); white-space:nowrap; }
-  .dt-saved{ font-family:'IBM Plex Mono',monospace; font-size:0.62cqw; color:oklch(0.58 0.014 250); letter-spacing:.08cqw; white-space:nowrap; }
+  .dt-promptbar{ flex:none; display:flex; align-items:center; gap:1.5cqw; padding:.9cqw 1.5cqw 1.1cqw; flex-wrap:wrap; }
+  .dt-prompt{ display:flex; align-items:center; gap:.5cqw; }
+  .dt-key{ width:1.9cqw; height:1.9cqw; min-width:20px; min-height:20px; border-radius:50%; background:rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-size:1.05cqw; font-weight:700; flex:none; }
+  .dt-key.gold{ background:var(--dt-oro); color:var(--dt-tinta); }
+  .dt-prompt-txt{ font-family:'Barlow Condensed',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.06cqw; color:oklch(0.88 0.015 265); white-space:nowrap; }
+  .dt-saved{ font-family:'Barlow Condensed',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.08cqw; color:oklch(0.72 0.02 265); white-space:nowrap; }
 
-  .dt-style-item{ display:flex; justify-content:space-between; align-items:center; padding:.5cqw .6cqw; border-radius:3px; cursor:pointer; background:var(--dt-bg-inset); border:1px solid transparent; margin-bottom:.3cqw; }
+  .dt-style-item{ display:flex; justify-content:space-between; align-items:center; padding:.8cqw 1cqw; border-radius:99px; cursor:pointer; background:var(--dt-panel-hi); margin-bottom:.45cqw; }
   .dt-style-item:last-child{ margin-bottom:0; }
-  .dt-style-item.active{ background:var(--dt-bg-active); border-color:var(--dt-verde); }
-  .dt-style-name{ font-family:'IBM Plex Mono',monospace; font-size:0.8cqw; font-weight:600; color:var(--dt-text-sec); }
-  .dt-style-item.active .dt-style-name{ color:var(--dt-verde); }
-  .dt-slider-label{ display:flex; justify-content:space-between; font-size:0.72cqw; margin-bottom:.3cqw; }
+  .dt-style-item:hover{ filter:brightness(1.15); }
+  .dt-style-item.active{ background:var(--dt-oro); color:var(--dt-tinta); }
+  .dt-style-name{ font-family:'Barlow Condensed',sans-serif; font-size:1.5cqw; font-weight:700; }
+  .dt-slider-label{ display:flex; justify-content:space-between; align-items:baseline; font-size:0.98cqw; font-weight:600; margin-bottom:.35cqw; }
   .dt-slider{ width:100%; -webkit-appearance:none; appearance:none; background:transparent; }
-  .dt-slider::-webkit-slider-runnable-track{ height:6px; background:oklch(0.28 0.016 250); border-radius:99px; }
-  .dt-slider::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; margin-top:-5px; border-radius:50%; background:var(--dt-verde); cursor:pointer; }
-  .dt-pitch{ border:1px solid var(--dt-border); border-radius:5px; position:relative; overflow:hidden; height:100%; min-height:220px; background:linear-gradient(180deg,oklch(0.235 0.035 155) 0%,oklch(0.195 0.028 155) 100%); }
-  .dt-pitch-line{ position:absolute; border:1px solid rgba(255,255,255,.18); }
-  .dt-pitch-slot{ position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:.2cqw; cursor:pointer; }
-  .dt-pitch-badge{ width:2.5cqw; height:2.5cqw; min-width:30px; min-height:30px; border-radius:50%; background:oklch(0.16 0.015 250); border:.16cqw solid var(--dt-verde); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:0.78cqw; font-weight:600; box-shadow:0 .3cqw .8cqw rgba(0,0,0,.4); }
-  .dt-pitch-slot.empty .dt-pitch-badge{ border-color:rgba(255,255,255,.35); border-style:dashed; color:rgba(255,255,255,.6); }
-  .dt-pitch-name{ font-size:0.64cqw; font-weight:600; background:rgba(0,0,0,.45); padding:.1cqw .3cqw; border-radius:2px; white-space:nowrap; color:#fff; }
+  .dt-slider::-webkit-slider-runnable-track{ height:10px; background:rgba(255,255,255,.16); border-radius:99px; }
+  .dt-slider::-webkit-slider-thumb{ -webkit-appearance:none; width:24px; height:24px; margin-top:-7px; border-radius:50%; background:var(--dt-oro-suave); border:3px solid oklch(0.20 0.05 265); cursor:pointer; }
+  .dt-pitch{ border-radius:1cqw; position:relative; overflow:hidden; height:100%; min-height:220px; background:linear-gradient(180deg,oklch(0.50 0.11 148) 0%,oklch(0.42 0.10 148) 100%); }
+  .dt-pitch-line{ position:absolute; border:.2cqw solid rgba(255,255,255,.55); }
+  .dt-pitch-slot{ position:absolute; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:.25cqw; cursor:pointer; }
+  .dt-pitch-badge{ width:3.4cqw; height:3.4cqw; min-width:34px; min-height:34px; border-radius:.6cqw; background:linear-gradient(160deg,oklch(0.30 0.06 265),oklch(0.20 0.05 265)); border:.16cqw solid var(--dt-oro-suave); display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-size:1.4cqw; font-weight:700; box-shadow:0 .4cqw .9cqw rgba(0,0,0,.45); }
+  .dt-pitch-slot.empty .dt-pitch-badge{ border-color:rgba(255,255,255,.35); border-style:dashed; }
+  .dt-pitch-name{ font-size:0.85cqw; font-weight:700; background:rgba(6,10,26,.8); padding:.15cqw .45cqw; border-radius:99px; white-space:nowrap; color:#fff; }
+  .dt-step-btn{ width:3.4cqw; height:3.4cqw; min-width:34px; min-height:34px; border-radius:50%; border:2px solid var(--dt-border-strong); display:flex; align-items:center; justify-content:center; font-size:1.8cqw; font-weight:700; cursor:pointer; flex:none; background:transparent; color:var(--dt-text); }
+  .dt-step-btn:hover{ background:rgba(255,255,255,.14); }
 
   @media (max-width:640px){
-    .dt-metrics{ display:none; }
-    .dt-sidebar{ width:9.5cqw; }
-    .dt-nav-label{ font-size:0.9cqw; }
+    .dt-club-meta{ display:none; }
+    .dt-tab{ font-size:1.6cqw; }
     .dt-promptbar .dt-prompt:nth-child(n+3){ display:none; }
   }
 </style>
@@ -2356,45 +2348,39 @@
 
         <div class="dt-cockpit">
           <div class="dt-frame" id="dtFrame">
-            <div class="dt-topbar">
-              <div class="dt-crest" aria-hidden="true"></div>
-              <div>
-                <div class="dt-club-name" id="dtClubName">Club</div>
-                <div class="dt-club-meta" id="dtClubMeta">Liga · Temporada 1</div>
-              </div>
-              <div class="dt-divider"></div>
-              <div class="dt-metrics" id="dtMetrics"></div>
-              <div class="dt-spacer"></div>
-              <div class="dt-clock-pill">
-                <div class="dt-clock-dot"></div>
-                <div class="dt-clock-txt" id="dtClockTxt">Día 0</div>
-              </div>
-              <button class="dt-btn-avanzar" id="dtAvanzarBtn" type="button">AVANZAR ▸</button>
-              <div class="dt-profile">
-                <div style="text-align:right;">
-                  <div class="dt-profile-name" id="dtCoachName">Entrenador</div>
-                  <div class="dt-profile-role">DIRECTOR TÉCNICO</div>
+            <div class="dt-frame-texture"></div>
+            <div class="dt-frame-inner">
+              <div class="dt-topbar">
+                <div class="dt-pill">
+                  <div class="dt-crest" id="dtCoachInitials2" aria-hidden="true">DT</div>
+                  <div>
+                    <div class="dt-club-name" id="dtClubName">Club</div>
+                    <div class="dt-club-meta" id="dtClubMeta">Liga · Temporada 1</div>
+                  </div>
                 </div>
-                <div class="dt-avatar" id="dtCoachInitials">DT</div>
+                <div class="dt-spacer"></div>
+                <div class="dt-pill">
+                  <div class="dt-clock-dot"></div>
+                  <div class="dt-clock-txt" id="dtClockTxt">Día 0</div>
+                </div>
+                <div class="dt-pill" style="padding-right:.6cqw;">
+                  <div style="text-align:right;">
+                    <div class="dt-profile-name" id="dtCoachName">Entrenador</div>
+                    <div class="dt-profile-role" id="dtCoachRole">Reputación 50</div>
+                  </div>
+                  <div class="dt-avatar" id="dtCoachInitials">DT</div>
+                </div>
               </div>
-            </div>
 
-            <div class="dt-body">
-              <div class="dt-sidebar">
-                <div id="dtNav"></div>
-                <div class="dt-sidebar-spacer"></div>
-                <div class="dt-confidence-card">
-                  <div class="dt-label" style="margin-bottom:.4cqw;">Confianza directiva</div>
-                  <div class="dt-confidence-track"><div class="dt-confidence-fill" id="dtConfidenceFill" style="width:60%;"></div></div>
-                  <div class="dt-confidence-row"><span id="dtConfidenceLabel">ESTABLE</span><span id="dtConfidencePct">60%</span></div>
-                </div>
+              <div class="dt-tabs" id="dtTabs"></div>
+              <div class="dt-subtabbar">
+                <div class="dt-breadcrumb" id="dtBreadcrumb"></div>
+                <div style="display:flex; gap:1.2cqw;" id="dtSubtabs"></div>
+                <div class="dt-spacer"></div>
+                <button class="dt-btn-avanzar" id="dtAvanzarBtn" type="button">AVANZAR ▸</button>
               </div>
 
               <div class="dt-content">
-                <div class="dt-content-head">
-                  <div class="dt-screen-title" id="dtScreenTitle">Escritorio</div>
-                  <div class="dt-screen-sub" id="dtScreenSub"></div>
-                </div>
                 <div class="dt-screen-body">
                   <div data-dt-screen="hub" style="height:100%;"></div>
                   <div data-dt-screen="plantilla" style="height:100%;" hidden></div>
@@ -2409,9 +2395,9 @@
                   <div data-dt-screen="finanzas" style="height:100%;" hidden></div>
                 </div>
               </div>
-            </div>
 
-            <div class="dt-promptbar" id="dtPromptBar"></div>
+              <div class="dt-promptbar" id="dtPromptBar"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -8892,6 +8878,11 @@
     directiva: 'var(--dt-verde)', renovacion: 'var(--dt-verde)', resultado: 'var(--dt-verde)', fichaje: 'var(--dt-ambar)',
     contrato: 'var(--dt-ambar)', prensa: 'var(--dt-azul)'
   };
+  function mgrWagePct(){
+    var club = state.manager.club;
+    var wageBill = state.manager.squad.reduce(function(s, p){ return s + (p.wage || 0); }, 0);
+    return club.wageBudget ? Math.round(Math.min(999, wageBill / club.wageBudget * 100)) : 0;
+  }
   function mgrRenderDtChrome(){
     var club = state.manager.club;
     document.getElementById('dtClubName').textContent = club.name;
@@ -8904,38 +8895,16 @@
     }
     document.getElementById('dtClubMeta').textContent = leagueName + ' · Temporada ' + state.manager.season + cupText;
 
-    var table = mgrStandingsTable();
-    var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
-    var wageBill = state.manager.squad.reduce(function(s, p){ return s + (p.wage || 0); }, 0);
-    var wagePct = club.wageBudget ? Math.round(Math.min(999, wageBill / club.wageBudget * 100)) : 0;
-    var avgMorale = state.manager.squad.length ? Math.round(state.manager.squad.reduce(function(s, p){ return s + (p.morale || 50); }, 0) / state.manager.squad.length) : 50;
-    var moraleLabel = avgMorale >= 70 ? 'ALTA' : avgMorale >= 45 ? 'MEDIA' : 'BAJA';
-    var moraleColor = avgMorale >= 70 ? 'var(--dt-verde)' : avgMorale >= 45 ? 'var(--dt-ambar)' : 'var(--dt-rojo)';
-    var wageColor = wagePct >= 90 ? 'var(--dt-rojo)' : wagePct >= 70 ? 'var(--dt-ambar)' : 'var(--dt-verde)';
-    document.getElementById('dtMetrics').innerHTML = [
-      ['Presupuesto', Math.round(club.budget).toLocaleString('es-CO'), 'var(--dt-verde)'],
-      ['Masa salarial', wagePct + '%', wageColor],
-      ['Posición', myPos + 'º', 'var(--dt-text)'],
-      ['Moral del vestuario', moraleLabel, moraleColor]
-    ].map(function(m){
-      return '<div><div class="dt-metric-label">' + m[0] + '</div><div class="dt-metric-value" style="color:' + m[2] + ';">' + m[1] + '</div></div>';
-    }).join('');
-
     var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
     document.getElementById('dtClockTxt').textContent = 'Día ' + state.manager.day + ' · Jornada ' + state.manager.matchday + '/' + total;
     var today = mgrTodayMatchInfo(state.manager.day);
     document.getElementById('dtAvanzarBtn').textContent = today ? 'JUGAR ▸' : 'AVANZAR ▸';
 
     document.getElementById('dtCoachName').textContent = club.coachName || 'Entrenador';
+    document.getElementById('dtCoachRole').textContent = 'Reputación ' + (club.reputation || 50);
     var initials = (club.coachName || 'DT').trim().split(/\s+/).map(function(w){ return w[0] || ''; }).slice(0, 2).join('').toUpperCase() || 'DT';
     document.getElementById('dtCoachInitials').textContent = initials;
-
-    var conf = Math.max(0, Math.min(100, club.boardConfidence));
-    var confFill = document.getElementById('dtConfidenceFill');
-    confFill.style.width = conf + '%';
-    confFill.style.background = conf >= 50 ? 'var(--dt-verde)' : conf >= 25 ? 'var(--dt-ambar)' : 'var(--dt-rojo)';
-    document.getElementById('dtConfidencePct').textContent = conf + '%';
-    document.getElementById('dtConfidenceLabel').textContent = conf >= 60 ? 'ESTABLE' : conf >= 30 ? 'EN DUDA' : 'CRÍTICA';
+    document.getElementById('dtCoachInitials2').textContent = initials;
   }
   function mgrObjectiveProgress(){
     var obj = state.manager.club.objective;
@@ -8978,97 +8947,141 @@
     list.sort(function(a, b){ return b.p.ovr - a.p.ovr; });
     return list.slice(0, 4);
   }
+  function mgrInboxTargetTab(m){
+    if(m.meta && m.meta.negId) return 'negociacion';
+    if(m.meta && m.meta.pressId) return 'objetivos';
+    if(m.type === 'lesion' || m.type === 'renovacion' || m.type === 'contrato') return 'plantilla';
+    if(m.type === 'oferta' || m.type === 'fichaje') return 'mercado';
+    if(m.type === 'resultado') return 'calendario';
+    if(m.type === 'news' && /academia|cantera|juvenil/i.test(m.title)) return 'cantera';
+    return 'objetivos';
+  }
   function mgrRenderHub(){
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="hub"]');
     root.innerHTML = '';
     var grid = document.createElement('div');
     grid.className = 'dt-screen';
-    grid.style.gridTemplateColumns = '1.5fr 1fr 1fr';
+    grid.style.gridTemplateColumns = '1.25fr .85fr 1.1fr';
     root.appendChild(grid);
-
-    /* --- Columna 1: próximo partido + bandeja --- */
-    var col1 = document.createElement('div'); col1.className = 'dt-col';
-    grid.appendChild(col1);
 
     var today = mgrTodayMatchInfo(state.manager.day);
     var next = today ? null : mgrNextMyFixture();
-    var kickerText, rivalName, metaText, numText, numLabel;
+
+    /* --- Columna 1: jugar/avanzar + simular/táctica --- */
+    var col1 = document.createElement('div'); col1.className = 'dt-col';
+    grid.appendChild(col1);
+
+    var kicker, rivalName, meta;
     if(today){
-      kickerText = (today.kind === 'cup' ? (MGR_CUP_NAME + ' · ' + MGR_CUP_ROUND_LABELS[state.manager.cup.round]) : ('Jornada ' + today.fixture.matchday)) + ' · ' + (today.iAmHome ? 'Casa' : 'Fuera');
+      kicker = (today.kind === 'cup' ? (MGR_CUP_NAME + ' · ' + MGR_CUP_ROUND_LABELS[state.manager.cup.round]) : ('Liga Nacional · Jornada ' + today.fixture.matchday)) + ' · ' + (today.iAmHome ? 'en casa' : 'fuera');
       rivalName = today.oppName;
-      metaText = today.weather || '';
-      numText = '¡HOY!';
-      numLabel = 'DÍA DE PARTIDO';
+      meta = today.weather || '';
     } else if(next){
       var oppIdx = next.home === 0 ? next.away : next.home;
-      kickerText = 'Jornada ' + next.matchday + ' · ' + (next.home === 0 ? 'Casa' : 'Fuera');
+      kicker = 'Faltan ' + (next.day - state.manager.day) + ' día(s) · ' + (next.home === 0 ? 'en casa' : 'fuera');
       rivalName = mgrClubName(oppIdx);
-      metaText = 'Preparación de la semana';
-      numText = 'Faltan ' + (next.day - state.manager.day);
-      numLabel = 'DÍA(S) PARA EL PARTIDO';
+      meta = 'Jornada ' + next.matchday;
     } else {
-      kickerText = 'Sin partido programado'; rivalName = '—'; metaText = ''; numText = '—'; numLabel = '';
+      kicker = 'Temporada sin más partidos programados'; rivalName = '—'; meta = '';
     }
-    var hero = document.createElement('div'); hero.className = 'dt-hero'; hero.style.flex = '1.25';
+    var hero = document.createElement('div'); hero.className = 'dt-gold-card'; hero.style.cssText += 'flex:1.45; display:flex; flex-direction:column; justify-content:space-between; cursor:pointer;';
     hero.innerHTML =
-      '<div class="dt-hero-top">' +
-        '<div><div class="dt-hero-kicker">' + escapeHtml(kickerText) + '</div>' +
-        '<div class="dt-hero-rival">' + escapeHtml(rivalName) + '</div>' +
-        '<div class="dt-hero-meta">' + escapeHtml(metaText) + '</div></div>' +
-        '<div><div class="dt-hero-num">' + escapeHtml(numText) + '</div><div class="dt-hero-num-label">' + escapeHtml(numLabel) + '</div></div>' +
+      '<div>' +
+        '<div style="font-size:2.2cqw; font-weight:800; line-height:.95; letter-spacing:-.03cqw;">' + (today ? 'JUGAR<br>PARTIDO' : 'AVANZAR<br>DÍA') + '</div>' +
+        '<div class="dt-gold-label" style="margin-top:.6cqw;">' + escapeHtml(kicker) + '</div>' +
+        (rivalName !== '—' ? '<div style="font-size:1.2cqw; font-weight:800; margin-top:.1cqw;">vs ' + escapeHtml(rivalName) + '</div>' : '') +
       '</div>' +
-      '<div class="dt-form-row"><span class="dt-label" style="margin-right:.2cqw;">Forma</span><span id="dtHeroForm" style="display:flex; gap:.3cqw;"></span></div>' +
-      '<div class="dt-hero-actions">' +
-        '<button class="dt-btn-fill" type="button" id="dtGoPreviaBtn">IR A LA PREVIA</button>' +
-        '<button class="dt-btn-outline" type="button" id="dtGoTacticaBtn">AJUSTAR ONCE</button>' +
-      '</div>';
+      (meta ? '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; font-weight:600; text-transform:uppercase; letter-spacing:.05cqw;">' + escapeHtml(meta) + '</div>' : '<div></div>');
+    hero.addEventListener('click', function(){ if(today) mgrSwitchTab('previa'); else if(next) mgrAdvanceDay(); });
     col1.appendChild(hero);
-    var formHolder = hero.querySelector('#dtHeroForm');
-    var form = state.manager.recentForm || [];
-    if(form.length){
-      form.forEach(function(r){
-        var b = document.createElement('span'); b.className = 'dt-form-badge ' + r.toLowerCase(); b.textContent = r;
-        formHolder.appendChild(b);
-      });
-    } else {
-      formHolder.textContent = 'Sin partidos jugados esta temporada';
-    }
-    hero.querySelector('#dtGoPreviaBtn').addEventListener('click', function(){ mgrSwitchTab('previa'); });
-    hero.querySelector('#dtGoTacticaBtn').addEventListener('click', function(){ mgrSwitchTab('tactica'); });
 
-    var inboxPanel = document.createElement('div'); inboxPanel.className = 'dt-panel flex-col'; inboxPanel.style.flex = '1';
+    var miniRow = document.createElement('div'); miniRow.style.cssText = 'flex:1; display:flex; gap:.8cqw;';
+    var simCard = document.createElement('div'); simCard.className = 'dt-panel'; simCard.style.cssText = 'flex:1; display:flex; flex-direction:column; justify-content:space-between; cursor:pointer;';
+    simCard.innerHTML = '<div style="font-size:1.35cqw; font-weight:800; line-height:1; color:var(--dt-oro-suave);">SIMULAR<br>PARTIDO</div><div class="dt-row-detail">' + (today ? 'Resultado directo' : 'Sin partido hoy') + '</div>';
+    simCard.addEventListener('click', function(){ if(today) mgrPlayMatchday('sim'); });
+    var tactCard = document.createElement('div'); tactCard.className = 'dt-panel'; tactCard.style.cssText = 'flex:1; display:flex; flex-direction:column; justify-content:space-between; cursor:pointer;';
+    var tactics = mgrEnsureTactics();
+    tactCard.innerHTML = '<div style="font-size:1.35cqw; font-weight:800; line-height:1; color:var(--dt-oro-suave);">AJUSTAR<br>EL ONCE</div><div class="dt-row-detail">Estilo: ' + escapeHtml((MGR_STYLE_LABELS[tactics.style] || tactics.style)) + '</div>';
+    tactCard.addEventListener('click', function(){ mgrSwitchTab('tactica'); });
+    miniRow.appendChild(simCard); miniRow.appendChild(tactCard);
+    col1.appendChild(miniRow);
+
+    /* --- Columna 2: tabla + entrenamiento --- */
+    var col2 = document.createElement('div'); col2.className = 'dt-col';
+    grid.appendChild(col2);
+
+    var tablePanel = document.createElement('div'); tablePanel.className = 'dt-panel';
+    tablePanel.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.6cqw;"><span class="dt-panel-title" style="margin-bottom:0;">TABLA</span><span class="dt-row-detail">JUG · PTS</span></div>';
+    var table = mgrStandingsTable();
+    table.slice(0, 5).forEach(function(row, i){
+      var r = document.createElement('div');
+      r.className = 'dt-table-row' + (row.idx === 0 ? ' me' : '');
+      r.innerHTML =
+        '<span class="dt-table-pos">' + (i + 1) + '</span>' +
+        '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(row.name) + '</span>' +
+        '<span class="dt-table-pj" style="opacity:.75;">' + row.stats.pj + '</span>' +
+        '<span class="dt-table-pts">' + row.stats.pts + '</span>';
+      tablePanel.appendChild(r);
+    });
+    col2.appendChild(tablePanel);
+
+    var entrenoPanel = document.createElement('div'); entrenoPanel.className = 'dt-panel'; entrenoPanel.style.cssText = 'flex:1; display:flex; flex-direction:column; justify-content:space-between; cursor:pointer;';
+    var devCount = state.manager.squad.filter(function(p){ return p.age <= 26 && p.ovr < p.potential; }).length;
+    entrenoPanel.innerHTML =
+      '<div class="dt-panel-title gold" style="margin-bottom:0;">ENTRENAMIENTO</div>' +
+      '<div style="font-size:1cqw; line-height:1.45;">Foco actual en ' + escapeHtml((({ GK: 'porteros', DEF: 'defensas', MID: 'mediocampistas', FWD: 'delanteros' })[state.manager.trainingFocus] || 'porteros')) + '. ' + devCount + ' jugador(es) joven(es) con margen de mejora.</div>' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.06cqw; color:var(--dt-oro-suave);">Ver planes de desarrollo ▸</div>';
+    entrenoPanel.addEventListener('click', function(){ mgrSwitchTab('entreno'); });
+    col2.appendChild(entrenoPanel);
+
+    /* --- Columna 3: la prensa dice + despacho --- */
+    var col3 = document.createElement('div'); col3.className = 'dt-col';
+    grid.appendChild(col3);
+
     var inbox = state.manager.inbox || [];
+    var pressLike = inbox.filter(function(m){ return m.type === 'prensa' || m.type === 'news' || m.type === 'resultado'; })[0];
+    var pressPanel = document.createElement('div'); pressPanel.className = 'dt-panel'; pressPanel.style.flex = '1.1';
+    pressPanel.innerHTML =
+      '<div class="dt-panel-title gold">LA PRENSA DICE</div>' +
+      '<div style="font-size:1.1cqw; font-weight:700; line-height:1.35;">' + (pressLike ? '«' + escapeHtml(pressLike.body) + '»' : 'Sin comunicados recientes.') + '</div>' +
+      (pressLike ? '<div class="dt-row-detail" style="margin-top:.6cqw;">' + escapeHtml(pressLike.title) + '</div>' : '');
+    col3.appendChild(pressPanel);
+
+    var despachoPanel = document.createElement('div'); despachoPanel.className = 'dt-panel flex-col'; despachoPanel.style.flex = '1';
     var unread = inbox.filter(function(m){ return !m.read; }).length;
-    var inboxHead = document.createElement('div');
-    inboxHead.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:.55cqw;';
-    inboxHead.innerHTML = '<div class="dt-panel-title" style="margin-bottom:0;">Bandeja del club' + (unread ? ' · ' + unread + ' sin leer' : '') + '</div>';
+    var despachoHead = document.createElement('div');
+    despachoHead.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:.6cqw;';
+    despachoHead.innerHTML = '<div class="dt-panel-title" style="margin-bottom:0;">DESPACHO <span style="color:var(--dt-oro-suave); font-weight:600;">· ' + unread + ' AVISOS</span></div>';
     if(inbox.some(function(m){ return m.read; })){
       var clearBtn = document.createElement('button'); clearBtn.type = 'button'; clearBtn.className = 'dt-btn-outline';
-      clearBtn.style.cssText = 'padding:.15cqw .6cqw; font-size:0.6cqw; flex:none;'; clearBtn.textContent = 'Borrar leídos';
+      clearBtn.style.cssText = 'padding:.2cqw .7cqw; font-size:0.75cqw; flex:none;'; clearBtn.textContent = 'Borrar leídos';
       clearBtn.addEventListener('click', mgrClearReadInbox);
-      inboxHead.appendChild(clearBtn);
+      despachoHead.appendChild(clearBtn);
     }
-    inboxPanel.appendChild(inboxHead);
-    var inboxList = document.createElement('div'); inboxList.className = 'dt-scroll'; inboxList.style.flex = '1';
-    inboxPanel.appendChild(inboxList);
-    if(!inbox.length){ inboxList.innerHTML = '<p class="dt-row-detail">Sin mensajes por ahora.</p>'; }
-    inbox.slice(0, 12).forEach(function(m){
-      var wrap = document.createElement('div'); wrap.style.marginBottom = '.35cqw';
+    despachoPanel.appendChild(despachoHead);
+    var despachoWrap = document.createElement('div'); despachoWrap.className = 'dt-scroll';
+    despachoPanel.appendChild(despachoWrap);
+    if(!inbox.length){ despachoWrap.innerHTML = '<p class="dt-row-detail">Sin mensajes por ahora.</p>'; }
+    inbox.slice(0, 10).forEach(function(m){
+      var wrap = document.createElement('div'); wrap.style.marginBottom = '.4cqw';
       var row = document.createElement('div'); row.className = 'dt-row clickable'; row.style.marginBottom = '0';
       row.innerHTML =
         '<div class="dt-row-tone" style="background:' + (MGR_DT_INBOX_TONE[m.type] || 'var(--dt-azul)') + ';"></div>' +
         '<div style="flex:1; min-width:0;">' +
-          '<div class="dt-row-title">' + escapeHtml(m.title) + (m.read ? '' : ' <span style="color:var(--dt-verde);">●</span>') + '</div>' +
-          '<div class="dt-row-detail" style="white-space:normal;">' + escapeHtml(m.body) + '</div>' +
-        '</div>';
-      row.addEventListener('click', function(){ mgrMarkInboxRead(m.id); });
+          '<div class="dt-row-title">' + escapeHtml(m.title) + (m.read ? '' : ' <span style="color:var(--dt-oro-suave);">●</span>') + '</div>' +
+          '<div class="dt-row-detail" style="white-space:normal; text-transform:none;">' + escapeHtml(m.body) + '</div>' +
+        '</div><div style="font-size:1.1cqw; color:var(--dt-oro-suave);">▸</div>';
+      row.addEventListener('click', function(){
+        mgrMarkInboxRead(m.id);
+        if(!(m.meta && (m.meta.negId || m.meta.pressId))) mgrSwitchTab(mgrInboxTargetTab(m));
+      });
       wrap.appendChild(row);
       if(m.meta && m.meta.negId){
         var meNeg = mgrNegoById(m.meta.negId);
         if(meNeg && meNeg.status === 'active'){
           var goBtn = document.createElement('button'); goBtn.type = 'button'; goBtn.className = 'dt-btn-outline';
-          goBtn.style.cssText = 'margin-top:.3cqw; width:100%;'; goBtn.textContent = 'Ver negociación';
+          goBtn.style.cssText = 'margin-top:.3cqw; width:100%; padding:.4cqw;'; goBtn.textContent = 'Ver negociación';
           goBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrGotoNego(meNeg.id); });
           wrap.appendChild(goBtn);
         }
@@ -9077,92 +9090,20 @@
         var press = (state.manager.press || []).filter(function(x){ return x.id === m.meta.pressId; })[0];
         if(press && !press.resolved){
           var pWrap = document.createElement('div'); pWrap.style.marginTop = '.3cqw';
-          var qP = document.createElement('div'); qP.className = 'dt-row-detail'; qP.style.cssText += 'white-space:normal; margin-bottom:.25cqw;'; qP.textContent = press.question;
+          var qP = document.createElement('div'); qP.className = 'dt-row-detail'; qP.style.cssText += 'white-space:normal; text-transform:none; margin-bottom:.25cqw;'; qP.textContent = press.question;
           pWrap.appendChild(qP);
           press.options.forEach(function(opt, idx){
             var optBtn = document.createElement('button'); optBtn.type = 'button'; optBtn.className = 'dt-btn-outline';
-            optBtn.style.cssText = 'width:100%; margin-top:.2cqw; text-align:left;'; optBtn.textContent = opt.label;
+            optBtn.style.cssText = 'width:100%; margin-top:.25cqw; text-align:left; padding:.4cqw .6cqw; font-size:0.85cqw;'; optBtn.textContent = opt.label;
             optBtn.addEventListener('click', function(e){ e.stopPropagation(); mgrMarkInboxRead(m.id); mgrAnswerPress(press.id, idx); });
             pWrap.appendChild(optBtn);
           });
           wrap.appendChild(pWrap);
         }
       }
-      inboxList.appendChild(wrap);
+      despachoWrap.appendChild(wrap);
     });
-    col1.appendChild(inboxPanel);
-
-    /* --- Columna 2: tabla + parte médico --- */
-    var col2 = document.createElement('div'); col2.className = 'dt-col';
-    grid.appendChild(col2);
-
-    var tablePanel = document.createElement('div'); tablePanel.className = 'dt-panel';
-    tablePanel.innerHTML = '<div class="dt-panel-title">Tabla · top 5</div>';
-    var table = mgrStandingsTable();
-    table.slice(0, 5).forEach(function(row, i){
-      var r = document.createElement('div');
-      r.className = 'dt-table-row' + (row.idx === 0 ? ' me' : '');
-      r.innerHTML =
-        '<div class="dt-table-pos">' + (i + 1) + '</div>' +
-        '<div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(row.name) + '</div>' +
-        '<div class="dt-table-pj">' + row.stats.pj + '</div>' +
-        '<div class="dt-table-pts">' + row.stats.pts + '</div>';
-      tablePanel.appendChild(r);
-    });
-    col2.appendChild(tablePanel);
-
-    var medPanel = document.createElement('div'); medPanel.className = 'dt-panel flex-col'; medPanel.style.flex = '1';
-    medPanel.innerHTML = '<div class="dt-panel-title">Parte médico</div>';
-    var medWrap = document.createElement('div'); medWrap.className = 'dt-scroll';
-    var medList = mgrHubMedicalList();
-    if(!medList.length){ medWrap.innerHTML = '<p class="dt-row-detail">Plantilla sin bajas.</p>'; }
-    medList.forEach(function(item){
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; gap:.5cqw; margin-bottom:.4cqw;';
-      var tone = item.tone === 'rojo' ? 'var(--dt-rojo-t)' : 'var(--dt-ambar-t)';
-      var textTone = item.tone === 'rojo' ? 'var(--dt-rojo)' : 'var(--dt-ambar)';
-      row.innerHTML =
-        '<div><div class="dt-row-title">' + escapeHtml(item.nombre) + '</div><div class="dt-row-detail">' + item.detalle + '</div></div>' +
-        '<div class="dt-chip" style="background:' + tone + '; color:' + textTone + ';">' + item.plazo + '</div>';
-      medWrap.appendChild(row);
-    });
-    medPanel.appendChild(medWrap);
-    col2.appendChild(medPanel);
-
-    /* --- Columna 3: objetivo + radar de mercado --- */
-    var col3 = document.createElement('div'); col3.className = 'dt-col';
-    grid.appendChild(col3);
-
-    var objPanel = document.createElement('div'); objPanel.className = 'dt-panel';
-    objPanel.innerHTML = '<div class="dt-panel-title">Objetivo de temporada</div>';
-    var obj = mgrObjectiveProgress();
-    if(obj){
-      var objRow = document.createElement('div');
-      objRow.innerHTML =
-        '<div style="display:flex; justify-content:space-between; font-size:0.74cqw; margin-bottom:.25cqw; gap:.5cqw;"><span>' + escapeHtml(obj.text) + '</span><span class="dt-mono" style="color:var(--dt-text-sec); flex:none;">' + obj.pct + '%</span></div>' +
-        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + obj.pct + '%; background:' + obj.tone + ';"></div></div>';
-      objPanel.appendChild(objRow);
-    } else {
-      objPanel.innerHTML += '<p class="dt-row-detail">Sin objetivo asignado.</p>';
-    }
-    col3.appendChild(objPanel);
-
-    var radarPanel = document.createElement('div'); radarPanel.className = 'dt-panel flex-col'; radarPanel.style.flex = '1';
-    radarPanel.innerHTML = '<div class="dt-panel-title">Radar de mercado</div>';
-    var radarWrap = document.createElement('div'); radarWrap.className = 'dt-scroll';
-    var radarList = mgrHubRadarList();
-    if(!radarList.length){ radarWrap.innerHTML = '<p class="dt-row-detail">Sin datos de mercado todavía.</p>'; }
-    radarList.forEach(function(entry){
-      var row = document.createElement('div'); row.className = 'dt-row clickable';
-      row.innerHTML =
-        '<div class="dt-radar-icon">' + entry.p.position + '</div>' +
-        '<div style="flex:1; min-width:0;"><div class="dt-row-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(entry.p.name) + '</div><div class="dt-row-detail">' + escapeHtml(entry.clubName) + ' · ' + entry.p.age + ' años</div></div>' +
-        '<div class="dt-radar-value">' + entry.p.value.toLocaleString('es-CO') + '</div>';
-      row.addEventListener('click', function(){ mgrOpenTransferSheet(entry.clubIdx, entry.p.id); });
-      radarWrap.appendChild(row);
-    });
-    radarPanel.appendChild(radarWrap);
-    col3.appendChild(radarPanel);
+    col3.appendChild(despachoPanel);
   }
 
   var MGR_DT_POS_COLOR = { GK: 'var(--dt-ambar)', DEF: 'var(--dt-azul)', MID: 'var(--dt-verde)', FWD: 'var(--dt-rojo)' };
@@ -10725,90 +10666,59 @@
     detailView.appendChild(actions);
   }
 
-  var MGR_DT_SCREENS = [
-    ['hub', 'Escritorio', 'Escritorio del DT'],
-    ['plantilla', 'Plantilla', 'Plantilla'],
-    ['tactica', 'Táctica', 'Táctica y once'],
-    ['mercado', 'Mercado', 'Mercado de fichajes'],
-    ['negociacion', 'Negociación', 'Negociación'],
-    ['calendario', 'Calendario', 'Calendario'],
-    ['entreno', 'Entrenamiento', 'Entrenamiento'],
-    ['objetivos', 'Directiva', 'Objetivos de la directiva'],
-    ['previa', 'Previa', 'Previa del partido'],
-    ['cantera', 'Cantera', 'Cantera y ojeo'],
-    ['finanzas', 'Finanzas', 'Finanzas']
+  var MGR_DT_TABS = [
+    ['central', 'Central', [['hub', 'Resumen']]],
+    ['plantilla', 'Plantilla', [['plantilla', 'Jugadores']]],
+    ['tactica', 'Táctica', [['tactica', 'Pizarra']]],
+    ['traspasos', 'Traspasos', [['mercado', 'Buscar futbolistas'], ['negociacion', 'Negociación']]],
+    ['temporada', 'Temporada', [['calendario', 'Calendario'], ['previa', 'Previa']]],
+    ['oficina', 'Oficina', [['objetivos', 'Directiva'], ['entreno', 'Entrenamiento']]],
+    ['cantera', 'Cantera', [['cantera', 'Promesas']]],
+    ['finanzas', 'Finanzas', [['finanzas', 'Balance']]]
   ];
   var mgrActiveTab = 'hub';
-  function mgrDtSubtitle(tab){
-    if(tab === 'hub'){
-      var total = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
-      return 'temporada ' + state.manager.season + ' · jornada ' + state.manager.matchday + '/' + total;
-    }
-    if(tab === 'plantilla'){
-      var squad = state.manager.squad;
-      if(!squad.length) return 'sin fichas todavía';
-      var avgAge = Math.round(squad.reduce(function(s, p){ return s + p.age; }, 0) / squad.length * 10) / 10;
-      return squad.length + ' fichas · media ' + mgrSquadAvgOvr() + ' · edad media ' + String(avgAge).replace('.', ',');
-    }
-    if(tab === 'tactica'){
-      var tactics = mgrEnsureTactics();
-      return 'estilo ' + (MGR_STYLE_LABELS[tactics.style] || tactics.style).toLowerCase() + ' · presión ' + tactics.pressing + '%';
-    }
-    if(tab === 'mercado'){
-      return 'presupuesto libre ' + Math.round(state.manager.club.budget).toLocaleString('es-CO');
-    }
-    if(tab === 'negociacion'){
-      var activeCount = mgrNegotiations().filter(function(n){ return n.status === 'active'; }).length;
-      return activeCount ? (activeCount + ' negociación(es) activa(s)') : 'sin negociaciones activas';
-    }
-    if(tab === 'calendario'){
-      var totalMd = state.manager.calendar.length ? state.manager.calendar[state.manager.calendar.length - 1].matchday : 0;
-      return 'temporada ' + state.manager.season + ' · ' + totalMd + ' jornadas';
-    }
-    if(tab === 'previa'){
-      var t = mgrTodayMatchInfo(state.manager.day);
-      return t ? (t.kind === 'cup' ? MGR_CUP_NAME : 'jornada ' + t.fixture.matchday) + ' · ' + (t.iAmHome ? 'casa' : 'fuera') + ' · ' + t.oppName : 'sin partido hoy';
-    }
-    if(tab === 'entreno'){
-      return 'foco en ' + (state.manager.trainingFocus || 'GK').toLowerCase();
-    }
-    if(tab === 'objetivos'){
-      return 'confianza directiva ' + state.manager.club.boardConfidence + '%';
-    }
-    if(tab === 'cantera'){
-      return (state.manager.academy || []).length + ' juvenil(es) en seguimiento';
-    }
-    if(tab === 'finanzas'){
-      return 'ejercicio ' + state.manager.season;
-    }
-    return 'próximamente en esta fase del rediseño';
+  function mgrDtTabFor(screen){
+    return MGR_DT_TABS.filter(function(t){ return t[2].some(function(s){ return s[0] === screen; }); })[0] || MGR_DT_TABS[0];
   }
-  function mgrRenderDtNav(){
-    var navEl = document.getElementById('dtNav');
-    navEl.innerHTML = '';
-    MGR_DT_SCREENS.forEach(function(s, i){
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'dt-nav-item' + (mgrActiveTab === s[0] ? ' active' : '');
-      btn.innerHTML = '<span class="dt-nav-num">' + String(i + 1).padStart(2, '0') + '</span><span class="dt-nav-label">' + s[1] + '</span>';
-      btn.addEventListener('click', function(){ mgrSwitchTab(s[0]); });
-      navEl.appendChild(btn);
+  function mgrRenderDtTabs(){
+    var tabDef = mgrDtTabFor(mgrActiveTab);
+    var tabsEl = document.getElementById('dtTabs');
+    tabsEl.innerHTML = '';
+    MGR_DT_TABS.forEach(function(t){
+      var btn = document.createElement('button'); btn.type = 'button';
+      btn.className = 'dt-tab' + (t[0] === tabDef[0] ? ' active' : '');
+      btn.textContent = t[1];
+      btn.addEventListener('click', function(){ mgrSwitchTab(t[2][0][0]); });
+      tabsEl.appendChild(btn);
     });
+    var subAct = tabDef[2].filter(function(s){ return s[0] === mgrActiveTab; })[0] || tabDef[2][0];
+    document.getElementById('dtBreadcrumb').textContent = tabDef[1] + ' ❯ ' + subAct[1];
+    var subsEl = document.getElementById('dtSubtabs');
+    subsEl.innerHTML = '';
+    if(tabDef[2].length > 1){
+      tabDef[2].forEach(function(s){
+        var sEl = document.createElement('div');
+        sEl.className = 'dt-subtab' + (s[0] === mgrActiveTab ? ' active' : '');
+        sEl.textContent = s[1];
+        sEl.addEventListener('click', function(){ mgrSwitchTab(s[0]); });
+        subsEl.appendChild(sEl);
+      });
+    }
   }
   function mgrRenderDtPromptBar(){
     var el = document.getElementById('dtPromptBar');
     if(el.childNodes.length) return;
-    var prompts = [['↵', 'Seleccionar'], ['ESC', 'Volver'], ['Q/E', 'Cambiar sección'], ['F', 'Filtrar'], ['SPC', 'Avanzar']];
-    el.innerHTML = prompts.map(function(p){ return '<div class="dt-prompt"><div class="dt-key">' + p[0] + '</div><span class="dt-prompt-txt">' + p[1] + '</span></div>'; }).join('') +
-      '<div class="dt-spacer"></div><div class="dt-saved">GUARDADO AUTOMÁTICO</div>';
+    var prompts = [
+      { tecla: 'A', accion: 'Seleccionar', gold: true }, { tecla: 'B', accion: 'Atrás' },
+      { tecla: 'LB', accion: 'Pestaña anterior' }, { tecla: 'RB', accion: 'Pestaña siguiente' }
+    ];
+    el.innerHTML = prompts.map(function(p){ return '<div class="dt-prompt"><div class="dt-key' + (p.gold ? ' gold' : '') + '">' + p.tecla + '</div><span class="dt-prompt-txt">' + p.accion + '</span></div>'; }).join('') +
+      '<div class="dt-spacer"></div><div class="dt-saved">Guardado automático</div>';
   }
   function mgrRenderActiveTab(){
     if(!state.manager || !state.manager.active) return;
-    mgrRenderDtNav();
+    mgrRenderDtTabs();
     mgrRenderDtPromptBar();
-    var def = MGR_DT_SCREENS.filter(function(s){ return s[0] === mgrActiveTab; })[0] || MGR_DT_SCREENS[0];
-    document.getElementById('dtScreenTitle').textContent = def[2];
-    document.getElementById('dtScreenSub').textContent = mgrDtSubtitle(mgrActiveTab);
     if(mgrActiveTab === 'hub'){
       mgrRenderHub();
     } else if(mgrActiveTab === 'plantilla'){
