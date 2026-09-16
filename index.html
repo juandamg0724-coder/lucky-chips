@@ -9108,45 +9108,48 @@
 
   var MGR_DT_POS_COLOR = { GK: 'var(--dt-ambar)', DEF: 'var(--dt-azul)', MID: 'var(--dt-verde)', FWD: 'var(--dt-rojo)' };
   var mgrOpenSquadPlayerId = null;
+  function mgrFormaLabel(form){
+    if(form >= 75) return { txt: 'En racha', tone: 'var(--dt-verde)' };
+    if(form >= 60) return { txt: 'Estable', tone: 'var(--dt-oro-suave)' };
+    return { txt: 'Bajo tono', tone: 'var(--dt-rojo)' };
+  }
   function mgrRenderPlantillaDT(){
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="plantilla"]');
     root.innerHTML = '';
     var grid = document.createElement('div');
     grid.className = 'dt-screen';
-    grid.style.gridTemplateColumns = '1fr 20cqw';
+    grid.style.gridTemplateColumns = '1fr 26cqw';
     root.appendChild(grid);
 
     var squad = state.manager.squad;
     if((mgrOpenSquadPlayerId === null || !mgrPlayerById(mgrOpenSquadPlayerId)) && squad.length) mgrOpenSquadPlayerId = squad[0].id;
 
     var tableCol = document.createElement('div'); tableCol.className = 'dt-panel flex-col'; tableCol.style.cssText += 'padding:0; overflow:hidden;';
-    var colsTemplate = '2.4cqw 1.9fr 2.6cqw 2.6cqw 1fr 1fr 3.4cqw 3.6cqw';
+    var colsTemplate = '3cqw 1fr 4cqw 4cqw 5cqw 6cqw';
     var head = document.createElement('div');
-    head.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.5cqw; padding:.55cqw .8cqw; border-bottom:1px solid var(--dt-border);';
-    head.innerHTML = ['#', 'Jugador', 'Pos', 'Edad', 'Forma', 'Moral', 'Media', 'Valor'].map(function(h){ return '<div class="dt-label" style="margin-bottom:0;">' + h + '</div>'; }).join('');
+    head.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.6cqw; padding:.8cqw 1.1cqw; border-bottom:1px solid rgba(255,255,255,.12);';
+    head.innerHTML = ['Pos', 'Jugador', 'Edad', 'Glb', 'Forma', 'Valor'].map(function(h){ return '<div class="dt-label" style="margin-bottom:0;">' + h + '</div>'; }).join('');
     tableCol.appendChild(head);
-    var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll'; listWrap.style.flex = '1';
+    var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll'; listWrap.style.flex = '1'; listWrap.style.padding = '.5cqw';
     tableCol.appendChild(listWrap);
 
-    squad.forEach(function(p, i){
+    squad.forEach(function(p){
       var isSel = p.id === mgrOpenSquadPlayerId;
       var row = document.createElement('div');
-      row.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.5cqw; padding:.42cqw .8cqw; align-items:center; font-size:0.76cqw; cursor:pointer;' +
-        (isSel ? 'background:var(--dt-bg-active); box-shadow:inset .16cqw 0 0 var(--dt-verde);' : (i % 2 ? 'background:oklch(0.175 0.014 250);' : ''));
-      var formaTone = p.form >= 75 ? 'var(--dt-verde)' : p.form >= 60 ? 'var(--dt-ambar)' : 'var(--dt-rojo)';
-      var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
+      row.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.6cqw; align-items:center; padding:.62cqw .6cqw; border-radius:.6cqw; font-size:0.8cqw; cursor:pointer; margin-bottom:.15cqw;' +
+        (isSel ? 'background:var(--dt-oro); color:var(--dt-tinta);' : 'background:rgba(255,255,255,.05);');
+      var forma = mgrFormaLabel(p.form);
+      var posColor = isSel ? 'var(--dt-tinta)' : (MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)');
       var injured = p.injuredUntil && p.injuredUntil > state.manager.matchday;
       var suspended = p.suspendedUntil && p.suspendedUntil > state.manager.matchday;
       row.innerHTML =
-        '<div class="dt-mono" style="color:var(--dt-text-mono);">' + p.number + '</div>' +
-        '<div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600;">' + escapeHtml(p.name) + (injured ? ' 🚑' : '') + (suspended ? ' 🟥' : '') + (p.onLoan ? ' (cedido)' : '') + '</div>' +
-        '<div class="dt-mono" style="color:' + posColor + '; font-weight:600;">' + p.position + '</div>' +
-        '<div class="dt-mono" style="color:var(--dt-text-sec);">' + p.age + '</div>' +
-        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + Math.max(0, Math.min(100, p.form)) + '%; background:' + formaTone + ';"></div></div>' +
-        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + Math.max(0, Math.min(100, p.morale)) + '%; background:var(--dt-azul);"></div></div>' +
-        '<div class="dt-mono" style="font-weight:600; text-align:right;">' + p.ovr + '</div>' +
-        '<div class="dt-mono" style="text-align:right; color:var(--dt-text-sec);">' + p.value.toLocaleString('es-CO') + '</div>';
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700; color:' + posColor + ';">' + p.position + '</div>' +
+        '<div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700;">' + escapeHtml(p.name) + (injured ? ' 🚑' : '') + (suspended ? ' 🟥' : '') + (p.onLoan ? ' (cedido)' : '') + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; opacity:.8;">' + p.age + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; font-weight:700;">' + p.ovr + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-weight:600; color:' + (isSel ? 'var(--dt-tinta)' : forma.tone) + ';">' + forma.txt + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; text-align:right; opacity:.9;">' + p.value.toLocaleString('es-CO') + '</div>';
       row.addEventListener('click', function(){ mgrOpenSquadPlayerId = p.id; mgrRenderPlantillaDT(); });
       listWrap.appendChild(row);
     });
@@ -9160,37 +9163,33 @@
       var attrDefs = [['Ritmo', 'velocidad'], ['Tiro', 'tiro'], ['Pase', 'pase'], ['Regate', 'regate'], ['Defensa', 'defensa'], ['Físico', 'fisico']];
       var dataRows = [
         ['Salario', p.wage.toLocaleString('es-CO')],
-        ['Valor de mercado', p.value.toLocaleString('es-CO')],
         ['Partidos / goles', (p.seasonApps || 0) + ' / ' + (p.seasonGoals || 0)],
         ['Pie · altura', p.foot + ' · ' + p.height + 'cm']
       ];
       fichaCol.innerHTML =
-        '<div style="display:flex; gap:.7cqw; align-items:flex-start;">' +
-          '<div style="width:4.6cqw; height:5.6cqw; min-width:56px; min-height:68px; border-radius:4px; background:repeating-linear-gradient(135deg,var(--dt-bg-inset) 0 6px,oklch(0.23 0.016 250) 6px 12px); display:flex; align-items:flex-end; justify-content:center; padding:.3cqw; flex:none;"><span class="dt-mono" style="font-size:0.5cqw; color:var(--dt-text-mono);">FOTO</span></div>' +
-          '<div style="flex:1; min-width:0;">' +
-            '<div style="font-size:1.05cqw; font-weight:800; line-height:1.1;">#' + p.number + ' ' + escapeHtml(p.name) + '</div>' +
-            '<div class="dt-mono" style="font-size:0.64cqw; color:var(--dt-text-sec); margin-top:.2cqw;">' + p.position + ' · ' + p.age + ' años · contrato ' + p.contractYears + ' año(s)' + (p.onLoan ? ' · cedido' : '') + '</div>' +
-            '<div style="display:flex; gap:.4cqw; margin-top:.5cqw;">' +
-              '<div class="dt-chip" style="background:var(--dt-verde); color:var(--dt-ink); font-weight:600;">' + p.ovr + ' MED</div>' +
-              '<div class="dt-chip" style="border:1px solid var(--dt-border-strong);">' + p.potential + ' POT</div>' +
-            '</div>' +
+        '<div style="display:flex; gap:1cqw; align-items:center;">' +
+          '<div style="width:6cqw; height:7.4cqw; min-width:56px; min-height:68px; border-radius:.8cqw; background:repeating-linear-gradient(135deg, rgba(255,255,255,.09) 0 8px, rgba(255,255,255,.03) 8px 16px); display:flex; align-items:flex-end; justify-content:center; padding-bottom:.5cqw; flex:none;"><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.8cqw; color:rgba(255,255,255,.5); text-transform:uppercase;">Foto</span></div>' +
+          '<div style="min-width:0;">' +
+            '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:3.4cqw; font-weight:700; line-height:.85; color:var(--dt-oro-suave);">' + p.ovr + '</div>' +
+            '<div style="font-size:1.35cqw; font-weight:800; line-height:1.1; margin-top:.3cqw;">#' + p.number + ' ' + escapeHtml(p.name) + '</div>' +
+            '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.05cqw; color:var(--dt-text-sec);">' + p.position + ' · ' + p.age + ' años · contrato ' + p.contractYears + ' año(s)' + (p.onLoan ? ' · cedido' : '') + '</div>' +
           '</div>' +
         '</div>' +
-        '<div style="display:flex; flex-direction:column; gap:.5cqw; margin-top:.8cqw;">' +
+        '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:.5cqw; margin-top:.9cqw;">' +
           attrDefs.map(function(a){
             var val = p.attrs[a[1]];
-            var tone = val >= 78 ? 'var(--dt-verde)' : val >= 62 ? 'var(--dt-ambar)' : 'var(--dt-rojo)';
-            return '<div><div style="display:flex; justify-content:space-between; font-family:\'IBM Plex Mono\',monospace; font-size:0.64cqw; color:var(--dt-text-sec); margin-bottom:.2cqw;"><span>' + a[0] + '</span><span>' + val + '</span></div><div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + val + '%; background:' + tone + ';"></div></div></div>';
+            var tone = val >= 78 ? 'var(--dt-verde)' : val >= 62 ? 'var(--dt-oro-suave)' : 'var(--dt-rojo)';
+            return '<div style="padding:.7cqw; border-radius:.7cqw; background:rgba(255,255,255,.07); text-align:center;"><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.9cqw; font-weight:700; line-height:1; color:' + tone + ';">' + val + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.85cqw; letter-spacing:.07cqw; text-transform:uppercase; color:var(--dt-text-sec);">' + a[0] + '</div></div>';
           }).join('') +
         '</div>' +
-        '<div style="border-top:1px solid var(--dt-border); margin-top:.7cqw; padding-top:.6cqw; display:flex; flex-direction:column; gap:.35cqw;">' +
+        '<div style="display:flex; flex-direction:column; gap:.1cqw; margin-top:.9cqw;">' +
           dataRows.map(function(d){
-            return '<div style="display:flex; justify-content:space-between; font-size:0.72cqw;"><span style="color:var(--dt-text-sec);">' + d[0] + '</span><span class="dt-mono" style="font-weight:600;">' + d[1] + '</span></div>';
+            return '<div style="display:flex; justify-content:space-between; align-items:baseline; padding:.4cqw 0; border-bottom:1px solid rgba(255,255,255,.08);"><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.05cqw; color:var(--dt-text-sec);">' + d[0] + '</span><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.15cqw; font-weight:700;">' + d[1] + '</span></div>';
           }).join('') +
         '</div>' +
-        '<div style="display:flex; gap:.45cqw; margin-top:.8cqw;">' +
-          '<button type="button" class="dt-btn-outline" id="dtFichaRenovarBtn">RENOVAR</button>' +
-          '<button type="button" class="dt-btn-fill" id="dtFichaTransferBtn" style="background:' + (p.forSale ? 'var(--dt-rojo)' : 'var(--dt-border-strong)') + ';">' + (p.forSale ? 'QUITAR DE VENTA' : 'TRANSFERIBLE') + '</button>' +
+        '<div style="display:flex; gap:.6cqw; margin-top:auto; padding-top:.9cqw;">' +
+          '<button type="button" class="dt-btn-fill" id="dtFichaRenovarBtn" style="flex:1;">RENOVAR</button>' +
+          '<button type="button" class="dt-btn-outline" id="dtFichaTransferBtn" style="flex:1;' + (p.forSale ? ' background:var(--dt-rojo-t); border-color:var(--dt-rojo);' : '') + '">' + (p.forSale ? 'QUITAR DE VENTA' : 'VENDER') + '</button>' +
         '</div>';
       fichaCol.querySelector('#dtFichaRenovarBtn').addEventListener('click', function(){ mgrOpenPlayerSheet(p.id); });
       fichaCol.querySelector('#dtFichaTransferBtn').addEventListener('click', function(){ p.forSale = !p.forSale; saveState(); mgrRenderPlantillaDT(); });
@@ -9198,27 +9197,31 @@
     grid.appendChild(fichaCol);
   }
 
+  var MGR_TACT_LEVEL_LABELS = ['MÍNIMO', 'BAJO', 'MEDIO', 'ALTO', 'MÁXIMO'];
   function mgrRenderTacticaDT(){
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="tactica"]');
     root.innerHTML = '';
     var grid = document.createElement('div');
     grid.className = 'dt-screen';
-    grid.style.gridTemplateColumns = '15cqw 1fr 17cqw';
+    grid.style.gridTemplateColumns = '19cqw 1fr 21cqw';
     root.appendChild(grid);
     var tactics = mgrEnsureTactics();
+    ['pressing', 'block', 'width'].forEach(function(k){ tactics[k] = Math.round(tactics[k] / 25) * 25; });
 
     /* --- Columna izquierda: estilo + instrucciones --- */
     var col1 = document.createElement('div'); col1.className = 'dt-col';
     grid.appendChild(col1);
 
     var stylePanel = document.createElement('div'); stylePanel.className = 'dt-panel';
-    stylePanel.innerHTML = '<div class="dt-panel-title">Estilo de juego</div>';
-    var styleList = document.createElement('div');
+    stylePanel.innerHTML = '<div class="dt-panel-title">FORMACIÓN</div>';
+    var styleList = document.createElement('div'); styleList.style.cssText = 'display:flex; flex-direction:column; gap:.45cqw;';
     Object.keys(MGR_STYLE_LABELS).forEach(function(key){
+      var active = tactics.style === key;
       var item = document.createElement('div');
-      item.className = 'dt-style-item' + (tactics.style === key ? ' active' : '');
-      item.innerHTML = '<span class="dt-style-name">' + MGR_STYLE_LABELS[key] + '</span>';
+      item.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:.8cqw 1cqw; border-radius:99px; cursor:pointer; font-family:\'Barlow Condensed\',sans-serif; font-weight:700; font-size:1.05cqw;' +
+        (active ? 'background:var(--dt-oro); color:var(--dt-tinta);' : 'background:rgba(255,255,255,.07); color:var(--dt-text);');
+      item.textContent = MGR_STYLE_LABELS[key];
       item.addEventListener('click', function(){ tactics.style = key; saveState(); mgrRenderTacticaDT(); });
       styleList.appendChild(item);
     });
@@ -9226,16 +9229,17 @@
     col1.appendChild(stylePanel);
 
     var instrPanel = document.createElement('div'); instrPanel.className = 'dt-panel flex-col'; instrPanel.style.flex = '1';
-    instrPanel.innerHTML = '<div class="dt-panel-title">Instrucciones</div>';
+    instrPanel.innerHTML = '<div class="dt-panel-title">PLAN DE JUEGO</div>';
     [['pressing', 'Presión'], ['block', 'Bloque defensivo'], ['width', 'Anchura']].forEach(function(def){
-      var wrap = document.createElement('div'); wrap.style.marginTop = '.7cqw';
-      var label = document.createElement('div'); label.className = 'dt-slider-label';
-      label.innerHTML = '<span>' + def[1] + '</span><span class="dt-mono" style="color:var(--dt-verde);">' + tactics[def[0]] + '</span>';
+      var wrap = document.createElement('div'); wrap.style.marginTop = '.9cqw';
+      var label = document.createElement('div');
+      label.style.cssText = 'display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.35cqw;';
+      label.innerHTML = '<span style="font-size:0.98cqw; font-weight:600;">' + def[1] + '</span><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.25cqw; font-weight:700; color:var(--dt-oro-suave);">' + MGR_TACT_LEVEL_LABELS[tactics[def[0]] / 25] + '</span>';
       var input = document.createElement('input');
-      input.type = 'range'; input.min = '0'; input.max = '100'; input.value = String(tactics[def[0]]); input.className = 'dt-slider';
+      input.type = 'range'; input.min = '0'; input.max = '100'; input.step = '25'; input.value = String(tactics[def[0]]); input.className = 'dt-slider'; input.style.width = '100%';
       input.addEventListener('input', function(){
         tactics[def[0]] = parseInt(input.value, 10);
-        label.querySelector('span:last-child').textContent = tactics[def[0]];
+        label.querySelector('span:last-child').textContent = MGR_TACT_LEVEL_LABELS[tactics[def[0]] / 25];
         mgrRenderTacticaCenterRight(tactics);
       });
       input.addEventListener('change', function(){ saveState(); });
@@ -9274,10 +9278,10 @@
     /* --- Columna derecha: química + banquillo --- */
     var col3 = document.createElement('div'); col3.className = 'dt-col';
     grid.appendChild(col3);
-    var chemPanel = document.createElement('div'); chemPanel.className = 'dt-panel'; chemPanel.id = 'dtChemPanel';
+    var chemPanel = document.createElement('div'); chemPanel.className = 'dt-gold-card'; chemPanel.id = 'dtChemPanel';
     col3.appendChild(chemPanel);
     var benchPanel = document.createElement('div'); benchPanel.className = 'dt-panel flex-col'; benchPanel.style.flex = '1';
-    benchPanel.innerHTML = '<div class="dt-panel-title">Banquillo</div>';
+    benchPanel.innerHTML = '<div class="dt-panel-title">BANQUILLO</div>';
     var benchWrap = document.createElement('div'); benchWrap.className = 'dt-scroll';
     benchPanel.appendChild(benchWrap);
     var startersIds = {};
@@ -9285,12 +9289,12 @@
     var bench = state.manager.squad.filter(function(p){ return !startersIds[p.id]; });
     if(!bench.length){ benchWrap.innerHTML = '<p class="dt-row-detail">Sin suplentes disponibles.</p>'; }
     bench.forEach(function(p){
-      var row = document.createElement('div'); row.className = 'dt-row clickable';
+      var row = document.createElement('div'); row.style.cssText = 'display:flex; align-items:center; gap:.7cqw; padding:.6cqw .7cqw; border-radius:.6cqw; background:rgba(255,255,255,.07); cursor:pointer; margin-bottom:.4cqw;';
       var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
       row.innerHTML =
-        '<span class="dt-mono" style="color:' + posColor + '; width:1.8cqw; font-weight:600;">' + p.position + '</span>' +
-        '<span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</span>' +
-        '<span class="dt-mono" style="font-weight:600;">' + p.ovr + '</span>';
+        '<span style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700; width:3cqw; color:' + posColor + ';">' + p.position + '</span>' +
+        '<span style="flex:1; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</span>' +
+        '<span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.3cqw; font-weight:700;">' + p.ovr + '</span>';
       row.addEventListener('click', function(){ mgrOpenPlayerSheet(p.id); });
       benchWrap.appendChild(row);
     });
@@ -9318,11 +9322,11 @@
     var chemLabel = chemistry >= 70 ? 'buen encaje' : chemistry >= 45 ? 'encaje mejorable' : 'encaje pobre';
     avisos.sort(function(a, b){ var order = { 'var(--dt-rojo)': 0, 'var(--dt-ambar)': 1, 'var(--dt-verde)': 2 }; return order[a.tono] - order[b.tono]; });
     chemPanel.innerHTML =
-      '<div class="dt-panel-title">Química del bloque</div>' +
-      '<div style="display:flex; align-items:baseline; gap:.5cqw;"><span class="dt-mono" style="font-size:2.2cqw; font-weight:600; color:var(--dt-verde);">' + chemistry + '</span><span style="font-size:0.72cqw; color:var(--dt-text-sec);">/100 · ' + chemLabel + '</span></div>' +
-      '<div style="margin-top:.6cqw; display:flex; flex-direction:column; gap:.4cqw;">' +
+      '<div class="dt-gold-label">Química del bloque</div>' +
+      '<div style="display:flex; align-items:baseline; gap:.6cqw;"><span class="dt-gold-big" style="font-size:3.6cqw;">' + chemistry + '</span><span style="font-size:1.05cqw; font-weight:700;">' + chemLabel + '</span></div>' +
+      '<div style="margin-top:.7cqw; display:flex; flex-direction:column; gap:.35cqw;">' +
         avisos.slice(0, 3).map(function(a){
-          return '<div style="display:flex; gap:.45cqw; align-items:center; font-size:0.72cqw;"><div style="width:.45cqw; height:.45cqw; border-radius:50%; background:' + a.tono + '; flex:none;"></div><span style="color:oklch(0.82 0.01 250);">' + escapeHtml(a.texto) + '</span></div>';
+          return '<div style="display:flex; gap:.4cqw; align-items:center; font-size:0.85cqw; font-weight:600;"><div style="width:.5cqw; height:.5cqw; border-radius:50%; background:' + a.tono + '; flex:none;"></div><span>' + escapeHtml(a.texto) + '</span></div>';
         }).join('') +
       '</div>';
   }
@@ -9338,75 +9342,119 @@
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="mercado"]');
     root.innerHTML = '';
-    var grid = document.createElement('div');
-    grid.className = 'dt-screen';
-    grid.style.gridTemplateColumns = '13cqw 1fr';
-    root.appendChild(grid);
+    var col = document.createElement('div'); col.className = 'dt-screen'; col.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw;';
+    root.appendChild(col);
 
-    var filtersPanel = document.createElement('div'); filtersPanel.className = 'dt-panel flex-col';
-    filtersPanel.innerHTML = '<div class="dt-panel-title">Filtros</div>';
-    function chipRow(label, options, current, onPick){
-      var wrap = document.createElement('div'); wrap.style.marginBottom = '.7cqw';
-      var lab = document.createElement('div'); lab.style.cssText = 'font-size:0.68cqw; color:var(--dt-text-sec); margin-bottom:.3cqw;'; lab.textContent = label;
-      wrap.appendChild(lab);
-      var row = document.createElement('div'); row.style.cssText = 'display:flex; flex-wrap:wrap; gap:.25cqw;';
-      options.forEach(function(opt){
-        var active = opt.key === current;
-        var chip = document.createElement('div');
-        chip.className = 'dt-chip'; chip.style.cursor = 'pointer';
-        chip.style.cssText += active ? 'background:var(--dt-verde); color:var(--dt-ink); border:1px solid var(--dt-verde);' : 'border:1px solid var(--dt-border-strong); color:var(--dt-text-sec);';
-        chip.textContent = opt.label;
-        chip.addEventListener('click', function(){ onPick(opt.key); mgrRenderMercadoDT(); });
-        row.appendChild(chip);
-      });
-      wrap.appendChild(row);
-      return wrap;
+    var MGR_MERC_POS = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
+    var MGR_MERC_AGE = [{ k: 'ALL', l: 'Todas' }, { k: 'U21', l: 'Sub-21' }, { k: '21-28', l: '21 a 28' }, { k: '29+', l: '29+' }];
+    var MGR_MERC_OVR = [{ k: 'ALL', l: 'Todas' }, { k: '80+', l: '80+' }, { k: '70-79', l: '70 a 79' }, { k: '<70', l: 'Menos de 70' }];
+    var MGR_MERC_VAL = [{ k: 'ALL', l: 'Todos' }, { k: 'ALTO', l: 'Alto' }, { k: 'MEDIO', l: 'Medio' }, { k: 'BAJO', l: 'Bajo' }];
+    var MGR_MERC_SORT = [{ k: 'ovr', l: 'Media' }, { k: 'potential', l: 'Potencial' }, { k: 'age', l: 'Edad' }, { k: 'value', l: 'Valor' }];
+    var filterRow = document.createElement('div'); filterRow.style.cssText = 'display:grid; grid-template-columns:repeat(5,1fr); gap:.7cqw;';
+    function filterCard(nombre, valor, onClick){
+      var card = document.createElement('div');
+      card.style.cssText = 'border-radius:.9cqw; padding:1cqw; cursor:pointer; text-align:center; background:rgba(255,255,255,.07); border:2px solid rgba(255,255,255,.14);';
+      card.innerHTML = '<div style="font-size:1.05cqw; font-weight:800; letter-spacing:.03cqw;">' + nombre + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.3cqw; font-weight:700; margin-top:.3cqw; color:var(--dt-oro-suave);">' + valor + '</div>';
+      card.addEventListener('click', onClick);
+      return card;
     }
-    filtersPanel.appendChild(chipRow('Posición', [{ key: 'ALL', label: 'Todos' }, { key: 'GK', label: 'GK' }, { key: 'DEF', label: 'DEF' }, { key: 'MID', label: 'MID' }, { key: 'FWD', label: 'FWD' }], mgrTransferFilter, function(k){ mgrTransferFilter = k; }));
-    filtersPanel.appendChild(chipRow('Ordenar por', [{ key: 'ovr', label: 'Media' }, { key: 'potential', label: 'Potencial' }, { key: 'age', label: 'Edad' }, { key: 'value', label: 'Valor' }], mgrTransferSort, function(k){ mgrTransferSort = k; }));
-    var budgetCard = document.createElement('div'); budgetCard.style.cssText = 'margin-top:auto; padding:.7cqw; border-radius:4px; background:var(--dt-bg-inset);';
-    budgetCard.innerHTML = '<div class="dt-label" style="margin-bottom:.2cqw;">Presupuesto libre</div><div class="dt-mono" style="font-size:1.2cqw; font-weight:600; color:var(--dt-verde);">' + Math.round(state.manager.club.budget).toLocaleString('es-CO') + '</div>';
-    filtersPanel.appendChild(budgetCard);
-    grid.appendChild(filtersPanel);
+    filterRow.appendChild(filterCard('POSICIÓN', mgrTransferFilter === 'ALL' ? 'Todas' : mgrTransferFilter, function(){
+      mgrTransferFilter = MGR_MERC_POS[(MGR_MERC_POS.indexOf(mgrTransferFilter) + 1) % MGR_MERC_POS.length]; mgrRenderMercadoDT();
+    }));
+    filterRow.appendChild(filterCard('EDAD', MGR_MERC_AGE.filter(function(o){ return o.k === mgrTransferAgeBand; })[0].l, function(){
+      var i = MGR_MERC_AGE.map(function(o){ return o.k; }).indexOf(mgrTransferAgeBand);
+      mgrTransferAgeBand = MGR_MERC_AGE[(i + 1) % MGR_MERC_AGE.length].k; mgrRenderMercadoDT();
+    }));
+    filterRow.appendChild(filterCard('MEDIA', MGR_MERC_OVR.filter(function(o){ return o.k === mgrTransferOvrBand; })[0].l, function(){
+      var i = MGR_MERC_OVR.map(function(o){ return o.k; }).indexOf(mgrTransferOvrBand);
+      mgrTransferOvrBand = MGR_MERC_OVR[(i + 1) % MGR_MERC_OVR.length].k; mgrRenderMercadoDT();
+    }));
+    filterRow.appendChild(filterCard('VALOR', MGR_MERC_VAL.filter(function(o){ return o.k === mgrTransferValBand; })[0].l, function(){
+      var i = MGR_MERC_VAL.map(function(o){ return o.k; }).indexOf(mgrTransferValBand);
+      mgrTransferValBand = MGR_MERC_VAL[(i + 1) % MGR_MERC_VAL.length].k; mgrRenderMercadoDT();
+    }));
+    filterRow.appendChild(filterCard('ORDENAR POR', MGR_MERC_SORT.filter(function(o){ return o.k === mgrTransferSort; })[0].l, function(){
+      var i = MGR_MERC_SORT.map(function(o){ return o.k; }).indexOf(mgrTransferSort);
+      mgrTransferSort = MGR_MERC_SORT[(i + 1) % MGR_MERC_SORT.length].k; mgrRenderMercadoDT();
+    }));
+    col.appendChild(filterRow);
+
+    var body = document.createElement('div'); body.style.cssText = 'flex:1; display:grid; grid-template-columns:1fr 22cqw; gap:.8cqw; min-height:0;';
+    col.appendChild(body);
 
     var tableCol = document.createElement('div'); tableCol.className = 'dt-panel flex-col'; tableCol.style.cssText += 'padding:0; overflow:hidden;';
-    var colsTemplate = '2.4fr 2.4cqw 2.4cqw 1.6fr 4cqw 4.4cqw 5cqw';
+    var colsTemplate = '3.4cqw 1fr 4cqw 5cqw 7cqw 6.5cqw';
     var head = document.createElement('div');
-    head.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.5cqw; padding:.55cqw .8cqw; border-bottom:1px solid var(--dt-border);';
-    head.innerHTML = ['Objetivo', 'Pos', 'Ed', 'Club', 'Med/Pot', 'Valor', 'Interés'].map(function(h){ return '<div class="dt-label" style="margin-bottom:0;">' + h + '</div>'; }).join('');
+    head.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.6cqw; padding:.8cqw 1.1cqw; border-bottom:1px solid rgba(255,255,255,.12);';
+    head.innerHTML = ['Pos', 'Objetivo', 'Edad', 'Glb/Pot', 'Club', 'Valor'].map(function(h){ return '<div class="dt-label" style="margin-bottom:0;">' + h + '</div>'; }).join('');
     tableCol.appendChild(head);
-    var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll'; listWrap.style.flex = '1';
+    var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll'; listWrap.style.flex = '1'; listWrap.style.padding = '.5cqw';
     tableCol.appendChild(listWrap);
 
     var list = [];
     state.manager.cpuClubs.forEach(function(club, idx){
-      club.squad.forEach(function(p){ if(mgrTransferFilter === 'ALL' || p.position === mgrTransferFilter) list.push({ p: p, clubIdx: idx, clubName: club.name }); });
+      club.squad.forEach(function(p){
+        if(mgrTransferFilter !== 'ALL' && p.position !== mgrTransferFilter) return;
+        if(mgrTransferAgeBand === 'U21' && p.age > 21) return;
+        if(mgrTransferAgeBand === '21-28' && (p.age < 21 || p.age > 28)) return;
+        if(mgrTransferAgeBand === '29+' && p.age < 29) return;
+        if(mgrTransferOvrBand === '80+' && p.ovr < 80) return;
+        if(mgrTransferOvrBand === '70-79' && (p.ovr < 70 || p.ovr > 79)) return;
+        if(mgrTransferOvrBand === '<70' && p.ovr >= 70) return;
+        if(mgrTransferValBand === 'ALTO' && p.value < 150000) return;
+        if(mgrTransferValBand === 'MEDIO' && (p.value < 50000 || p.value >= 150000)) return;
+        if(mgrTransferValBand === 'BAJO' && p.value >= 50000) return;
+        list.push({ p: p, clubIdx: idx, clubName: club.name });
+      });
     });
     if(mgrTransferSort === 'age') list.sort(function(a, b){ return a.p.age - b.p.age; });
     else if(mgrTransferSort === 'value') list.sort(function(a, b){ return b.p.value - a.p.value; });
     else if(mgrTransferSort === 'potential') list.sort(function(a, b){ return b.p.potential - a.p.potential; });
     else list.sort(function(a, b){ return b.p.ovr - a.p.ovr; });
 
-    if(!list.length){ listWrap.innerHTML = '<p class="dt-row-detail" style="padding:.8cqw;">No hay jugadores en esta posición.</p>'; }
+    if(!list.length){ listWrap.innerHTML = '<p class="dt-row-detail" style="padding:.8cqw;">Ningún jugador cumple estos filtros.</p>'; }
     list.slice(0, 60).forEach(function(entry){
       var p = entry.p;
-      var interest = mgrTransferInterest(p);
-      var tone = interest >= 70 ? 'var(--dt-verde)' : interest >= 45 ? 'var(--dt-ambar)' : 'oklch(0.50 0.02 250)';
       var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
       var row = document.createElement('div');
-      row.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.5cqw; padding:.45cqw .8cqw; align-items:center; font-size:0.76cqw; cursor:pointer;';
+      row.style.cssText = 'display:grid; grid-template-columns:' + colsTemplate + '; gap:.6cqw; align-items:center; padding:.68cqw .6cqw; border-radius:.6cqw; cursor:pointer; background:rgba(255,255,255,.05); font-size:0.85cqw; margin-bottom:.15cqw;';
       row.innerHTML =
-        '<div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</div>' +
-        '<div class="dt-mono" style="color:' + posColor + '; font-weight:600;">' + p.position + '</div>' +
-        '<div class="dt-mono" style="color:var(--dt-text-sec);">' + p.age + '</div>' +
-        '<div style="color:var(--dt-text-sec); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(entry.clubName) + '</div>' +
-        '<div class="dt-mono" style="font-weight:600;">' + p.ovr + ' / ' + p.potential + '</div>' +
-        '<div class="dt-mono" style="text-align:right;">' + p.value.toLocaleString('es-CO') + '</div>' +
-        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + interest + '%; background:' + tone + ';"></div></div>';
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700; color:' + posColor + ';">' + p.position + '</div>' +
+        '<div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; opacity:.8;">' + p.age + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; font-weight:700;">' + p.ovr + '/' + p.potential + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(entry.clubName) + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700; text-align:right; color:var(--dt-oro-suave);">' + p.value.toLocaleString('es-CO') + '</div>';
       row.addEventListener('click', function(){ mgrOpenTransferSheet(entry.clubIdx, p.id); });
       listWrap.appendChild(row);
     });
-    grid.appendChild(tableCol);
+    body.appendChild(tableCol);
+
+    var sideCol = document.createElement('div'); sideCol.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw;';
+    var budgetCard = document.createElement('div'); budgetCard.className = 'dt-gold-card';
+    budgetCard.innerHTML = '<div class="dt-gold-label">Presupuesto libre</div><div class="dt-gold-big">' + Math.round(state.manager.club.budget).toLocaleString('es-CO') + '</div>';
+    sideCol.appendChild(budgetCard);
+
+    var suggestPanel = document.createElement('div'); suggestPanel.className = 'dt-panel flex-col'; suggestPanel.style.flex = '1';
+    var best = null, bestScore = -1;
+    state.manager.cpuClubs.forEach(function(club, idx){
+      club.squad.forEach(function(p){
+        var score = mgrTransferInterest(p);
+        if(score > bestScore){ bestScore = score; best = { p: p, clubIdx: idx, clubName: club.name }; }
+      });
+    });
+    if(best){
+      var needed = bestScore >= 55;
+      suggestPanel.innerHTML =
+        '<div class="dt-panel-title">EL OJEADOR SUGIERE</div>' +
+        '<div style="font-size:1.05cqw; line-height:1.5;">' + (needed ? 'Necesitas refuerzo en ' + best.p.position + '. ' : '') + escapeHtml(best.p.name) + ' (' + best.p.ovr + ' GLB, ' + best.p.age + ' años en ' + escapeHtml(best.clubName) + ') es la mejor opción disponible.</div>' +
+        '<button type="button" class="dt-btn-fill" id="dtOjeadorBtn" style="flex:none; margin-top:auto;">ABRIR NEGOCIACIÓN</button>';
+      suggestPanel.querySelector('#dtOjeadorBtn').addEventListener('click', function(){ mgrOpenTransferSheet(best.clubIdx, best.p.id); });
+    } else {
+      suggestPanel.innerHTML = '<div class="dt-panel-title">EL OJEADOR SUGIERE</div><p class="dt-row-detail">Sin datos de mercado todavía.</p>';
+    }
+    sideCol.appendChild(suggestPanel);
+    body.appendChild(sideCol);
   }
 
   function mgrRenderNegoRowDT(neg){
@@ -9444,83 +9492,92 @@
       return;
     }
 
-    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1.25fr 1fr';
+    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '1.2fr 1fr';
     root.appendChild(grid);
 
     var rivalName = neg.stage === 'contract' ? neg.playerName : neg.clubName;
     var rivalTag = neg.stage === 'contract' ? 'Jugador' : (neg.kind === 'buy' ? 'Club vendedor' : 'Club comprador');
-    var currentAmount = neg.aiLastAmount != null ? neg.aiLastAmount : (neg.myLastAmount != null ? neg.myLastAmount : (neg.stage === 'contract' ? neg.playerWageAsk : neg.playerValueSnapshot));
-    var amountLabel = neg.stage === 'contract' ? 'Salario en la mesa' : 'Traspaso en la mesa';
+    var player = mgrPlayerById(neg.playerId) || (neg.kind === 'buy' && state.manager.cpuClubs[neg.clubIdx] ? state.manager.cpuClubs[neg.clubIdx].squad.filter(function(x){ return x.id === neg.playerId; })[0] : null);
+    var amountLabel = neg.stage === 'contract' ? 'Salario propuesto' : 'Total de transferencia';
     var stageLabel = neg.stage === 'contract' ? 'Negociando contrato con ' + neg.playerName : (neg.kind === 'buy' ? 'Negociando el traspaso de ' + neg.playerName : 'Te ofrecen por ' + neg.playerName);
+    var step = neg.stage === 'contract' ? 500 : Math.max(1000, Math.round((neg.playerValueSnapshot || 100000) * 0.02 / 1000) * 1000);
+    var offerVal = neg.stage === 'contract' ? (neg.myLastAmount || neg.playerWageAsk)
+      : neg.kind === 'buy' ? (neg.myLastAmount ? Math.round(neg.myLastAmount * 1.05) : neg.playerValueSnapshot)
+      : (neg.myLastAmount ? Math.round(neg.myLastAmount * 1.1) : Math.round((neg.aiLastAmount || neg.playerValueSnapshot) * 1.15));
 
-    var left = document.createElement('div'); left.className = 'dt-panel flex-col'; left.style.gap = '.7cqw';
+    var left = document.createElement('div'); left.className = 'dt-panel flex-col'; left.style.gap = '1cqw';
     left.innerHTML =
-      '<div>' +
-        '<div style="font-size:1.2cqw; font-weight:800;">' + escapeHtml(neg.playerName) + '</div>' +
-        '<div class="dt-mono" style="font-size:0.64cqw; color:var(--dt-text-sec); margin-top:.2cqw;">' + escapeHtml(stageLabel) + '</div>' +
+      '<div style="display:flex; align-items:center; gap:1cqw;">' +
+        '<div style="width:6cqw; height:7.4cqw; min-width:56px; min-height:68px; border-radius:.8cqw; background:repeating-linear-gradient(135deg, rgba(255,255,255,.09) 0 8px, rgba(255,255,255,.03) 8px 16px); display:flex; align-items:flex-end; justify-content:center; padding-bottom:.5cqw; flex:none;"><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.8cqw; color:rgba(255,255,255,.5); text-transform:uppercase;">Foto</span></div>' +
+        '<div>' +
+          '<div style="font-size:1.9cqw; font-weight:800; line-height:1;">' + escapeHtml(neg.playerName) + '</div>' +
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.05cqw; color:var(--dt-text-sec); margin-top:.25cqw;">' + escapeHtml(stageLabel) + '</div>' +
+          (player ? '<div style="display:flex; gap:.5cqw; margin-top:.5cqw;">' +
+            '<div style="padding:.3cqw .7cqw; border-radius:99px; background:var(--dt-oro); color:var(--dt-tinta); font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700;">' + player.ovr + ' GLB</div>' +
+            '<div style="padding:.3cqw .7cqw; border-radius:99px; border:2px solid rgba(255,255,255,.3); font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700;">' + player.potential + ' POT</div>' +
+            '<div style="padding:.3cqw .7cqw; border-radius:99px; border:2px solid rgba(255,255,255,.3); font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700;">VALOR ' + player.value.toLocaleString('es-CO') + '</div>' +
+          '</div>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:1.1cqw; border-radius:.9cqw; background:rgba(255,255,255,.06);">' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.08cqw; color:var(--dt-text-sec);">' + amountLabel + '</div>' +
+        '<div style="display:flex; align-items:center; gap:1cqw; margin-top:.4cqw;">' +
+          '<button type="button" id="dtNegoMinus" style="width:3.4cqw; height:3.4cqw; min-width:34px; min-height:34px; border-radius:50%; border:2px solid rgba(255,255,255,.35); background:transparent; color:var(--dt-text); display:flex; align-items:center; justify-content:center; font-size:1.8cqw; font-weight:700; cursor:pointer; flex:none;">−</button>' +
+          '<div id="dtNegoAmount" style="flex:1; font-family:\'Barlow Condensed\',sans-serif; font-size:2.6cqw; font-weight:700; line-height:1; text-align:center; color:var(--dt-oro-suave);">' + offerVal.toLocaleString('es-CO') + '</div>' +
+          '<button type="button" id="dtNegoPlus" style="width:3.4cqw; height:3.4cqw; min-width:34px; min-height:34px; border-radius:50%; border:2px solid rgba(255,255,255,.35); background:transparent; color:var(--dt-text); display:flex; align-items:center; justify-content:center; font-size:1.8cqw; font-weight:700; cursor:pointer; flex:none;">+</button>' +
+        '</div>' +
+        (neg.aiLastAmount != null ? '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.06cqw; color:var(--dt-text-sec); text-align:center; margin-top:.3cqw;">Piden ' + neg.aiLastAmount.toLocaleString('es-CO') + ' · pasos de ' + step.toLocaleString('es-CO') + '</div>' : '') +
       '</div>' +
       '<div>' +
-        '<div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.3cqw;"><span class="dt-label" style="margin-bottom:0;">' + amountLabel + '</span><span class="dt-mono" style="font-size:1.3cqw; font-weight:600; color:var(--dt-verde);">' + currentAmount.toLocaleString('es-CO') + '</span></div>' +
-        '<div style="display:flex; justify-content:space-between; font-size:0.68cqw; color:var(--dt-text-sec);"><span>Mi club: ' + escapeHtml(state.manager.club.name) + '</span><span>' + rivalTag + ': ' + escapeHtml(rivalName) + '</span></div>' +
-      '</div>' +
-      '<div>' +
-        '<div style="display:flex; justify-content:space-between; font-size:0.72cqw; margin-bottom:.25cqw;"><span>Tensión de la negociación</span><span class="dt-mono">' + neg.tension + '%</span></div>' +
-        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + neg.tension + '%; background:' + (neg.tension >= 66 ? 'var(--dt-rojo)' : neg.tension >= 33 ? 'var(--dt-ambar)' : 'var(--dt-verde)') + ';"></div></div>' +
+        '<div style="display:flex; justify-content:space-between; font-size:0.9cqw; margin-bottom:.3cqw;"><span>Tensión de la negociación</span><span style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700;">' + neg.tension + '%</span></div>' +
+        '<div class="dt-bar-track"><div class="dt-bar-fill" style="width:' + neg.tension + '%; background:' + (neg.tension >= 66 ? 'var(--dt-rojo)' : neg.tension >= 33 ? 'var(--dt-oro-suave)' : 'var(--dt-verde)') + ';"></div></div>' +
       '</div>';
 
-    var actionsWrap = document.createElement('div'); actionsWrap.style.cssText = 'display:flex; flex-direction:column; gap:.5cqw; margin-top:auto;';
+    var amountEl = left.querySelector('#dtNegoAmount');
+    left.querySelector('#dtNegoMinus').addEventListener('click', function(){ offerVal = Math.max(step, offerVal - step); amountEl.textContent = offerVal.toLocaleString('es-CO'); });
+    left.querySelector('#dtNegoPlus').addEventListener('click', function(){ offerVal = offerVal + step; amountEl.textContent = offerVal.toLocaleString('es-CO'); });
+
+    var actionsWrap = document.createElement('div'); actionsWrap.style.cssText = 'display:flex; flex-direction:column; gap:.6cqw; margin-top:auto;';
     if(neg.aiLastAmount != null){
-      var acceptBtn = document.createElement('button'); acceptBtn.type = 'button'; acceptBtn.className = 'dt-btn-fill';
+      var acceptBtn = document.createElement('button'); acceptBtn.type = 'button'; acceptBtn.className = 'dt-btn-outline'; acceptBtn.style.flex = 'none';
       acceptBtn.textContent = 'ACEPTAR ' + neg.aiLastAmount.toLocaleString('es-CO');
       acceptBtn.addEventListener('click', function(){ mgrNegoAcceptAsk(neg.id); });
       actionsWrap.appendChild(acceptBtn);
     }
-    var raiseRow = document.createElement('div'); raiseRow.style.cssText = 'display:flex; gap:.5cqw; align-items:center;';
-    var input = document.createElement('input'); input.type = 'number'; input.min = '1000'; input.step = '1000';
-    input.style.cssText = "flex:1; background:var(--dt-bg-inset); border:1px solid var(--dt-border-strong); border-radius:4px; color:var(--dt-text); padding:.5cqw .6cqw; font-family:'IBM Plex Mono',monospace; font-size:0.76cqw;";
-    var actionBtn = document.createElement('button'); actionBtn.type = 'button'; actionBtn.className = 'dt-btn-outline'; actionBtn.style.flex = 'none'; actionBtn.style.width = 'auto'; actionBtn.style.padding = '.5cqw 1cqw';
-    if(neg.stage === 'contract'){
-      input.value = String(neg.myLastAmount || neg.playerWageAsk);
-      actionBtn.textContent = 'PROPONER';
-      actionBtn.addEventListener('click', function(){ mgrNegoWageRound(neg.id, parseInt(input.value, 10)); });
-    } else if(neg.kind === 'buy'){
-      input.value = String(neg.myLastAmount ? Math.round(neg.myLastAmount * 1.05) : neg.playerValueSnapshot);
-      actionBtn.textContent = 'SUBIR OFERTA';
-      actionBtn.addEventListener('click', function(){ mgrNegoUserRound(neg.id, parseInt(input.value, 10)); });
-    } else {
-      input.value = String(neg.myLastAmount ? Math.round(neg.myLastAmount * 1.1) : Math.round((neg.aiLastAmount || neg.playerValueSnapshot) * 1.15));
-      actionBtn.textContent = 'PEDIR MÁS';
-      actionBtn.addEventListener('click', function(){ mgrNegoUserAsk(neg.id, parseInt(input.value, 10)); });
-    }
-    raiseRow.appendChild(input); raiseRow.appendChild(actionBtn);
-    actionsWrap.appendChild(raiseRow);
-
-    var bottomRow = document.createElement('div'); bottomRow.style.cssText = 'display:flex; gap:.5cqw;';
-    var withdrawBtn = document.createElement('button'); withdrawBtn.type = 'button'; withdrawBtn.className = 'dt-btn-outline';
+    var bottomRow = document.createElement('div'); bottomRow.style.cssText = 'display:flex; gap:.7cqw;';
+    var sendBtn = document.createElement('button'); sendBtn.type = 'button'; sendBtn.className = 'dt-btn-fill'; sendBtn.style.flex = '1.5';
+    sendBtn.textContent = neg.stage === 'contract' ? 'PROPONER' : (neg.kind === 'buy' ? 'ENVIAR OFERTA' : 'PEDIR MÁS');
+    sendBtn.addEventListener('click', function(){
+      if(neg.stage === 'contract') mgrNegoWageRound(neg.id, offerVal);
+      else if(neg.kind === 'buy') mgrNegoUserRound(neg.id, offerVal);
+      else mgrNegoUserAsk(neg.id, offerVal);
+    });
+    var withdrawBtn = document.createElement('button'); withdrawBtn.type = 'button'; withdrawBtn.className = 'dt-btn-outline'; withdrawBtn.style.flex = '1';
     withdrawBtn.textContent = neg.kind === 'sell' ? 'RECHAZAR' : 'RETIRARSE';
     withdrawBtn.addEventListener('click', function(){ mgrNegoWithdraw(neg.id); });
-    var backBtn = document.createElement('button'); backBtn.type = 'button'; backBtn.className = 'dt-btn-outline';
+    bottomRow.appendChild(sendBtn); bottomRow.appendChild(withdrawBtn);
+    actionsWrap.appendChild(bottomRow);
+    var backBtn = document.createElement('button'); backBtn.type = 'button'; backBtn.className = 'dt-btn-outline'; backBtn.style.flex = 'none';
     backBtn.textContent = 'VOLVER A LA LISTA';
     backBtn.addEventListener('click', function(){ mgrOpenNegoId = null; mgrRenderNegociacionDT(); });
-    bottomRow.appendChild(withdrawBtn); bottomRow.appendChild(backBtn);
-    actionsWrap.appendChild(bottomRow);
+    actionsWrap.appendChild(backBtn);
     left.appendChild(actionsWrap);
     grid.appendChild(left);
 
     var right = document.createElement('div'); right.className = 'dt-col';
     var prob = Math.max(4, Math.min(96, 100 - neg.tension));
-    var probTone = prob >= 65 ? 'var(--dt-verde)' : prob >= 40 ? 'var(--dt-ambar)' : 'var(--dt-rojo)';
+    var probTone = prob >= 65 ? 'var(--dt-verde)' : prob >= 40 ? 'var(--dt-oro-suave)' : 'var(--dt-rojo)';
     var probLabel = prob >= 65 ? 'muy probable' : prob >= 40 ? 'negociable' : 'poco probable';
-    var probPanel = document.createElement('div'); probPanel.className = 'dt-panel';
+    var probPanel = document.createElement('div'); probPanel.className = 'dt-panel'; probPanel.style.textAlign = 'center';
     probPanel.innerHTML =
-      '<div class="dt-panel-title">Probabilidad de acuerdo</div>' +
-      '<div style="display:flex; align-items:baseline; gap:.5cqw;"><span class="dt-mono" style="font-size:2cqw; font-weight:600; color:' + probTone + ';">' + prob + '%</span><span style="font-size:0.72cqw; color:var(--dt-text-sec);">' + probLabel + '</span></div>' +
-      '<div class="dt-bar-track" style="margin-top:.5cqw;"><div class="dt-bar-fill" style="width:' + prob + '%; background:' + probTone + ';"></div></div>' +
-      '<div style="font-size:0.72cqw; color:oklch(0.82 0.01 250); margin-top:.5cqw; line-height:1.5;">' + (prob >= 65 ? 'La otra parte está cerca de aceptar. Una oferta razonable debería cerrar el acuerdo.' : 'La negociación está tensa. Subir la oferta ayudará, pero forzar demasiado puede hacer que se levanten de la mesa.') + '</div>';
+      '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.08cqw; color:var(--dt-text-sec);">Probabilidad de acuerdo</div>' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:5cqw; font-weight:700; line-height:1; color:' + probTone + ';">' + prob + '%</div>' +
+      '<div style="font-size:1.15cqw; font-weight:700; color:' + probTone + ';">' + probLabel + '</div>' +
+      '<div style="font-size:1cqw; line-height:1.5; color:var(--dt-text); margin-top:.6cqw;">' + (prob >= 65 ? 'La otra parte está cerca de aceptar. Una oferta razonable debería cerrar el acuerdo.' : 'La negociación está tensa. Subir la oferta ayudará, pero forzar demasiado puede hacer que se levanten de la mesa.') + '</div>';
     right.appendChild(probPanel);
 
     var histPanel = document.createElement('div'); histPanel.className = 'dt-panel flex-col'; histPanel.style.flex = '1';
-    histPanel.innerHTML = '<div class="dt-panel-title">Hilo de negociación</div>';
+    histPanel.innerHTML = '<div class="dt-panel-title">CONVERSACIÓN</div>';
     var histWrap = document.createElement('div'); histWrap.className = 'dt-scroll';
     histPanel.appendChild(histWrap);
     (neg.history || []).slice(-8).forEach(function(h){
@@ -9530,10 +9587,10 @@
       else if(h.action === 'accept') text = who + ' acepta ' + (h.amount || 0).toLocaleString('es-CO');
       else if(h.action === 'reject' || h.action === 'withdraw') text = who + ' se retira de la negociación';
       else text = who + ' propone ' + (h.amount || 0).toLocaleString('es-CO');
-      var tone = h.by === 'user' ? 'var(--dt-verde)' : 'var(--dt-border-strong)';
+      var tone = h.by === 'user' ? 'var(--dt-verde)' : 'var(--dt-oro-suave)';
       var row = document.createElement('div');
-      row.style.cssText = 'padding:.5cqw .6cqw; border-radius:4px; background:var(--dt-bg-inset); border-left:.2cqw solid ' + tone + '; margin-bottom:.4cqw;';
-      row.innerHTML = '<div class="dt-mono" style="font-size:0.6cqw; color:var(--dt-text-mono); margin-bottom:.15cqw;">' + escapeHtml(who) + '</div><div style="font-size:0.74cqw;">' + escapeHtml(text) + '</div>';
+      row.style.cssText = 'padding:.85cqw; border-radius:.8cqw; background:rgba(255,255,255,.06); border-left:.3cqw solid ' + tone + '; margin-bottom:.5cqw;';
+      row.innerHTML = '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.95cqw; text-transform:uppercase; letter-spacing:.06cqw; color:var(--dt-text-sec);">' + escapeHtml(who) + '</div><div style="font-size:1cqw; line-height:1.45; margin-top:.2cqw;">' + escapeHtml(text) + '</div>';
       histWrap.appendChild(row);
     });
     right.appendChild(histPanel);
@@ -10288,6 +10345,9 @@
   }
 
   var mgrTransferFilter = 'ALL';
+  var mgrTransferAgeBand = 'ALL';
+  var mgrTransferOvrBand = 'ALL';
+  var mgrTransferValBand = 'ALL';
   var mgrOpenTransferKey = null;
   function mgrOpenTransferSheet(clubIdx, playerId){
     mgrOpenTransferKey = clubIdx + ':' + playerId;
