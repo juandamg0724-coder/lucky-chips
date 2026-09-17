@@ -2392,7 +2392,9 @@
                   <div data-dt-screen="objetivos" style="height:100%;" hidden></div>
                   <div data-dt-screen="previa" style="height:100%;" hidden></div>
                   <div data-dt-screen="cantera" style="height:100%;" hidden></div>
+                  <div data-dt-screen="ojeo" style="height:100%;" hidden></div>
                   <div data-dt-screen="finanzas" style="height:100%;" hidden></div>
+                  <div data-dt-screen="partido" style="height:100%;" hidden></div>
                 </div>
               </div>
 
@@ -8645,39 +8647,87 @@
   }
 
   var mgrLiveMatch = null, mgrLiveTimer = null;
+  function mgrRenderPartidoDT(){
+    mgrRenderDtChrome();
+    mgrRenderLiveMatch();
+  }
   function mgrRenderLiveMatch(){
     var m = mgrLiveMatch;
-    var el = document.getElementById('mgrLiveMatch');
-    if(!m || !el) return;
+    var root = document.querySelector('[data-dt-screen="partido"]');
+    if(!m || !root) return;
     var elapsed = Date.now() - m.liveStartAt;
     var finished = elapsed >= CAREER_MATCH_MS;
     var elapsedMinute = Math.min(90, Math.round((Math.min(elapsed, CAREER_MATCH_MS) / CAREER_MATCH_MS) * 90));
-    var visibleEvents = (m.sim.timeline || []).filter(function(e){ return e.minute <= elapsedMinute; });
-    var scoreA = 0, scoreB = 0;
-    visibleEvents.forEach(function(e){ if(e.type === 'goal'){ if(e.team === 'A') scoreA++; else scoreB++; } });
-    var homeName = m.homeName, awayName = m.awayName;
-    var scoreHome = scoreA, scoreAway = scoreB;
-
-    el.innerHTML = '';
-    var card = document.createElement('div');
-    card.className = 'career-live-card';
-    card.innerHTML =
-      '<div class="career-live-score">' +
-        '<span class="team">' + escapeHtml(homeName) + '</span>' +
-        '<span class="score">' + scoreHome + ' - ' + scoreAway + '</span>' +
-        '<span class="team">' + escapeHtml(awayName) + '</span>' +
-      '</div>' +
-      '<p class="career-live-clock">' + (finished ? 'Partido terminado' : ('Minuto ' + elapsedMinute + "'")) + (m.weather ? ' · ' + m.weather : '') + '</p>';
-    var eventsWrap = document.createElement('div');
-    eventsWrap.className = 'career-live-events';
-    visibleEvents.slice().reverse().forEach(function(e){
-      var row = document.createElement('div');
-      row.className = 'career-event-row';
-      row.innerHTML = '<span class="career-event-min">' + e.minute + "'</span><span class=\"career-event-icon\">" + careerEventIcon(e.type) + '</span><span>' + escapeHtml(careerEventText(e)) + '</span>';
-      eventsWrap.appendChild(row);
+    var visibleEvents = (m.sim.timeline || []).filter(function(e){ return e.minute <= elapsedMinute && e.type !== 'halftime' && e.type !== 'fulltime'; });
+    var scoreA = 0, scoreB = 0, amarillas = 0, rojas = 0, faltas = 0;
+    visibleEvents.forEach(function(e){
+      if(e.type === 'goal'){ if(e.team === 'A') scoreA++; else scoreB++; }
+      else if(e.type === 'yellow') amarillas++;
+      else if(e.type === 'red') rojas++;
+      else if(e.type === 'foul') faltas++;
     });
-    card.appendChild(eventsWrap);
+    var homeName = m.homeName, awayName = m.awayName;
 
+    var col = document.createElement('div'); col.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw; height:100%;';
+    root.innerHTML = ''; root.appendChild(col);
+
+    var header = document.createElement('div'); header.className = 'dt-gold-card'; header.style.cssText += 'flex:none; display:flex; align-items:center; gap:1.4cqw;';
+    header.innerHTML =
+      '<div style="flex:1; text-align:right; font-size:1.7cqw; font-weight:800;">' + escapeHtml(homeName) + '</div>' +
+      '<div style="display:flex; align-items:center; gap:1cqw; padding:.3cqw 1.2cqw; border-radius:.7cqw; background:var(--dt-tinta); color:var(--dt-oro-suave);">' +
+        '<span style="font-family:\'Barlow Condensed\',sans-serif; font-size:3.2cqw; font-weight:700; line-height:1;">' + scoreA + ' — ' + scoreB + '</span>' +
+      '</div>' +
+      '<div style="flex:1; font-size:1.7cqw; font-weight:800;">' + escapeHtml(awayName) + '</div>' +
+      '<div style="flex:none; text-align:center; padding:.4cqw 1cqw; border-radius:99px; background:var(--dt-tinta); color:var(--dt-oro-suave);">' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.8cqw; font-weight:700; line-height:1;">' + (finished ? 'FIN' : elapsedMinute + '’') + '</div>' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.9cqw; text-transform:uppercase; letter-spacing:.08cqw;">' + (finished ? '' : (elapsedMinute > 45 ? '2ª parte' : '1ª parte')) + '</div>' +
+      '</div>';
+    col.appendChild(header);
+
+    var body = document.createElement('div'); body.style.cssText = 'flex:1; display:grid; grid-template-columns:20cqw 1fr 23cqw; gap:.8cqw; min-height:0;';
+    col.appendChild(body);
+
+    var cronicaPanel = document.createElement('div'); cronicaPanel.className = 'dt-panel flex-col';
+    cronicaPanel.innerHTML = '<div class="dt-panel-title">CRÓNICA</div>';
+    var cronicaWrap = document.createElement('div'); cronicaWrap.className = 'dt-scroll';
+    cronicaPanel.appendChild(cronicaWrap);
+    visibleEvents.slice().reverse().forEach(function(e){
+      var gold = e.type === 'goal';
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex; align-items:center; gap:.6cqw; padding:.55cqw .65cqw; border-radius:.6cqw; margin-bottom:.35cqw;' + (gold ? 'background:var(--dt-oro); color:var(--dt-tinta);' : 'background:rgba(255,255,255,.06);');
+      row.innerHTML = '<span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700; width:2.6cqw;">' + e.minute + '’</span><span style="flex:1; font-size:0.9cqw; font-weight:700;">' + careerEventIcon(e.type) + ' ' + escapeHtml(careerEventText(e)) + '</span>';
+      cronicaWrap.appendChild(row);
+    });
+    body.appendChild(cronicaPanel);
+
+    var pitch = document.createElement('div'); pitch.style.cssText = 'border-radius:1cqw; overflow:hidden; position:relative; background:linear-gradient(180deg,oklch(0.50 0.11 148),oklch(0.40 0.10 148)); display:flex; flex-direction:column; justify-content:space-between; padding:1.1cqw;';
+    pitch.innerHTML =
+      '<div style="position:absolute; inset:0; background:repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 4cqw, rgba(0,0,0,0) 4cqw 8cqw);"></div>' +
+      '<div style="position:absolute; left:50%; top:0; bottom:0; width:.2cqw; background:rgba(255,255,255,.45);"></div>' +
+      '<div style="position:absolute; left:50%; top:50%; width:13cqw; height:13cqw; transform:translate(-50%,-50%); border:.2cqw solid rgba(255,255,255,.45); border-radius:50%;"></div>' +
+      '<div style="position:relative; display:flex; justify-content:center;"><div style="padding:.5cqw .9cqw; border-radius:99px; background:rgba(6,10,26,.78);"><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.08cqw;">' + (m.weather || 'En vivo') + '</span></div></div>' +
+      '<div style="position:relative; display:flex; gap:.6cqw; justify-content:center;">' +
+        [['Goles', scoreA + scoreB], ['Amarillas', amarillas], ['Rojas', rojas], ['Faltas', faltas]].map(function(s){
+          return '<div style="flex:1; max-width:11cqw; text-align:center; padding:.8cqw .4cqw; border-radius:.8cqw; background:rgba(6,10,26,.72);"><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:2.2cqw; font-weight:700; line-height:1; color:var(--dt-oro-suave);">' + s[1] + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.92cqw; text-transform:uppercase; letter-spacing:.07cqw; color:#fff;">' + s[0] + '</div></div>';
+        }).join('') +
+      '</div>';
+    body.appendChild(pitch);
+
+    var right = document.createElement('div'); right.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw; min-height:0;';
+    var starters = mgrLineupList().map(function(l){ return mgrPlayerById(l.id); }).filter(Boolean);
+    var startersPanel = document.createElement('div'); startersPanel.className = 'dt-panel flex-col'; startersPanel.style.flex = '1';
+    startersPanel.innerHTML = '<div class="dt-panel-title">MI ONCE</div>';
+    var startersWrap = document.createElement('div'); startersWrap.className = 'dt-scroll';
+    startersPanel.appendChild(startersWrap);
+    starters.forEach(function(p){
+      var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
+      var row = document.createElement('div'); row.style.cssText = 'display:flex; align-items:center; gap:.7cqw; padding:.5cqw .7cqw; border-radius:.6cqw; background:rgba(255,255,255,.06); margin-bottom:.3cqw;';
+      row.innerHTML = '<span style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700; width:2.6cqw; color:' + posColor + ';">' + p.position + '</span><span style="flex:1; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</span><span style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700;">' + p.ovr + '</span>';
+      startersWrap.appendChild(row);
+    });
+    right.appendChild(startersPanel);
+
+    var actionsPanel = document.createElement('div'); actionsPanel.style.cssText = 'flex:none;';
     if(finished){
       if(!m.finalized){
         m.finalized = true;
@@ -8686,14 +8736,16 @@
         else mgrFinalizeMyMatch(m.fixture, m.sim, m.iAmHome);
         saveState();
       }
-      var closeBtn = document.createElement('button');
-      closeBtn.className = 'btn btn-ghost btn-block';
-      closeBtn.style.marginTop = '10px';
-      closeBtn.textContent = 'Cerrar';
-      closeBtn.addEventListener('click', function(){ mgrLiveMatch = null; el.hidden = true; mgrRenderActiveTab(); });
-      card.appendChild(closeBtn);
+      var closeBtn = document.createElement('button'); closeBtn.type = 'button'; closeBtn.className = 'dt-btn-fill'; closeBtn.style.cssText = 'display:block; width:100%;'; closeBtn.textContent = 'CERRAR';
+      closeBtn.addEventListener('click', function(){ mgrLiveMatch = null; mgrSwitchTab('hub'); });
+      actionsPanel.appendChild(closeBtn);
+    } else {
+      var liveTag = document.createElement('div'); liveTag.className = 'dt-panel'; liveTag.style.cssText = 'text-align:center; padding:.9cqw;';
+      liveTag.innerHTML = '<span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.06cqw; color:var(--dt-oro-suave);">Partido en curso…</span>';
+      actionsPanel.appendChild(liveTag);
     }
-    el.appendChild(card);
+    right.appendChild(actionsPanel);
+    body.appendChild(right);
   }
 
   function mgrAdvanceDay(){
@@ -8778,8 +8830,7 @@
         kind: today.kind, fixture: today.fixture, iAmHome: iAmHome, sim: sim, liveStartAt: Date.now(), finalized: false,
         homeName: iAmHome ? myName : today.oppName, awayName: iAmHome ? today.oppName : myName, weather: today.weather
       };
-      document.getElementById('mgrLiveMatch').hidden = false;
-      mgrRenderLiveMatch();
+      mgrSwitchTab('partido');
       if(mgrLiveTimer) clearInterval(mgrLiveTimer);
       mgrLiveTimer = setInterval(mgrRenderLiveMatch, 1000);
     }
@@ -9836,10 +9887,6 @@
     heroPanel.querySelector('#dtPreviaPlay').addEventListener('click', function(){ mgrPlayMatchday('play'); });
     heroPanel.querySelector('#dtPreviaSim').addEventListener('click', function(){ mgrPlayMatchday('sim'); });
     right.appendChild(heroPanel);
-
-    var liveWrap = document.createElement('div'); liveWrap.id = 'mgrLiveMatch'; liveWrap.hidden = !mgrLiveMatch;
-    right.appendChild(liveWrap);
-    if(mgrLiveMatch) mgrRenderLiveMatch();
   }
 
   function mgrRenderEntrenoDT(){
@@ -10762,7 +10809,7 @@
     ['traspasos', 'Traspasos', [['mercado', 'Buscar futbolistas'], ['negociacion', 'Negociación']]],
     ['temporada', 'Temporada', [['calendario', 'Calendario'], ['previa', 'Previa']]],
     ['oficina', 'Oficina', [['objetivos', 'Directiva'], ['entreno', 'Entrenamiento']]],
-    ['cantera', 'Cantera', [['cantera', 'Promesas']]],
+    ['cantera', 'Cantera', [['cantera', 'Promesas'], ['ojeo', 'Buscar canteranos']]],
     ['finanzas', 'Finanzas', [['finanzas', 'Balance']]]
   ];
   var mgrActiveTab = 'hub';
@@ -10770,8 +10817,18 @@
     return MGR_DT_TABS.filter(function(t){ return t[2].some(function(s){ return s[0] === screen; }); })[0] || MGR_DT_TABS[0];
   }
   function mgrRenderDtTabs(){
-    var tabDef = mgrDtTabFor(mgrActiveTab);
     var tabsEl = document.getElementById('dtTabs');
+    var subsEl = document.getElementById('dtSubtabs');
+    var avanzarBtn = document.getElementById('dtAvanzarBtn');
+    if(mgrActiveTab === 'partido'){
+      tabsEl.innerHTML = ''; tabsEl.hidden = true;
+      subsEl.innerHTML = ''; avanzarBtn.hidden = true;
+      var m = mgrLiveMatch;
+      document.getElementById('dtBreadcrumb').textContent = 'Partido en juego ❯ ' + (m ? (m.iAmHome ? m.awayName : m.homeName) : '');
+      return;
+    }
+    tabsEl.hidden = false; avanzarBtn.hidden = false;
+    var tabDef = mgrDtTabFor(mgrActiveTab);
     tabsEl.innerHTML = '';
     MGR_DT_TABS.forEach(function(t){
       var btn = document.createElement('button'); btn.type = 'button';
@@ -10782,7 +10839,6 @@
     });
     var subAct = tabDef[2].filter(function(s){ return s[0] === mgrActiveTab; })[0] || tabDef[2][0];
     document.getElementById('dtBreadcrumb').textContent = tabDef[1] + ' ❯ ' + subAct[1];
-    var subsEl = document.getElementById('dtSubtabs');
     subsEl.innerHTML = '';
     if(tabDef[2].length > 1){
       tabDef[2].forEach(function(s){
@@ -10828,8 +10884,12 @@
       mgrRenderDirectivaDT();
     } else if(mgrActiveTab === 'cantera'){
       mgrRenderCanteraDT();
+    } else if(mgrActiveTab === 'ojeo'){
+      mgrRenderOjeoDT();
     } else if(mgrActiveTab === 'finanzas'){
       mgrRenderFinanzasDT();
+    } else if(mgrActiveTab === 'partido'){
+      mgrRenderPartidoDT();
     } else {
       mgrRenderDtChrome();
       var root = document.querySelector('[data-dt-screen="' + mgrActiveTab + '"]');
