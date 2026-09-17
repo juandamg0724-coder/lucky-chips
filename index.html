@@ -10094,6 +10094,125 @@
     right.appendChild(notePanel);
   }
 
+  var MGR_OJEO_ZONAS = ['Norte', 'Sur', 'Centro', 'Extranjero'];
+  var MGR_OJEO_PUESTOS = ['GK', 'DEF', 'MID', 'FWD'];
+  var mgrOjeoZona = 'Norte';
+  var mgrOjeoPuesto = 'MID';
+  var mgrOjeoPotMin = 80;
+  var mgrOjeoResults = null;
+  function mgrScoutSearch(){
+    var club = state.manager.club;
+    var scoutQuality = club.scoutingLevel || 3;
+    var certeza = Math.min(95, 38 + scoutQuality * 11);
+    var poolSize = 6 + scoutQuality * 2;
+    var pool = [];
+    for(var i = 0; i < poolSize; i++){
+      var position = mgrPick(MGR_OJEO_PUESTOS);
+      var age = 16 + Math.floor(Math.random() * 3);
+      var baseOvr = 38 + Math.floor(Math.random() * 10);
+      var potential = Math.min(94, baseOvr + 10 + Math.floor(Math.random() * (15 + scoutQuality * 3)));
+      pool.push({
+        id: 'sct' + Date.now() + Math.floor(Math.random() * 1000000) + i,
+        name: UT_PLAYER_POOL[Math.floor(Math.random() * UT_PLAYER_POOL.length)],
+        age: age, position: position, ovr: baseOvr, potential: potential, zona: mgrPick(MGR_OJEO_ZONAS), certeza: certeza,
+        physical: 55 + Math.floor(Math.random() * 20), morale: 70, form: 60,
+        wage: Math.round((baseOvr * baseOvr * 2) / 10) * 10,
+        value: Math.round((baseOvr * baseOvr * 40) / 100) * 100,
+        contractYears: 3, seasonApps: 0, seasonGoals: 0, seasonAssists: 0, seasonRatingSum: 0, seasonInjuries: 0,
+        injuredUntil: 0, onLoan: false, number: 0, forSale: false, forLoanListed: false,
+        personality: mgrPick(MGR_PERSONALITIES)
+      });
+    }
+    mgrOjeoResults = pool.filter(function(p){ return p.position === mgrOjeoPuesto && p.zona === mgrOjeoZona && p.potential >= mgrOjeoPotMin; });
+  }
+  function mgrSignScoutFind(id){
+    var found = (mgrOjeoResults || []).filter(function(p){ return p.id === id; })[0];
+    if(!found) return;
+    mgrFillPlayerTactical(found);
+    if(!state.manager.academy) state.manager.academy = [];
+    state.manager.academy.push(found);
+    mgrOjeoResults = mgrOjeoResults.filter(function(p){ return p.id !== id; });
+    mgrPushInbox('informe', 'Canterano fichado', found.name + ' se une a la cantera desde la zona ' + found.zona + '.');
+    saveState();
+    mgrRenderOjeoDT();
+  }
+  function mgrRenderOjeoDT(){
+    mgrRenderDtChrome();
+    var root = document.querySelector('[data-dt-screen="ojeo"]');
+    root.innerHTML = '';
+    var grid = document.createElement('div'); grid.className = 'dt-screen'; grid.style.gridTemplateColumns = '24cqw 1fr';
+    root.appendChild(grid);
+
+    var filtersPanel = document.createElement('div'); filtersPanel.className = 'dt-panel flex-col';
+    filtersPanel.innerHTML = '<div class="dt-panel-title">BUSCAR CANTERANOS</div>';
+    function pillGroup(label, options, current, onPick){
+      var wrap = document.createElement('div'); wrap.style.marginBottom = '.9cqw';
+      var lab = document.createElement('div'); lab.style.cssText = 'font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.07cqw; color:var(--dt-text-sec); margin-bottom:.35cqw;'; lab.textContent = label;
+      wrap.appendChild(lab);
+      var row = document.createElement('div'); row.style.cssText = 'display:flex; flex-wrap:wrap; gap:.4cqw;';
+      options.forEach(function(opt){
+        var active = opt === current;
+        var chip = document.createElement('div');
+        chip.style.cssText = 'padding:.55cqw .9cqw; border-radius:99px; cursor:pointer; font-size:0.98cqw; font-weight:700;' +
+          (active ? 'background:var(--dt-oro); color:var(--dt-tinta);' : 'background:rgba(255,255,255,.06); border:2px solid rgba(255,255,255,.18);');
+        chip.textContent = opt;
+        chip.addEventListener('click', function(){ onPick(opt); mgrOjeoResults = null; mgrRenderOjeoDT(); });
+        row.appendChild(chip);
+      });
+      wrap.appendChild(row);
+      return wrap;
+    }
+    filtersPanel.appendChild(pillGroup('Zona', MGR_OJEO_ZONAS, mgrOjeoZona, function(v){ mgrOjeoZona = v; }));
+    filtersPanel.appendChild(pillGroup('Puesto', MGR_OJEO_PUESTOS, mgrOjeoPuesto, function(v){ mgrOjeoPuesto = v; }));
+
+    var potWrap = document.createElement('div'); potWrap.style.marginBottom = '.9cqw';
+    potWrap.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.35cqw;"><span style="font-size:0.98cqw; font-weight:700;">Potencial mínimo</span><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.4cqw; font-weight:700; color:var(--dt-oro-suave);">' + mgrOjeoPotMin + '</span></div>';
+    var potInput = document.createElement('input'); potInput.type = 'range'; potInput.min = '70'; potInput.max = '90'; potInput.step = '5'; potInput.value = String(mgrOjeoPotMin); potInput.className = 'dt-slider'; potInput.style.width = '100%';
+    potInput.addEventListener('input', function(){ mgrOjeoPotMin = parseInt(potInput.value, 10); mgrOjeoResults = null; mgrRenderOjeoDT(); });
+    potWrap.appendChild(potInput);
+    filtersPanel.appendChild(potWrap);
+
+    var buscarBtn = document.createElement('button'); buscarBtn.type = 'button'; buscarBtn.className = 'dt-btn-fill'; buscarBtn.style.cssText = 'display:block; width:100%; flex:none; margin-top:auto;';
+    buscarBtn.textContent = mgrOjeoResults ? 'NUEVA BÚSQUEDA' : 'ENVIAR OJEADOR';
+    buscarBtn.addEventListener('click', function(){ mgrScoutSearch(); mgrRenderOjeoDT(); });
+    filtersPanel.appendChild(buscarBtn);
+    grid.appendChild(filtersPanel);
+
+    var resultsPanel = document.createElement('div'); resultsPanel.className = 'dt-panel flex-col';
+    var head = document.createElement('div'); head.style.cssText = 'display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.7cqw;';
+    head.innerHTML =
+      '<div class="dt-panel-title" style="margin-bottom:0;">' + (mgrOjeoResults ? 'CANTERANOS ENCONTRADOS' : 'SIN BÚSQUEDA ACTIVA') + '</div>' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.07cqw; color:var(--dt-text-sec);">' + (mgrOjeoResults ? (mgrOjeoZona + ' · ' + mgrOjeoPuesto + ' · potencial ' + mgrOjeoPotMin + '+') : 'Elige zona y puesto, y envía un ojeador') + '</div>';
+    resultsPanel.appendChild(head);
+
+    if(!mgrOjeoResults){
+      var emptyWrap = document.createElement('div'); emptyWrap.style.cssText = 'flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.8cqw; text-align:center; padding:2cqw;';
+      emptyWrap.innerHTML = '<div style="width:5cqw; height:5cqw; border-radius:50%; border:.3cqw solid rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; font-size:2.2cqw; color:var(--dt-oro-suave);">⌕</div><div style="font-size:1.1cqw; font-weight:600; line-height:1.5; max-width:34cqw;">Elige una zona, un puesto y el potencial mínimo que te interesa. El ojeador tarda una semana en traer el informe.</div>';
+      resultsPanel.appendChild(emptyWrap);
+    } else if(!mgrOjeoResults.length){
+      var noneWrap = document.createElement('div'); noneWrap.style.cssText = 'flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.8cqw; text-align:center; padding:2cqw;';
+      noneWrap.innerHTML = '<div style="width:5cqw; height:5cqw; border-radius:50%; border:.3cqw solid rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; font-size:2.2cqw; color:var(--dt-oro-suave);">⌕</div><div style="font-size:1.1cqw; font-weight:600; line-height:1.5; max-width:34cqw;">Ningún canterano de ' + mgrOjeoZona + ' encaja como ' + mgrOjeoPuesto + ' con potencial ' + mgrOjeoPotMin + '+. Baja el potencial o prueba otra zona.</div>';
+      resultsPanel.appendChild(noneWrap);
+    } else {
+      var listWrap = document.createElement('div'); listWrap.className = 'dt-scroll';
+      resultsPanel.appendChild(listWrap);
+      mgrOjeoResults.forEach(function(p){
+        var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
+        var row = document.createElement('div');
+        row.style.cssText = 'display:grid; grid-template-columns:3.4cqw 1fr 7cqw 6cqw 9cqw; gap:.9cqw; align-items:center; padding:.85cqw .9cqw; border-radius:.8cqw; background:rgba(255,255,255,.06); margin-bottom:.5cqw;';
+        row.innerHTML =
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700; color:' + posColor + ';">' + p.position + '</div>' +
+          '<div><div style="font-size:1.1cqw; font-weight:700;">' + escapeHtml(p.name) + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.04cqw; color:var(--dt-text-sec);">' + p.age + ' años · ' + p.zona + '</div></div>' +
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.35cqw; font-weight:700; text-align:center;">' + p.ovr + '/' + p.potential + '</div>' +
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.2cqw; font-weight:700; text-align:center; color:' + (p.certeza >= 70 ? 'var(--dt-verde)' : p.certeza >= 50 ? 'var(--dt-oro-suave)' : 'var(--dt-rojo)') + ';">' + p.certeza + '%</div>' +
+          '<button type="button" style="text-align:center; padding:.6cqw; border-radius:99px; background:var(--dt-oro); color:var(--dt-tinta); font-size:0.98cqw; font-weight:800; cursor:pointer; border:none;">FICHAR</button>';
+        row.querySelector('button').addEventListener('click', function(id){ return function(){ mgrSignScoutFind(id); }; }(p.id));
+        listWrap.appendChild(row);
+      });
+    }
+    grid.appendChild(resultsPanel);
+  }
+
   function mgrRenderFinanzasDT(){
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="finanzas"]');
