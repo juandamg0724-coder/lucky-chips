@@ -9011,13 +9011,35 @@
     mgrRenderDtChrome();
     var root = document.querySelector('[data-dt-screen="hub"]');
     root.innerHTML = '';
-    var grid = document.createElement('div');
-    grid.className = 'dt-screen';
-    grid.style.gridTemplateColumns = '1.25fr .85fr 1.1fr';
-    root.appendChild(grid);
+    var outer = document.createElement('div'); outer.className = 'dt-screen'; outer.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw; height:100%;';
+    root.appendChild(outer);
 
     var today = mgrTodayMatchInfo(state.manager.day);
     var next = today ? null : mgrNextMyFixture();
+
+    var continuarBar = document.createElement('div'); continuarBar.style.cssText = 'flex:none; display:flex; align-items:stretch; gap:.8cqw; border-radius:1cqw; background:rgba(10,14,32,.7); border:1px solid rgba(255,255,255,.14); padding:.8cqw .9cqw; cursor:pointer;';
+    var continuarLabel = document.createElement('div'); continuarLabel.style.cssText = 'flex:none; display:flex; flex-direction:column; justify-content:center; gap:.1cqw; padding:0 1.2cqw 0 .3cqw;';
+    continuarLabel.innerHTML = '<div style="font-size:1.5cqw; font-weight:800; letter-spacing:.04cqw; color:var(--dt-oro-suave);">CONTINUAR ▸</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.07cqw; color:var(--dt-text-sec);">Temporada ' + state.manager.season + '</div>';
+    continuarBar.appendChild(continuarLabel);
+    var diasWrap = document.createElement('div'); diasWrap.style.cssText = 'flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:.45cqw;';
+    for(var dOff = 0; dOff < 7; dOff++){
+      var dNum = state.manager.day + dOff;
+      var dInfo = mgrTodayMatchInfo(dNum);
+      var isToday = dOff === 0;
+      var cell = document.createElement('div');
+      cell.style.cssText = 'border-radius:.7cqw; padding:.5cqw .35cqw; text-align:center; display:flex; flex-direction:column; gap:.1cqw; justify-content:center;' +
+        (isToday ? 'background:var(--dt-oro); color:var(--dt-tinta);' : dInfo ? 'background:rgba(255,255,255,.16); border:2px solid rgba(255,255,255,.35);' : 'background:rgba(255,255,255,.06);');
+      cell.innerHTML = '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.85cqw; text-transform:uppercase; letter-spacing:.06cqw; opacity:.85;">Día ' + dNum + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.85cqw; text-transform:uppercase; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + (dInfo ? escapeHtml(dInfo.oppName) : '—') + '</div>';
+      diasWrap.appendChild(cell);
+    }
+    continuarBar.appendChild(diasWrap);
+    continuarBar.addEventListener('click', function(){ if(today) mgrSwitchTab('previa'); else mgrAdvanceDay(); });
+    outer.appendChild(continuarBar);
+
+    var grid = document.createElement('div');
+    grid.className = 'dt-screen'; grid.style.cssText = 'flex:1; min-height:0;';
+    grid.style.gridTemplateColumns = '1.25fr .85fr 1.1fr';
+    outer.appendChild(grid);
 
     /* --- Columna 1: jugar/avanzar + simular/táctica --- */
     var col1 = document.createElement('div'); col1.className = 'dt-col';
@@ -9091,13 +9113,38 @@
     grid.appendChild(col3);
 
     var inbox = state.manager.inbox || [];
-    var pressLike = inbox.filter(function(m){ return m.type === 'prensa' || m.type === 'news' || m.type === 'resultado'; })[0];
-    var pressPanel = document.createElement('div'); pressPanel.className = 'dt-panel'; pressPanel.style.flex = '1.1';
-    pressPanel.innerHTML =
-      '<div class="dt-panel-title gold">LA PRENSA DICE</div>' +
-      '<div style="font-size:1.1cqw; font-weight:700; line-height:1.35;">' + (pressLike ? '«' + escapeHtml(pressLike.body) + '»' : 'Sin comunicados recientes.') + '</div>' +
-      (pressLike ? '<div class="dt-row-detail" style="margin-top:.6cqw;">' + escapeHtml(pressLike.title) + '</div>' : '');
-    col3.appendChild(pressPanel);
+    var squadForForm = state.manager.squad || [];
+    var topScorer = squadForForm.slice().sort(function(a, b){ return (b.seasonGoals || 0) - (a.seasonGoals || 0); })[0];
+    var topAssist = squadForForm.filter(function(p){ return p !== topScorer; }).sort(function(a, b){ return (b.seasonAssists || 0) - (a.seasonAssists || 0); })[0];
+    var topYoung = squadForForm.filter(function(p){ return p !== topScorer && p !== topAssist && p.age <= 23; }).sort(function(a, b){ return (b.potential - b.ovr) - (a.potential - a.ovr); })[0];
+    var enFormaList = [
+      topScorer ? { p: topScorer, tag: (topScorer.seasonGoals || 0) + ' goles' } : null,
+      topAssist ? { p: topAssist, tag: (topAssist.seasonAssists || 0) + ' asist.' } : null,
+      topYoung ? { p: topYoung, tag: 'promesa' } : null
+    ].filter(Boolean);
+    var enFormaPanel = document.createElement('div'); enFormaPanel.className = 'dt-panel flex-col'; enFormaPanel.style.flex = '1.1';
+    var enFormaHead = document.createElement('div'); enFormaHead.style.cssText = 'display:flex; justify-content:space-between; align-items:baseline;';
+    enFormaHead.innerHTML = '<div class="dt-panel-title gold" style="margin-bottom:0;">EN FORMA</div><div class="dt-row-detail">Temporada ' + state.manager.season + '</div>';
+    enFormaPanel.appendChild(enFormaHead);
+    var enFormaRow = document.createElement('div'); enFormaRow.style.cssText = 'flex:1; min-height:0; display:grid; grid-template-columns:repeat(3,1fr); gap:.6cqw; margin-top:.7cqw;';
+    if(!enFormaList.length){ enFormaRow.innerHTML = '<p class="dt-row-detail">Sin datos todavía.</p>'; }
+    enFormaList.forEach(function(entry){
+      var p = entry.p;
+      var card = document.createElement('div'); card.style.cssText = 'position:relative; border-radius:.8cqw; overflow:hidden; background:rgba(255,255,255,.07); cursor:pointer;';
+      card.innerHTML =
+        '<img src="' + mgrAvatarUrl(p.id) + '" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">' +
+        '<div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(6,10,26,.92) 0%, rgba(6,10,26,.25) 45%, rgba(6,10,26,0) 70%);"></div>' +
+        '<div style="position:absolute; left:.5cqw; top:.45cqw; padding:.1cqw .5cqw; border-radius:99px; background:var(--dt-oro); color:var(--dt-tinta); font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700;">' + p.ovr + '</div>' +
+        '<div style="position:absolute; left:.5cqw; right:.5cqw; bottom:.45cqw;">' +
+          '<div style="font-size:0.92cqw; font-weight:800; line-height:1.1; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</div>' +
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.85cqw; text-transform:uppercase; letter-spacing:.04cqw; color:rgba(255,255,255,.85);">' + p.position + ' · ' + entry.tag + '</div>' +
+        '</div>';
+      card.style.aspectRatio = '3/4';
+      card.addEventListener('click', function(id){ return function(){ mgrOpenSquadPlayerId = id; mgrSwitchTab('plantilla'); }; }(p.id));
+      enFormaRow.appendChild(card);
+    });
+    enFormaPanel.appendChild(enFormaRow);
+    col3.appendChild(enFormaPanel);
 
     var despachoPanel = document.createElement('div'); despachoPanel.className = 'dt-panel flex-col'; despachoPanel.style.flex = '1';
     var unread = inbox.filter(function(m){ return !m.read; }).length;
@@ -9158,6 +9205,14 @@
   }
 
   var MGR_DT_POS_COLOR = { GK: 'var(--dt-ambar)', DEF: 'var(--dt-azul)', MID: 'var(--dt-verde)', FWD: 'var(--dt-rojo)' };
+  function mgrAvatarUrl(id){
+    var s = String(id); var h = 0;
+    for(var i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) >>> 0; }
+    return 'assets/jugador-' + ((h % 3) + 1) + '.webp';
+  }
+  function mgrAvatarBox(id, w, h){
+    return '<div style="width:' + w + '; height:' + h + '; border-radius:.8cqw; overflow:hidden; flex:none; background:rgba(255,255,255,.07);"><img src="' + mgrAvatarUrl(id) + '" alt="" style="width:100%; height:100%; object-fit:cover; display:block;"></div>';
+  }
   var mgrOpenSquadPlayerId = null;
   var mgrOpenCanteraId = null;
   function mgrFormaLabel(form){
@@ -9220,7 +9275,7 @@
       ];
       fichaCol.innerHTML =
         '<div style="display:flex; gap:1cqw; align-items:center;">' +
-          '<div style="width:6cqw; height:7.4cqw; min-width:56px; min-height:68px; border-radius:.8cqw; background:repeating-linear-gradient(135deg, rgba(255,255,255,.09) 0 8px, rgba(255,255,255,.03) 8px 16px); display:flex; align-items:flex-end; justify-content:center; padding-bottom:.5cqw; flex:none;"><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.8cqw; color:rgba(255,255,255,.5); text-transform:uppercase;">Foto</span></div>' +
+          mgrAvatarBox(p.id, '6cqw', '7.4cqw') +
           '<div style="min-width:0;">' +
             '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:3.4cqw; font-weight:700; line-height:.85; color:var(--dt-oro-suave);">' + p.ovr + '</div>' +
             '<div style="font-size:1.35cqw; font-weight:800; line-height:1.1; margin-top:.3cqw;">#' + p.number + ' ' + escapeHtml(p.name) + '</div>' +
@@ -9477,7 +9532,9 @@
         '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; font-weight:700;">' + p.ovr + '/' + p.potential + '</div>' +
         '<div style="font-family:\'Barlow Condensed\',sans-serif; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(entry.clubName) + '</div>' +
         '<div style="font-family:\'Barlow Condensed\',sans-serif; font-weight:700; text-align:right; color:var(--dt-oro-suave);">' + p.value.toLocaleString('es-CO') + '</div>';
-      row.addEventListener('click', function(){ mgrOpenTransferSheet(entry.clubIdx, p.id); });
+      var isSel = mgrOpenMercadoTarget && mgrOpenMercadoTarget.playerId === p.id;
+      if(isSel) row.style.cssText += 'background:var(--dt-oro); color:var(--dt-tinta);';
+      row.addEventListener('click', function(){ mgrOpenMercadoTarget = { clubIdx: entry.clubIdx, playerId: p.id }; mgrRenderMercadoDT(); });
       listWrap.appendChild(row);
     });
     body.appendChild(tableCol);
@@ -9487,25 +9544,46 @@
     budgetCard.innerHTML = '<div class="dt-gold-label">Presupuesto libre</div><div class="dt-gold-big">' + Math.round(state.manager.club.budget).toLocaleString('es-CO') + '</div>';
     sideCol.appendChild(budgetCard);
 
-    var suggestPanel = document.createElement('div'); suggestPanel.className = 'dt-panel flex-col'; suggestPanel.style.flex = '1';
-    var best = null, bestScore = -1;
-    state.manager.cpuClubs.forEach(function(club, idx){
-      club.squad.forEach(function(p){
-        var score = mgrTransferInterest(p);
-        if(score > bestScore){ bestScore = score; best = { p: p, clubIdx: idx, clubName: club.name }; }
-      });
-    });
-    if(best){
-      var needed = bestScore >= 55;
-      suggestPanel.innerHTML =
-        '<div class="dt-panel-title">EL OJEADOR SUGIERE</div>' +
-        '<div style="font-size:1.05cqw; line-height:1.5;">' + (needed ? 'Necesitas refuerzo en ' + best.p.position + '. ' : '') + escapeHtml(best.p.name) + ' (' + best.p.ovr + ' GLB, ' + best.p.age + ' años en ' + escapeHtml(best.clubName) + ') es la mejor opción disponible.</div>' +
-        '<button type="button" class="dt-btn-fill" id="dtOjeadorBtn" style="flex:none; margin-top:auto;">ABRIR NEGOCIACIÓN</button>';
-      suggestPanel.querySelector('#dtOjeadorBtn').addEventListener('click', function(){ mgrOpenTransferSheet(best.clubIdx, best.p.id); });
-    } else {
-      suggestPanel.innerHTML = '<div class="dt-panel-title">EL OJEADOR SUGIERE</div><p class="dt-row-detail">Sin datos de mercado todavía.</p>';
+    var target = mgrOpenMercadoTarget && list.some(function(e){ return e.p.id === mgrOpenMercadoTarget.playerId; }) ? mgrOpenMercadoTarget : null;
+    if(!target && list.length){
+      var bestEntry = list.slice().sort(function(a, b){ return mgrTransferInterest(b.p) - mgrTransferInterest(a.p); })[0];
+      target = { clubIdx: bestEntry.clubIdx, playerId: bestEntry.p.id };
+      mgrOpenMercadoTarget = target;
     }
-    sideCol.appendChild(suggestPanel);
+    var detailPanel = document.createElement('div'); detailPanel.className = 'dt-panel flex-col'; detailPanel.style.flex = '1';
+    if(!target){
+      detailPanel.innerHTML = '<div class="dt-panel-title">EL OJEADOR SUGIERE</div><p class="dt-row-detail">Ningún jugador cumple estos filtros.</p>';
+    } else {
+      var entryT = list.filter(function(e){ return e.p.id === target.playerId; })[0];
+      var pt = entryT.p;
+      var interest = mgrTransferInterest(pt);
+      var needed = interest >= 55;
+      var attrDefsT = [['Ritmo', 'velocidad'], ['Tiro', 'tiro'], ['Pase', 'pase'], ['Regate', 'regate'], ['Defensa', 'defensa'], ['Físico', 'fisico']];
+      detailPanel.innerHTML =
+        '<div style="display:flex; gap:1cqw; align-items:center;">' +
+          mgrAvatarBox(pt.id, '6cqw', '7.4cqw') +
+          '<div style="min-width:0;">' +
+            '<div style="display:flex; align-items:baseline; gap:.5cqw;"><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:2.6cqw; font-weight:700; line-height:.9; color:var(--dt-oro-suave);">' + pt.ovr + '</span><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.15cqw; font-weight:700;">▲ ' + pt.potential + '</span></div>' +
+            '<div style="font-size:1.15cqw; font-weight:800; line-height:1.1; margin-top:.2cqw;">' + escapeHtml(pt.name) + '</div>' +
+            '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.05cqw; color:var(--dt-text-sec);">' + pt.position + ' · ' + pt.age + ' años · ' + escapeHtml(entryT.clubName) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:.4cqw; margin-top:.8cqw;">' +
+          attrDefsT.map(function(a){
+            var val = pt.attrs[a[1]];
+            var tone = val >= 78 ? 'var(--dt-verde)' : val >= 62 ? 'var(--dt-oro-suave)' : 'var(--dt-rojo)';
+            return '<div style="padding:.5cqw; border-radius:.6cqw; background:rgba(255,255,255,.07); text-align:center;"><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.3cqw; font-weight:700; color:' + tone + ';">' + val + '</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.72cqw; letter-spacing:.05cqw; text-transform:uppercase; color:var(--dt-text-sec);">' + a[0] + '</div></div>';
+          }).join('') +
+        '</div>' +
+        '<div style="display:flex; gap:.5cqw; margin-top:.7cqw;">' +
+          '<div style="flex:1; padding:.5cqw .6cqw; border-radius:.6cqw; background:rgba(255,255,255,.07);"><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.85cqw; text-transform:uppercase; color:var(--dt-text-sec);">Valor</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700;">' + pt.value.toLocaleString('es-CO') + '</div></div>' +
+          '<div style="flex:1; padding:.5cqw .6cqw; border-radius:.6cqw; background:rgba(255,255,255,.07);"><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.85cqw; text-transform:uppercase; color:var(--dt-text-sec);">Interés</div><div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700; color:var(--dt-oro-suave);">' + interest + '%</div></div>' +
+        '</div>' +
+        '<div style="font-size:0.9cqw; line-height:1.45; margin-top:.7cqw;">' + (needed ? 'Necesitas refuerzo en ' + pt.position + '. ' : '') + 'El ojeador lo recomienda como objetivo realista para esta ventana.</div>' +
+        '<button type="button" id="dtMercadoNego" class="dt-btn-fill" style="flex:none; margin-top:auto;">ABRIR NEGOCIACIÓN</button>';
+      detailPanel.querySelector('#dtMercadoNego').addEventListener('click', function(){ mgrOpenTransferSheet(entryT.clubIdx, pt.id); });
+    }
+    sideCol.appendChild(detailPanel);
     body.appendChild(sideCol);
   }
 
@@ -9560,7 +9638,7 @@
     var left = document.createElement('div'); left.className = 'dt-panel flex-col'; left.style.gap = '1cqw';
     left.innerHTML =
       '<div style="display:flex; align-items:center; gap:1cqw;">' +
-        '<div style="width:6cqw; height:7.4cqw; min-width:56px; min-height:68px; border-radius:.8cqw; background:repeating-linear-gradient(135deg, rgba(255,255,255,.09) 0 8px, rgba(255,255,255,.03) 8px 16px); display:flex; align-items:flex-end; justify-content:center; padding-bottom:.5cqw; flex:none;"><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.8cqw; color:rgba(255,255,255,.5); text-transform:uppercase;">Foto</span></div>' +
+        mgrAvatarBox(neg.playerId, '6cqw', '7.4cqw') +
         '<div>' +
           '<div style="font-size:1.9cqw; font-weight:800; line-height:1;">' + escapeHtml(neg.playerName) + '</div>' +
           '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; letter-spacing:.05cqw; color:var(--dt-text-sec); margin-top:.25cqw;">' + escapeHtml(stageLabel) + '</div>' +
@@ -10055,7 +10133,7 @@
     } else {
       detailPanel.innerHTML =
         '<div style="display:flex; gap:1cqw; align-items:center;">' +
-          '<div style="width:5cqw; height:6.2cqw; min-width:48px; min-height:60px; border-radius:.8cqw; background:repeating-linear-gradient(135deg, rgba(255,255,255,.09) 0 8px, rgba(255,255,255,.03) 8px 16px); flex:none; display:flex; align-items:flex-end; justify-content:center; padding-bottom:.4cqw;"><span style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.78cqw; color:rgba(255,255,255,.5); text-transform:uppercase;">Foto</span></div>' +
+          mgrAvatarBox(promesa.id, '5cqw', '6.2cqw') +
           '<div>' +
             '<div style="font-size:1.35cqw; font-weight:800; line-height:1.1;">' + escapeHtml(promesa.name) + '</div>' +
             '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.05cqw; text-transform:uppercase; color:var(--dt-text-sec);">' + promesa.position + ' · ' + promesa.age + ' años</div>' +
@@ -10543,6 +10621,7 @@
   var mgrTransferAgeBand = 'ALL';
   var mgrTransferOvrBand = 'ALL';
   var mgrTransferValBand = 'ALL';
+  var mgrOpenMercadoTarget = null;
   var mgrOpenTransferKey = null;
   function mgrOpenTransferSheet(clubIdx, playerId){
     mgrOpenTransferKey = clubIdx + ':' + playerId;
