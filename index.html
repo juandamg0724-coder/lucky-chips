@@ -7386,7 +7386,7 @@
   // Reutiliza CAREER_SLOT_DEFS/CAREER_PITCH_LAYOUT (formacion 1-3-2-1), careerSimulateFullMatch
   // (motor de partidos), poissonSample/lambdaFor (partidos CPU vs CPU) y UT_PLAYER_POOL (nombres)
   // ya definidos arriba para Ultimate Team y Apuestas Deportivas.
-  var MGR_START_BUDGET = 500000;
+  var MGR_START_BUDGET = 5000000;
   var MGR_TOTAL_MATCHDAYS_HINT = 38; // 19 rivales CPU x ida y vuelta
   var MGR_EXTRA_CLUB_NAMES = [
     'Estrella Azul FC', 'Guerreros del Valle', 'Puma Real', 'Marea Roja', 'Vientos del Pacífico',
@@ -7441,8 +7441,8 @@
     club.academyLevel = Math.max(1, Math.min(5, Math.round(club.strength * 0.7 + Math.random() * 2)));
     club.scoutingLevel = Math.max(1, Math.min(5, Math.round(club.strength * 0.6 + Math.random() * 2.2)));
     club.staffLevel = Math.max(1, Math.min(5, Math.round(club.strength * 0.7 + Math.random() * 2)));
-    club.sponsor = { name: mgrPick(MGR_SPONSOR_NAMES), pay: Math.round((2000 + club.reputation * 180) / 100) * 100 };
-    club.wageBudget = Math.round((mgrClubTierBase(club.strength) * 900) / 100) * 100;
+    club.sponsor = { name: mgrPick(MGR_SPONSOR_NAMES), pay: Math.round((50000 + club.reputation * 25000) / 1000) * 1000 };
+    club.wageBudget = Math.round((mgrClubTierBase(club.strength) * 200000) / 10000) * 10000;
     club.rivalName = null;
     return club;
   }
@@ -7650,18 +7650,33 @@
     });
   }
 
+  // Curva de valores realista: no lineal con el global, para que las estrellas (85+) valgan
+  // decenas de veces más que un jugador medio y las promesas jóvenes de gran potencial y los
+  // veteranos en declive se aparten de esa curva base, como en el mercado real.
+  function mgrPlayerMarketValue(ovr, potential, age){
+    var base = 320000 * Math.pow(Math.max(0.1, (ovr - 40) / 10), 3.6);
+    if(age <= 23 && potential > ovr) base *= 1 + Math.min(0.6, (potential - ovr) * 0.02);
+    if(age >= 30) base *= Math.max(0.3, 1 - (age - 29) * 0.10);
+    return Math.max(30000, Math.round(base / 10000) * 10000);
+  }
+  function mgrPlayerWage(ovr, value){
+    var ratio = Math.max(0.10, Math.min(0.22, 0.24 - ovr * 0.0013));
+    return Math.max(15000, Math.round(value * ratio / 1000) * 1000);
+  }
   function mgrGeneratePlayer(position, minOvr, maxOvr){
     var ovr = Math.max(35, Math.min(90, minOvr + Math.floor(Math.random() * (maxOvr - minOvr + 1))));
     var age = 17 + Math.floor(Math.random() * 20);
     var potential = Math.min(94, ovr + Math.floor(Math.random() * (age < 23 ? 16 : 4)));
+    potential = Math.max(ovr, potential);
+    var mval = mgrPlayerMarketValue(ovr, potential, age);
     var player = {
       id: 'mp' + Date.now() + Math.floor(Math.random() * 1000000),
       name: UT_PLAYER_POOL[Math.floor(Math.random() * UT_PLAYER_POOL.length)],
-      age: age, position: position, ovr: ovr, potential: Math.max(ovr, potential),
+      age: age, position: position, ovr: ovr, potential: potential,
       physical: 60 + Math.floor(Math.random() * 35), morale: 65 + Math.floor(Math.random() * 30),
       form: 55 + Math.floor(Math.random() * 35),
-      wage: Math.round((ovr * ovr * 2) / 10) * 10,
-      value: Math.round((ovr * ovr * 40) / 100) * 100,
+      wage: mgrPlayerWage(ovr, mval),
+      value: mval,
       contractYears: 1 + Math.floor(Math.random() * 4),
       seasonApps: 0, seasonGoals: 0, seasonAssists: 0, seasonRatingSum: 0,
       injuredUntil: 0, onLoan: false, number: 0, forSale: false, forLoanListed: false
@@ -7956,40 +7971,70 @@
     var player = club ? club.squad.filter(function(p){ return p.id === neg.playerId; })[0] : null;
     if(!club || !player){ neg.status = 'rejected'; mgrPushInbox('oferta', 'Negociación cancelada', neg.playerName + ' ya no está disponible.'); saveState(); mgrRenderActiveTab(); return; }
     if(!amount || amount <= 0){ mgrMsg('Ingresa un monto válido'); return; }
+    var prevRatio = neg.myLastRatio || 0;
     var ratio = amount / Math.max(1, player.value);
     neg.history.push({ by: 'user', amount: amount, action: 'offer' });
-    var improved = ratio > (neg.myLastRatio || 0) + 0.02;
+    var improved = ratio > prevRatio + 0.015;
     neg.myLastAmount = amount; neg.myLastRatio = ratio; neg.rounds += 1;
 
-    var acceptThreshold = mgrNegoBuyThreshold(neg, club, player);
-    if(ratio >= acceptThreshold){
-      neg.status = 'agreed'; neg.agreedFee = amount;
-      mgrPushInbox('fichaje', club.name + ' acepta tu oferta', club.name + ' acepta ' + amount.toLocaleString('es-CO') + ' por ' + player.name + '. Ahora falta negociar el contrato con él.');
+    // El club tiene un piso real (nunca vende por debajo) y un pedido inicial inflado que va
+    // CEDIENDO un paso por ronda hacia ese piso -a lo largo de varias rondas, no de golpe- en vez
+    // de plantarse siempre en el mismo número. El paso se calcula sobre la distancia entre el
+    // pedido inicial y el piso (no sobre lo lejos que esté tu oferta), para que una oferta muy baja
+    // no haga que el club se desplome directo al piso en una sola ronda.
+    var floorRatio = mgrNegoBuyThreshold(neg, club, player);
+    var floorAmount = player.value * floorRatio;
+    if(neg.aiLastAmount == null){
+      var importance = mgrPlayerImportanceScore(club, player);
+      var openMarkup = Math.min(0.65, Math.max(0.14, 0.20 + Math.max(0, importance) * 0.0035 + (player.forSale ? -0.06 : 0.05)));
+      neg.aiLastAmount = Math.round(floorAmount * (1 + openMarkup) / 1000) * 1000;
+      neg.openAsk = neg.aiLastAmount;
+    }
+    if(neg.openAsk == null) neg.openAsk = neg.aiLastAmount;
+
+    if(amount >= neg.aiLastAmount){
+      var dealAmount = Math.min(amount, neg.aiLastAmount);
+      neg.status = 'agreed'; neg.agreedFee = dealAmount;
+      neg.history.push({ by: 'ai', amount: dealAmount, action: 'accept' });
+      mgrPushInbox('fichaje', club.name + ' acepta tu oferta', club.name + ' acepta ' + dealAmount.toLocaleString('es-CO') + ' por ' + player.name + '. Ahora falta negociar el contrato con él.');
       mgrNegoStartContract(neg);
       saveState(); mgrRenderActiveTab();
       return;
     }
-    // La tensión solo sube si no hubo una mejora real de tu parte: si vas subiendo de verdad,
-    // el pedido del club se mantiene estable en vez de escaparse cada ronda.
-    if(!improved) neg.tension = Math.min(100, neg.tension + 20);
-    var walkChance = Math.max(0, neg.tension - 60) / 100;
+    // La tensión solo sube si no hubo una mejora real de tu parte, pero el club siempre cede
+    // un paso cada ronda (más si tú también cediste) para que la negociación avance de verdad.
+    if(!improved) neg.tension = Math.min(100, neg.tension + 14);
+    var totalCushion = Math.max(1000, neg.openAsk - floorAmount);
+    var step = totalCushion / (MGR_NEGO_MAX_ROUNDS - 1);
+    var newAsk = neg.aiLastAmount - (improved ? step : step * 0.35);
+    newAsk = Math.max(floorAmount, newAsk);
+    if(newAsk - amount < floorAmount * 0.03) newAsk = Math.max(floorAmount, (newAsk + amount) / 2);
+    newAsk = Math.round(newAsk / 1000) * 1000;
+
+    var walkChance = Math.max(0, neg.tension - 75) / 160;
     if(neg.rounds >= MGR_NEGO_MAX_ROUNDS || Math.random() < walkChance){
+      if(newAsk - amount < floorAmount * 0.10){
+        neg.status = 'agreed'; neg.agreedFee = newAsk;
+        neg.history.push({ by: 'ai', amount: newAsk, action: 'accept' });
+        mgrPushInbox('fichaje', club.name + ' acepta cerrar el trato', club.name + ' acepta ' + newAsk.toLocaleString('es-CO') + ' por ' + player.name + ' como oferta final.');
+        mgrNegoStartContract(neg);
+        saveState(); mgrRenderActiveTab();
+        return;
+      }
       neg.status = 'rejected';
       neg.history.push({ by: 'ai', action: 'walk' });
       mgrPushInbox('oferta', club.name + ' se retira de la negociación', club.name + ' se cansó de negociar por ' + player.name + ' y se levanta de la mesa.');
       saveState(); mgrRenderActiveTab();
       return;
     }
-    var askRatio = Math.max(mgrNegoBuyThreshold(neg, club, player), ratio + 0.02);
-    var newAsk = Math.round(player.value * askRatio / 1000) * 1000;
-    neg.aiLastAmount = newAsk; neg.aiLastRatio = askRatio;
+    neg.aiLastAmount = newAsk; neg.aiLastRatio = newAsk / Math.max(1, player.value);
     neg.history.push({ by: 'ai', amount: newAsk, action: 'counter' });
     saveState(); mgrRenderActiveTab();
   }
   function mgrNegoStartContract(feeNeg){
     var player = mgrFindCpuPlayerById(feeNeg.playerId);
     if(!player) return;
-    var askWage = Math.round(mgrWageDemand(player) * 1.15 / 10) * 10;
+    var askWage = Math.round(mgrWageDemand(player) * 1.15 / 1000) * 1000;
     var neg = {
       id: 'neg' + Date.now() + Math.floor(Math.random() * 1000), kind: 'buy', stage: 'contract', status: 'active',
       clubIdx: feeNeg.clubIdx, clubName: feeNeg.clubName, playerId: feeNeg.playerId, playerName: feeNeg.playerName,
@@ -8006,27 +8051,44 @@
     var player = mgrFindCpuPlayerById(neg.playerId);
     if(!player){ neg.status = 'rejected'; saveState(); mgrRenderActiveTab(); return; }
     if(!wage || wage <= 0){ mgrMsg('Ingresa un salario válido'); return; }
+    var prevRatio = neg.myLastRatio || 0;
     var ratio = wage / Math.max(1, neg.playerWageAsk);
     neg.history.push({ by: 'user', amount: wage, action: 'offer' });
-    var improved = ratio > (neg.myLastRatio || 0) + 0.02;
+    var improved = ratio > prevRatio + 0.015;
     neg.myLastAmount = wage; neg.myLastRatio = ratio; neg.rounds += 1;
 
-    var acceptRatio = 0.9 * mgrNegoTensionMult(neg.tension);
-    if(ratio >= acceptRatio){
-      neg.status = 'agreed'; neg.agreedWage = wage; neg.agreedYears = 3;
+    // El jugador tiene un piso salarial real y va cediendo desde su pedido inicial en vez de
+    // plantarse: cada ronda el hueco se cierra un poco, más si tú también subiste de verdad.
+    var floorAmount = neg.playerWageAsk * 0.85 * mgrNegoTensionMult(neg.tension);
+    if(wage >= neg.aiLastAmount){
+      var dealWage = Math.min(wage, neg.aiLastAmount);
+      neg.status = 'agreed'; neg.agreedWage = dealWage; neg.agreedYears = 3;
+      neg.history.push({ by: 'ai', amount: dealWage, action: 'accept' });
       mgrNegoFinalizeBuy(neg);
       saveState(); mgrRenderActiveTab();
       return;
     }
-    if(!improved) neg.tension = Math.min(100, neg.tension + 20);
+    if(!improved) neg.tension = Math.min(100, neg.tension + 14);
+    var totalCushion = Math.max(1000, neg.playerWageAsk * 0.15);
+    var step = totalCushion / (MGR_NEGO_MAX_ROUNDS - 1);
+    var newAsk = neg.aiLastAmount - (improved ? step : step * 0.35);
+    newAsk = Math.max(floorAmount, newAsk);
+    if(newAsk - wage < neg.playerWageAsk * 0.03) newAsk = Math.max(floorAmount, (newAsk + wage) / 2);
+    newAsk = Math.round(newAsk / 1000) * 1000;
+
     if(neg.rounds >= MGR_NEGO_MAX_ROUNDS || neg.tension >= 100){
+      if(newAsk - wage < neg.playerWageAsk * 0.08){
+        neg.status = 'agreed'; neg.agreedWage = newAsk; neg.agreedYears = 3;
+        neg.history.push({ by: 'ai', amount: newAsk, action: 'accept' });
+        mgrNegoFinalizeBuy(neg);
+        saveState(); mgrRenderActiveTab();
+        return;
+      }
       neg.status = 'rejected';
       mgrPushInbox('oferta', 'El fichaje se cayó', neg.playerName + ' no llegó a un acuerdo personal y el fichaje con ' + neg.clubName + ' se cae.');
       saveState(); mgrRenderActiveTab();
       return;
     }
-    var newAskRatio = Math.min(1.1, Math.max(0.9 * mgrNegoTensionMult(neg.tension), ratio + 0.02));
-    var newAsk = Math.round(neg.playerWageAsk * newAskRatio / 10) * 10;
     neg.aiLastAmount = newAsk;
     neg.history.push({ by: 'ai', amount: newAsk, action: 'counter' });
     saveState(); mgrRenderActiveTab();
@@ -8056,7 +8118,7 @@
       id: 'neg' + Date.now() + Math.floor(Math.random() * 1000), kind: 'sell', stage: 'fee', status: 'active',
       clubIdx: clubIdx, clubName: club.name, playerId: playerId, playerName: player.name, playerValueSnapshot: player.value,
       tension: 0, rounds: 0, history: [{ by: 'ai', amount: amount, action: 'offer' }],
-      myLastAmount: null, myLastRatio: null, aiLastAmount: amount, aiLastRatio: amount / Math.max(1, player.value), lastGap: null
+      myLastAmount: null, myLastRatio: null, aiLastAmount: amount, aiLastRatio: amount / Math.max(1, player.value), lastGap: null, openOffer: amount
     };
     mgrNegotiations().push(neg);
     return neg;
@@ -8068,35 +8130,44 @@
     var player = mgrPlayerById(neg.playerId);
     if(!club || !player){ neg.status = 'rejected'; saveState(); mgrRenderActiveTab(); return; }
     if(!amount || amount <= 0){ mgrMsg('Ingresa un monto válido'); return; }
-    var ratio = amount / Math.max(1, player.value);
+    var prevAsk = neg.myLastAmount;
+    var improved = prevAsk != null && amount < prevAsk - Math.max(1, player.value) * 0.015;
     neg.history.push({ by: 'user', amount: amount, action: 'ask' });
-    neg.myLastAmount = amount; neg.myLastRatio = ratio; neg.rounds += 1;
+    neg.myLastAmount = amount; neg.myLastRatio = amount / Math.max(1, player.value); neg.rounds += 1;
 
-    var ceiling = mgrNegoSellCeiling(neg, club, player);
-    if(ratio <= ceiling){
+    var ceilingAmount = player.value * mgrNegoSellCeiling(neg, club, player);
+    if(neg.openOffer == null) neg.openOffer = neg.aiLastAmount;
+    if(amount <= neg.aiLastAmount || amount <= ceilingAmount){
       mgrNegoFinalizeSell(neg, amount);
       saveState(); mgrRenderActiveTab();
       return;
     }
-    var gapNow = ratio - ceiling;
-    var improved = neg.lastGap != null && gapNow < neg.lastGap - 0.02;
-    neg.lastGap = gapNow;
-    // La tensión solo sube si no cediste de verdad: si bajas el pedido en serio, la oferta del
-    // club se mantiene estable en su techo actual en vez de encogerse cada ronda.
-    if(!improved) neg.tension = Math.min(100, neg.tension + 20);
-    var walkChance = Math.max(0, neg.tension - 60) / 100;
+    // La tensión solo sube si no cediste de verdad, pero la oferta del club siempre sube un paso
+    // cada ronda (más si tú también bajaste el pedido) en vez de plantarse en el mismo número. El
+    // paso se calcula sobre la distancia entre la oferta inicial y el techo, no sobre lo lejos que
+    // esté tu pedido, para que un pedido muy alto no dispare la oferta hasta el techo de una vez.
+    if(!improved) neg.tension = Math.min(100, neg.tension + 14);
+    var totalRoom = Math.max(1000, ceilingAmount - neg.openOffer);
+    var step = totalRoom / (MGR_NEGO_MAX_ROUNDS - 1);
+    var newOffer = neg.aiLastAmount + (improved ? step : step * 0.35);
+    newOffer = Math.min(ceilingAmount, newOffer);
+    if(amount - newOffer < player.value * 0.035) newOffer = Math.min(ceilingAmount, (newOffer + amount) / 2);
+    newOffer = Math.max(neg.aiLastAmount, Math.round(newOffer / 1000) * 1000);
+
+    var walkChance = Math.max(0, neg.tension - 75) / 160;
     if(neg.rounds >= MGR_NEGO_MAX_ROUNDS || Math.random() < walkChance){
+      if(amount - newOffer < player.value * 0.10){
+        mgrNegoFinalizeSell(neg, newOffer);
+        saveState(); mgrRenderActiveTab();
+        return;
+      }
       neg.status = 'rejected';
       neg.history.push({ by: 'ai', action: 'walk' });
       mgrPushInbox('oferta', club.name + ' retira su oferta', club.name + ' no aceptó tu pedido por ' + player.name + ' y se retira.');
       saveState(); mgrRenderActiveTab();
       return;
     }
-    // La oferta del club nunca retrocede por debajo de lo que ya puso sobre la mesa: pedir más
-    // puede hacer que se plante o se retire, pero no que "retire" plata ya ofrecida.
-    var newOfferRatio = Math.max(neg.aiLastRatio || 0, Math.min(mgrNegoSellCeiling(neg, club, player), ratio - 0.02));
-    var newOffer = Math.round(player.value * newOfferRatio / 1000) * 1000;
-    neg.aiLastAmount = newOffer; neg.aiLastRatio = newOfferRatio;
+    neg.aiLastAmount = newOffer; neg.aiLastRatio = newOffer / Math.max(1, player.value);
     neg.history.push({ by: 'ai', amount: newOffer, action: 'counter' });
     saveState(); mgrRenderActiveTab();
   }
@@ -8268,7 +8339,7 @@
   function mgrWageDemand(player){
     var importance = player.ovr - mgrMySquadAvgOvr();
     var mult = 1 + Math.max(0, importance) * 0.03 + (player.potential - player.ovr) * 0.01 + (player.age < 24 ? 0.1 : 0);
-    return Math.max(player.wage, Math.round(player.wage * mult / 10) * 10);
+    return Math.max(player.wage, Math.round(player.wage * mult / 1000) * 1000);
   }
   function mgrProposeRenewal(playerId, years){
     var player = mgrPlayerById(playerId);
@@ -8285,8 +8356,14 @@
 
   function mgrApplyTraining(){
     var focus = state.manager.trainingFocus || 'GK';
+    var club = state.manager.club;
+    // Mejores instalaciones y cuerpo técnico aceleran el progreso; el foco elegido entrena más
+    // fuerte, pero el resto de la plantilla joven también mejora un poco por su cuenta.
+    var trainingPower = 1 + ((club.facilities || 3) + (club.staffLevel || 3) - 6) * 0.12;
     state.manager.squad.forEach(function(p){
-      if(p.position === focus && p.age <= 26 && p.ovr < p.potential && Math.random() < 0.2) p.ovr += 1;
+      if(p.age > 26 || p.ovr >= p.potential) return;
+      var chance = (p.position === focus ? 0.22 : 0.05) * trainingPower;
+      if(Math.random() < chance) p.ovr += 1;
     });
   }
   var MGR_INJURY_TYPES = [
@@ -8406,7 +8483,7 @@
       state.manager.history.cupChampions.push({ season: state.manager.season, champion: cup.championName });
       if(cup.championName === state.manager.club.name){
         mgrPushInbox('resultado', '¡Campeón de la ' + MGR_CUP_NAME + '!', '¡Ganaste la ' + MGR_CUP_NAME + ' esta temporada!');
-        state.manager.club.budget += 40000;
+        state.manager.club.budget += 2000000;
         state.manager.club.boardConfidence = Math.min(100, state.manager.club.boardConfidence + 15);
       } else {
         mgrPushInbox('news', 'Campeón de la ' + MGR_CUP_NAME, cup.championName + ' se coronó campeón de la ' + MGR_CUP_NAME + '.');
@@ -8457,13 +8534,14 @@
       var baseOvr = 38 + Math.floor(Math.random() * 10);
       var potential = Math.min(94, baseOvr + 15 + Math.floor(Math.random() * (10 + scoutQuality * 3)));
       var age = 16 + Math.floor(Math.random() * 3);
+      var mval = mgrPlayerMarketValue(baseOvr, potential, age);
       var player = {
         id: 'yth' + Date.now() + Math.floor(Math.random() * 1000000),
         name: UT_PLAYER_POOL[Math.floor(Math.random() * UT_PLAYER_POOL.length)],
         age: age, position: position, ovr: baseOvr, potential: potential,
         physical: 55 + Math.floor(Math.random() * 20), morale: 70, form: 60,
-        wage: Math.round((baseOvr * baseOvr * 2) / 10) * 10,
-        value: Math.round((baseOvr * baseOvr * 40) / 100) * 100,
+        wage: mgrPlayerWage(baseOvr, mval),
+        value: mval,
         contractYears: 3, seasonApps: 0, seasonGoals: 0, seasonAssists: 0, seasonRatingSum: 0, seasonInjuries: 0,
         injuredUntil: 0, onLoan: false, number: 0, forSale: false, forLoanListed: false,
         personality: mgrPick(MGR_PERSONALITIES)
@@ -8512,7 +8590,7 @@
   function mgrCloseSeason(){
     var table = mgrStandingsTable();
     var myPos = table.map(function(r){ return r.idx; }).indexOf(0) + 1;
-    var prize = Math.max(5000, Math.round((table.length - myPos + 1) * 15000));
+    var prize = Math.max(200000, Math.round((table.length - myPos + 1) * 400000 / 1000) * 1000);
     state.manager.club.budget += prize;
 
     var finances = mgrEnsureFinances();
@@ -8557,7 +8635,7 @@
       var growth = base * (0.5 + 0.5 * minutesFactor) * clubFactor + moraleFactor * 0.6 + planBonus - injuryPenalty;
       p.ovr = Math.max(35, Math.min(p.potential, Math.round(p.ovr + growth)));
       p.age += 1;
-      p.value = Math.round((p.ovr * p.ovr * 40) / 100) * 100;
+      p.value = mgrPlayerMarketValue(p.ovr, p.potential, p.age);
       p.contractYears = Math.max(0, p.contractYears - 1);
       p.seasonApps = 0; p.seasonGoals = 0; p.seasonAssists = 0; p.seasonRatingSum = 0; p.seasonInjuries = 0; p.seasonYellows = 0;
       if(p.contractYears === 0) mgrPushInbox('contrato', 'Contrato por vencer', p.name + ' se quedó sin contrato. Renuévalo o podría irse gratis.');
@@ -8631,7 +8709,7 @@
     var resultBody = 'Terminaste ' + myScore + '-' + oppScore + ' vs ' + oppName + '.';
     if(iAmHome){
       var club = state.manager.club;
-      var gate = Math.round(club.capacity * (0.4 + club.popularity / 200) * 8 / 1000) * 1000;
+      var gate = Math.round(club.capacity * (0.4 + club.popularity / 200) * 15 / 1000) * 1000;
       club.budget += gate;
       mgrEnsureFinances().seasonIncome += gate;
       resultBody += ' Taquilla: ' + gate.toLocaleString('es-CO') + '.';
@@ -9084,8 +9162,8 @@
     var col2 = document.createElement('div'); col2.className = 'dt-col';
     grid.appendChild(col2);
 
-    var tablePanel = document.createElement('div'); tablePanel.className = 'dt-panel';
-    tablePanel.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.6cqw;"><span class="dt-panel-title" style="margin-bottom:0;">TABLA</span><span class="dt-row-detail">JUG · PTS</span></div>';
+    var tablePanel = document.createElement('div'); tablePanel.className = 'dt-panel'; tablePanel.style.cursor = 'pointer';
+    tablePanel.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.6cqw;"><span class="dt-panel-title" style="margin-bottom:0;">TABLA</span><span class="dt-row-detail">JUG · PTS · VER TODA ▸</span></div>';
     var table = mgrStandingsTable();
     table.slice(0, 5).forEach(function(row, i){
       var r = document.createElement('div');
@@ -9097,6 +9175,7 @@
         '<span class="dt-table-pts">' + row.stats.pts + '</span>';
       tablePanel.appendChild(r);
     });
+    tablePanel.addEventListener('click', function(){ mgrSwitchTab('calendario'); });
     col2.appendChild(tablePanel);
 
     var entrenoPanel = document.createElement('div'); entrenoPanel.className = 'dt-panel'; entrenoPanel.style.cssText = 'flex:1; display:flex; flex-direction:column; justify-content:space-between; cursor:pointer;';
@@ -9128,11 +9207,11 @@
     enFormaPanel.appendChild(enFormaHead);
     var enFormaRow = document.createElement('div'); enFormaRow.style.cssText = 'flex:1; min-height:0; display:grid; grid-template-columns:repeat(3,1fr); gap:.6cqw; margin-top:.7cqw;';
     if(!enFormaList.length){ enFormaRow.innerHTML = '<p class="dt-row-detail">Sin datos todavía.</p>'; }
-    enFormaList.forEach(function(entry){
+    enFormaList.forEach(function(entry, entryIdx){
       var p = entry.p;
       var card = document.createElement('div'); card.style.cssText = 'position:relative; border-radius:.8cqw; overflow:hidden; background:rgba(255,255,255,.07); cursor:pointer;';
       card.innerHTML =
-        '<img src="' + mgrAvatarUrl(p.id) + '" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">' +
+        '<img src="' + mgrAvatarUrlAt(state.manager.club.name, entryIdx) + '" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">' +
         '<div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(6,10,26,.92) 0%, rgba(6,10,26,.25) 45%, rgba(6,10,26,0) 70%);"></div>' +
         '<div style="position:absolute; left:.5cqw; top:.45cqw; padding:.1cqw .5cqw; border-radius:99px; background:var(--dt-oro); color:var(--dt-tinta); font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700;">' + p.ovr + '</div>' +
         '<div style="position:absolute; left:.5cqw; right:.5cqw; bottom:.45cqw;">' +
@@ -9205,10 +9284,17 @@
   }
 
   var MGR_DT_POS_COLOR = { GK: 'var(--dt-ambar)', DEF: 'var(--dt-azul)', MID: 'var(--dt-verde)', FWD: 'var(--dt-rojo)' };
-  function mgrAvatarUrl(id){
+  var MGR_AVATAR_COUNT = 5;
+  function mgrAvatarHash(id){
     var s = String(id); var h = 0;
     for(var i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) >>> 0; }
-    return 'assets/jugador-' + ((h % 3) + 1) + '.webp';
+    return h;
+  }
+  function mgrAvatarUrl(id){
+    return 'assets/jugador-' + ((mgrAvatarHash(id) % MGR_AVATAR_COUNT) + 1) + '.webp';
+  }
+  function mgrAvatarUrlAt(seedId, offset){
+    return 'assets/jugador-' + (((mgrAvatarHash(seedId) + offset) % MGR_AVATAR_COUNT) + 1) + '.webp';
   }
   function mgrAvatarBox(id, w, h){
     return '<div style="width:' + w + '; height:' + h + '; border-radius:.8cqw; overflow:hidden; flex:none; background:rgba(255,255,255,.07);"><img src="' + mgrAvatarUrl(id) + '" alt="" style="width:100%; height:100%; object-fit:cover; display:block;"></div>';
@@ -9630,7 +9716,7 @@
     var player = mgrPlayerById(neg.playerId) || (neg.kind === 'buy' && state.manager.cpuClubs[neg.clubIdx] ? state.manager.cpuClubs[neg.clubIdx].squad.filter(function(x){ return x.id === neg.playerId; })[0] : null);
     var amountLabel = neg.stage === 'contract' ? 'Salario propuesto' : 'Total de transferencia';
     var stageLabel = neg.stage === 'contract' ? 'Negociando contrato con ' + neg.playerName : (neg.kind === 'buy' ? 'Negociando el traspaso de ' + neg.playerName : 'Te ofrecen por ' + neg.playerName);
-    var step = neg.stage === 'contract' ? 500 : Math.max(1000, Math.round((neg.playerValueSnapshot || 100000) * 0.02 / 1000) * 1000);
+    var step = neg.stage === 'contract' ? Math.max(1000, Math.round((neg.playerWageAsk || 50000) * 0.03 / 1000) * 1000) : Math.max(10000, Math.round((neg.playerValueSnapshot || 1000000) * 0.02 / 10000) * 10000);
     var offerVal = neg.stage === 'contract' ? (neg.myLastAmount || neg.playerWageAsk)
       : neg.kind === 'buy' ? (neg.myLastAmount ? Math.round(neg.myLastAmount * 1.05) : neg.playerValueSnapshot)
       : (neg.myLastAmount ? Math.round(neg.myLastAmount * 1.1) : Math.round((neg.aiLastAmount || neg.playerValueSnapshot) * 1.15));
@@ -10189,13 +10275,14 @@
       var age = 16 + Math.floor(Math.random() * 3);
       var baseOvr = 38 + Math.floor(Math.random() * 10);
       var potential = Math.min(94, baseOvr + 10 + Math.floor(Math.random() * (15 + scoutQuality * 3)));
+      var mval = mgrPlayerMarketValue(baseOvr, potential, age);
       pool.push({
         id: 'sct' + Date.now() + Math.floor(Math.random() * 1000000) + i,
         name: UT_PLAYER_POOL[Math.floor(Math.random() * UT_PLAYER_POOL.length)],
         age: age, position: position, ovr: baseOvr, potential: potential, zona: mgrPick(MGR_OJEO_ZONAS), certeza: certeza,
         physical: 55 + Math.floor(Math.random() * 20), morale: 70, form: 60,
-        wage: Math.round((baseOvr * baseOvr * 2) / 10) * 10,
-        value: Math.round((baseOvr * baseOvr * 40) / 100) * 100,
+        wage: mgrPlayerWage(baseOvr, mval),
+        value: mval,
         contractYears: 3, seasonApps: 0, seasonGoals: 0, seasonAssists: 0, seasonRatingSum: 0, seasonInjuries: 0,
         injuredUntil: 0, onLoan: false, number: 0, forSale: false, forLoanListed: false,
         personality: mgrPick(MGR_PERSONALITIES)
@@ -10688,7 +10775,7 @@
       var wrap = document.createElement('div');
       wrap.className = 'career-bid-row'; wrap.style.marginTop = '6px';
       var input = document.createElement('input');
-      input.type = 'number'; input.min = '1000'; input.step = '1000'; input.value = String(p.value);
+      input.type = 'number'; input.min = '10000'; input.step = '10000'; input.value = String(p.value);
       var sendBtn = document.createElement('button');
       sendBtn.className = 'btn btn-gold btn-sm'; sendBtn.textContent = 'Ofertar';
       sendBtn.addEventListener('click', function(){
