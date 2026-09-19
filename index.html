@@ -8725,8 +8725,13 @@
   }
 
   var mgrLiveMatch = null, mgrLiveTimer = null;
+  var mgrArcade = null;
   function mgrRenderPartidoDT(){
     mgrRenderDtChrome();
+    if(mgrArcade && mgrArcade.active){
+      if(!document.getElementById('mgrArcadeCanvas')) mgrBuildArcadeScreen();
+      return;
+    }
     mgrRenderLiveMatch();
   }
   function mgrRenderLiveMatch(){
@@ -8826,6 +8831,378 @@
     body.appendChild(right);
   }
 
+  /* ================= PARTIDO JUGABLE ESTILO HAXBALL ================= */
+  var MGR_ARCADE_W = 900, MGR_ARCADE_H = 520;
+  var MGR_ARCADE_GOAL_TOP = 190, MGR_ARCADE_GOAL_BOTTOM = 330;
+  var MGR_ARCADE_DURATION_MS = 50000;
+  var MGR_ARCADE_PLAYER_R = 11, MGR_ARCADE_BALL_R = 6;
+  var MGR_ARCADE_PLAYER_SPEED = 165;
+  var MGR_ARCADE_KICK_R = 22, MGR_ARCADE_DRIBBLE_R = 16, MGR_ARCADE_TACKLE_R = 24;
+
+  function mgrArcadeFormationSlots(){
+    return [
+      { position: 'GK', x: 45, y: 260 },
+      { position: 'DEF', x: 160, y: 130 },
+      { position: 'DEF', x: 160, y: 260 },
+      { position: 'DEF', x: 160, y: 390 },
+      { position: 'MID', x: 400, y: 190 },
+      { position: 'MID', x: 400, y: 330 },
+      { position: 'FWD', x: 620, y: 260 }
+    ];
+  }
+  function mgrArcadeBuildTeam(list, side){
+    var slots = mgrArcadeFormationSlots();
+    return list.map(function(entry, i){
+      var slot = slots[i] || slots[slots.length - 1];
+      var x = side === 'home' ? slot.x : (MGR_ARCADE_W - slot.x);
+      return {
+        id: entry.id, name: entry.name, position: entry.position, grl: entry.grl, side: side,
+        homeX: x, homeY: slot.y, x: x, y: slot.y, vx: 0, vy: 0, facingX: side === 'home' ? 1 : -1, facingY: 0
+      };
+    });
+  }
+  function mgrArcadeDist(a, b){ return Math.hypot(a.x - b.x, a.y - b.y); }
+  function mgrArcadeNearest(list, pt){
+    var best = null, bd = Infinity;
+    list.forEach(function(p){ var d = mgrArcadeDist(p, pt); if(d < bd){ bd = d; best = p; } });
+    return best;
+  }
+  function mgrArcadeSeek(p, tx, ty, speed){
+    var dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy) || 1;
+    if(d < 4){ p.vx = 0; p.vy = 0; return; }
+    p.vx = dx / d * speed; p.vy = dy / d * speed;
+    p.facingX = dx / d; p.facingY = dy / d;
+  }
+  function mgrArcadeTouch(p){
+    var a = mgrArcade;
+    if(a.lastToucher && a.lastToucher.name === p.name) return;
+    a.prevToucher = a.lastToucher;
+    a.lastToucher = { name: p.name, side: p.side };
+  }
+  function mgrArcadeShoot(p, targetX, targetY){
+    var a = mgrArcade;
+    var dx = targetX - p.x, dy = targetY - p.y, d = Math.hypot(dx, dy) || 1;
+    var power = 480 + (p.grl - 60) * 2.2;
+    a.ball.vx = dx / d * power; a.ball.vy = dy / d * power;
+    a.ball.ownerSide = null;
+    mgrArcadeTouch(p);
+  }
+  function mgrArcadeTackleAttempt(tackler, newOwnerSide){
+    var a = mgrArcade;
+    var chance = Math.max(0.15, Math.min(0.8, 0.5 + (tackler.grl - 65) * 0.006));
+    if(Math.random() < chance){
+      a.ball.vx *= 0.3; a.ball.vy *= 0.3;
+      a.ball.ownerSide = newOwnerSide;
+      mgrArcadeTouch(tackler);
+    }
+  }
+  function mgrArcadeGkSave(defendingSide, ballY){
+    var list = defendingSide === 'home' ? mgrArcade.myPlayers : mgrArcade.cpuPlayers;
+    var gk = list.filter(function(p){ return p.position === 'GK'; })[0];
+    if(!gk) return false;
+    var reach = Math.abs(gk.y - ballY) < 50 ? 1 : (Math.abs(gk.y - ballY) < 90 ? 0.5 : 0.15);
+    var chance = reach * Math.max(0.25, Math.min(0.75, 0.4 + (gk.grl - 60) * 0.006));
+    if(Math.random() < chance){
+      mgrArcade.ball.vx *= -0.55; mgrArcade.ball.vy = (Math.random() - 0.5) * 140;
+      mgrArcadeTouch(gk);
+      return true;
+    }
+    return false;
+  }
+  function mgrArcadeRandomAttacker(side){
+    var list = side === 'home' ? mgrArcade.myPlayers : mgrArcade.cpuPlayers;
+    var outfield = list.filter(function(p){ return p.position !== 'GK'; });
+    return mgrPick(outfield.length ? outfield : list).name;
+  }
+  function mgrArcadeUpdateScoreLabel(){
+    var el = document.getElementById('mgrArcadeScore');
+    if(el) el.textContent = mgrArcade.scoreMine + ' — ' + mgrArcade.scoreOpp;
+    var clk = document.getElementById('mgrArcadeClock');
+    if(clk) clk.textContent = Math.min(90, Math.round((mgrArcade.elapsedMs / mgrArcade.durationMs) * 90)) + '’';
+  }
+  function mgrArcadeGoal(scoringSide){
+    var a = mgrArcade;
+    if(scoringSide === 'home') a.scoreMine++; else a.scoreOpp++;
+    var minute = Math.min(90, Math.round((a.elapsedMs / a.durationMs) * 90));
+    var scorer = (a.lastToucher && a.lastToucher.side === scoringSide) ? a.lastToucher.name : mgrArcadeRandomAttacker(scoringSide);
+    var assistName = (a.prevToucher && a.prevToucher.side === scoringSide && a.prevToucher.name !== scorer) ? a.prevToucher.name : null;
+    var team = a.iAmHome ? (scoringSide === 'home' ? 'A' : 'B') : (scoringSide === 'home' ? 'B' : 'A');
+    a.timeline.push({ minute: minute, type: 'goal', team: team, player: scorer, assist: assistName });
+    mgrArcadeUpdateScoreLabel();
+    a.ball.x = MGR_ARCADE_W / 2; a.ball.y = MGR_ARCADE_H / 2; a.ball.vx = 0; a.ball.vy = 0; a.ball.ownerSide = null;
+    a.lastToucher = null; a.prevToucher = null;
+    a.myPlayers.forEach(function(p){ p.x = p.homeX; p.y = p.homeY; p.vx = 0; p.vy = 0; });
+    a.cpuPlayers.forEach(function(p){ p.x = p.homeX; p.y = p.homeY; p.vx = 0; p.vy = 0; });
+    a.freezeUntil = performance.now() + 900;
+  }
+  function mgrArcadeUpdate(dtSec){
+    var a = mgrArcade;
+    if(!a || !a.active || a.finished) return;
+    var now = performance.now();
+    if(a.freezeUntil && now < a.freezeUntil) return;
+    a.elapsedMs += dtSec * 1000;
+    if(a.elapsedMs >= a.durationMs){ mgrArcadeEndMatch(); return; }
+
+    var controlled = mgrArcadeNearest(a.myPlayers, a.ball);
+    a.controlledId = controlled.id;
+    var kx = (a.keys.ArrowRight ? 1 : 0) - (a.keys.ArrowLeft ? 1 : 0);
+    var ky = (a.keys.ArrowDown ? 1 : 0) - (a.keys.ArrowUp ? 1 : 0);
+    if(kx || ky){
+      var mag = Math.sqrt(kx * kx + ky * ky);
+      controlled.vx = (kx / mag) * MGR_ARCADE_PLAYER_SPEED;
+      controlled.vy = (ky / mag) * MGR_ARCADE_PLAYER_SPEED;
+      controlled.facingX = kx / mag; controlled.facingY = ky / mag;
+    } else { controlled.vx = 0; controlled.vy = 0; }
+
+    a.myPlayers.forEach(function(p){
+      if(p === controlled) return;
+      var tx = p.homeX + (a.ball.x - MGR_ARCADE_W * 0.5) * 0.18;
+      var ty = p.homeY + (a.ball.y - MGR_ARCADE_H * 0.5) * 0.18;
+      mgrArcadeSeek(p, tx, ty, MGR_ARCADE_PLAYER_SPEED * 0.72);
+    });
+
+    var cpuChaser = mgrArcadeNearest(a.cpuPlayers, a.ball);
+    a.cpuPlayers.forEach(function(p){
+      if(p === cpuChaser){
+        mgrArcadeSeek(p, a.ball.x, a.ball.y, MGR_ARCADE_PLAYER_SPEED * 0.98);
+      } else {
+        var tx = p.homeX + (a.ball.x - MGR_ARCADE_W * 0.5) * 0.15;
+        var ty = p.homeY + (a.ball.y - MGR_ARCADE_H * 0.5) * 0.15;
+        mgrArcadeSeek(p, tx, ty, MGR_ARCADE_PLAYER_SPEED * 0.68);
+      }
+    });
+
+    a.myPlayers.concat(a.cpuPlayers).forEach(function(p){
+      p.x += p.vx * dtSec; p.y += p.vy * dtSec;
+      p.x = Math.max(MGR_ARCADE_PLAYER_R, Math.min(MGR_ARCADE_W - MGR_ARCADE_PLAYER_R, p.x));
+      p.y = Math.max(MGR_ARCADE_PLAYER_R, Math.min(MGR_ARCADE_H - MGR_ARCADE_PLAYER_R, p.y));
+    });
+
+    if(mgrArcadeDist(cpuChaser, a.ball) < MGR_ARCADE_KICK_R && a.ball.ownerSide !== 'home'){
+      if(a.ball.x < MGR_ARCADE_W * 0.42 && Math.random() < 0.045){
+        mgrArcadeShoot(cpuChaser, 0, MGR_ARCADE_GOAL_TOP + (MGR_ARCADE_GOAL_BOTTOM - MGR_ARCADE_GOAL_TOP) * Math.random());
+      }
+    }
+    if(a.ball.ownerSide === 'home'){
+      var tackler = mgrArcadeNearest(a.cpuPlayers, a.ball);
+      if(mgrArcadeDist(tackler, a.ball) < MGR_ARCADE_TACKLE_R && Math.random() < 0.02) mgrArcadeTackleAttempt(tackler, 'away');
+    }
+
+    a.ball.vx *= 0.985; a.ball.vy *= 0.985;
+    a.ball.x += a.ball.vx * dtSec; a.ball.y += a.ball.vy * dtSec;
+    if(a.ball.y < MGR_ARCADE_BALL_R){ a.ball.y = MGR_ARCADE_BALL_R; a.ball.vy *= -0.6; }
+    if(a.ball.y > MGR_ARCADE_H - MGR_ARCADE_BALL_R){ a.ball.y = MGR_ARCADE_H - MGR_ARCADE_BALL_R; a.ball.vy *= -0.6; }
+    var inGoalMouthY = a.ball.y > MGR_ARCADE_GOAL_TOP && a.ball.y < MGR_ARCADE_GOAL_BOTTOM;
+    if(a.ball.x < MGR_ARCADE_BALL_R){
+      if(inGoalMouthY){
+        if(mgrArcadeGkSave('home', a.ball.y)) { a.ball.x = MGR_ARCADE_BALL_R + 12; }
+        else { mgrArcadeGoal('away'); return; }
+      } else { a.ball.x = MGR_ARCADE_BALL_R; a.ball.vx *= -0.6; }
+    }
+    if(a.ball.x > MGR_ARCADE_W - MGR_ARCADE_BALL_R){
+      if(inGoalMouthY){
+        if(mgrArcadeGkSave('away', a.ball.y)) { a.ball.x = MGR_ARCADE_W - MGR_ARCADE_BALL_R - 12; }
+        else { mgrArcadeGoal('home'); return; }
+      } else { a.ball.x = MGR_ARCADE_W - MGR_ARCADE_BALL_R; a.ball.vx *= -0.6; }
+    }
+
+    var allPlayers = a.myPlayers.concat(a.cpuPlayers);
+    for(var i = 0; i < allPlayers.length; i++){
+      var p = allPlayers[i];
+      if(mgrArcadeDist(p, a.ball) < MGR_ARCADE_DRIBBLE_R){
+        var targetX = p.x + (p.facingX || 0) * 14, targetY = p.y + (p.facingY || 0) * 14;
+        a.ball.x += (targetX - a.ball.x) * 0.18; a.ball.y += (targetY - a.ball.y) * 0.18;
+        a.ball.vx *= 0.85; a.ball.vy *= 0.85;
+        a.ball.ownerSide = p.side;
+        mgrArcadeTouch(p);
+        break;
+      }
+    }
+
+    if(a.spaceQueued){
+      a.spaceQueued = false;
+      var dCtrlBall = mgrArcadeDist(controlled, a.ball);
+      if(dCtrlBall < MGR_ARCADE_KICK_R && a.ball.ownerSide !== 'away'){
+        mgrArcadeShoot(controlled, MGR_ARCADE_W, MGR_ARCADE_GOAL_TOP + (MGR_ARCADE_GOAL_BOTTOM - MGR_ARCADE_GOAL_TOP) * 0.5 + (Math.random() - 0.5) * 40);
+      } else if(a.ball.ownerSide === 'away' && dCtrlBall < MGR_ARCADE_TACKLE_R){
+        mgrArcadeTackleAttempt(controlled, 'home');
+      }
+    }
+  }
+  function mgrArcadeDrawPlayer(ctx, p, color, highlight){
+    ctx.beginPath(); ctx.fillStyle = color; ctx.arc(p.x, p.y, MGR_ARCADE_PLAYER_R, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.stroke();
+    if(highlight){
+      ctx.beginPath(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.4; ctx.arc(p.x, p.y, MGR_ARCADE_PLAYER_R + 4, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  function mgrArcadeDraw(){
+    var canvas = document.getElementById('mgrArcadeCanvas');
+    if(!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var a = mgrArcade;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#0d3a1c';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(a.scale, 0, 0, a.scale, a.offX, a.offY);
+    ctx.fillStyle = '#12622e';
+    ctx.fillRect(0, 0, MGR_ARCADE_W, MGR_ARCADE_H);
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2;
+    ctx.strokeRect(6, 6, MGR_ARCADE_W - 12, MGR_ARCADE_H - 12);
+    ctx.beginPath(); ctx.moveTo(MGR_ARCADE_W / 2, 6); ctx.lineTo(MGR_ARCADE_W / 2, MGR_ARCADE_H - 6); ctx.stroke();
+    ctx.beginPath(); ctx.arc(MGR_ARCADE_W / 2, MGR_ARCADE_H / 2, 55, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeRect(6, MGR_ARCADE_GOAL_TOP - 20, 70, (MGR_ARCADE_GOAL_BOTTOM - MGR_ARCADE_GOAL_TOP) + 40);
+    ctx.strokeRect(MGR_ARCADE_W - 76, MGR_ARCADE_GOAL_TOP - 20, 70, (MGR_ARCADE_GOAL_BOTTOM - MGR_ARCADE_GOAL_TOP) + 40);
+    ctx.fillStyle = 'rgba(255,255,255,.9)';
+    ctx.fillRect(0, MGR_ARCADE_GOAL_TOP, 6, MGR_ARCADE_GOAL_BOTTOM - MGR_ARCADE_GOAL_TOP);
+    ctx.fillRect(MGR_ARCADE_W - 6, MGR_ARCADE_GOAL_TOP, 6, MGR_ARCADE_GOAL_BOTTOM - MGR_ARCADE_GOAL_TOP);
+    a.cpuPlayers.forEach(function(p){ mgrArcadeDrawPlayer(ctx, p, '#e0503a', false); });
+    a.myPlayers.forEach(function(p){ mgrArcadeDrawPlayer(ctx, p, '#f4c542', p.id === a.controlledId); });
+    ctx.beginPath(); ctx.fillStyle = '#fff'; ctx.arc(a.ball.x, a.ball.y, MGR_ARCADE_BALL_R, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = '#222'; ctx.stroke();
+  }
+  function mgrArcadeResizeCanvas(){
+    var canvas = document.getElementById('mgrArcadeCanvas');
+    if(!canvas || !mgrArcade) return;
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    mgrArcade.scale = Math.min(canvas.width / MGR_ARCADE_W, canvas.height / MGR_ARCADE_H);
+    mgrArcade.offX = (canvas.width - MGR_ARCADE_W * mgrArcade.scale) / 2;
+    mgrArcade.offY = (canvas.height - MGR_ARCADE_H * mgrArcade.scale) / 2;
+  }
+  function mgrArcadeKeyDown(e){
+    if(!mgrArcade || !mgrArcade.active) return;
+    if(e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'ArrowLeft' || e.code === 'ArrowRight' || e.code === 'Space') e.preventDefault();
+    if(e.code === 'Space'){ if(!mgrArcade.keys.Space) mgrArcade.spaceQueued = true; mgrArcade.keys.Space = true; return; }
+    mgrArcade.keys[e.key] = true;
+  }
+  function mgrArcadeKeyUp(e){
+    if(!mgrArcade) return;
+    if(e.code === 'Space'){ mgrArcade.keys.Space = false; return; }
+    mgrArcade.keys[e.key] = false;
+  }
+  function mgrArcadeOnResize(){ mgrArcadeResizeCanvas(); }
+  function mgrArcadeAttachInput(){
+    window.addEventListener('keydown', mgrArcadeKeyDown);
+    window.addEventListener('keyup', mgrArcadeKeyUp);
+    window.addEventListener('resize', mgrArcadeOnResize);
+  }
+  function mgrArcadeDetachInput(){
+    window.removeEventListener('keydown', mgrArcadeKeyDown);
+    window.removeEventListener('keyup', mgrArcadeKeyUp);
+    window.removeEventListener('resize', mgrArcadeOnResize);
+  }
+  function mgrArcadeTick(ts){
+    if(!mgrArcade || !mgrArcade.active) return;
+    if(!mgrArcade.scale) mgrArcadeResizeCanvas();
+    var dt = mgrArcade.lastTs ? Math.min(0.05, (ts - mgrArcade.lastTs) / 1000) : 0.016;
+    mgrArcade.lastTs = ts;
+    mgrArcadeUpdate(dt);
+    if(mgrArcade && mgrArcade.active && !mgrArcade.finished){
+      mgrArcadeDraw();
+      mgrArcadeUpdateScoreLabel();
+      mgrArcade.rafId = requestAnimationFrame(mgrArcadeTick);
+    }
+  }
+  function mgrArcadeBuildSimResult(){
+    var a = mgrArcade;
+    var homeScore = a.iAmHome ? a.scoreMine : a.scoreOpp;
+    var awayScore = a.iAmHome ? a.scoreOpp : a.scoreMine;
+    function toRatings(list){
+      return list.map(function(p){
+        var goals = a.timeline.filter(function(e){ return e.type === 'goal' && e.player === p.name; }).length;
+        var assists = a.timeline.filter(function(e){ return e.type === 'goal' && e.assist === p.name; }).length;
+        var rating = Math.max(3, Math.min(10, 6 + goals * 0.6 + assists * 0.3));
+        return { id: p.id, name: p.name, position: p.position, grl: p.grl, rating: rating, newGrl: p.grl };
+      });
+    }
+    var ratingsHome = toRatings(a.iAmHome ? a.myPlayers : a.cpuPlayers);
+    var ratingsAway = toRatings(a.iAmHome ? a.cpuPlayers : a.myPlayers);
+    return { scoreA: homeScore, scoreB: awayScore, timeline: a.timeline, ratingsA: ratingsHome, ratingsB: ratingsAway };
+  }
+  function mgrArcadeShowResult(){
+    var wrap = document.getElementById('mgrArcadeResult');
+    if(!wrap) return;
+    var myScore = mgrArcade.scoreMine, oppScore = mgrArcade.scoreOpp;
+    var title = myScore > oppScore ? '¡Victoria!' : (myScore < oppScore ? 'Derrota' : 'Empate');
+    wrap.innerHTML = '<div class="dt-gold-card" style="text-align:center; margin-bottom:.6cqw;"><div style="font-size:1.6cqw; font-weight:800;">' + title + ' ' + myScore + '-' + oppScore + '</div></div>' +
+      '<button type="button" id="mgrArcadeClose" class="dt-btn-fill" style="display:block; width:100%;">CERRAR</button>';
+    document.getElementById('mgrArcadeClose').addEventListener('click', function(){ mgrArcade = null; mgrSwitchTab('hub'); });
+  }
+  function mgrArcadeEndMatch(){
+    var a = mgrArcade;
+    a.finished = true; a.active = false;
+    if(a.rafId) cancelAnimationFrame(a.rafId);
+    mgrArcadeDetachInput();
+    var sim = mgrArcadeBuildSimResult();
+    if(!a.finalized){
+      a.finalized = true;
+      if(a.kind === 'cup') mgrFinalizeMyCupMatch(a.fixture, sim);
+      else mgrFinalizeMyMatch(a.fixture, sim, a.iAmHome);
+      saveState();
+    }
+    mgrArcadeUpdateScoreLabel();
+    mgrArcadeShowResult();
+  }
+  function mgrBuildArcadeScreen(){
+    var root = document.querySelector('[data-dt-screen="partido"]');
+    if(!root) return;
+    root.innerHTML = '';
+    var col = document.createElement('div'); col.style.cssText = 'display:flex; flex-direction:column; gap:.8cqw; height:100%;';
+    root.appendChild(col);
+
+    var header = document.createElement('div'); header.className = 'dt-gold-card'; header.style.cssText += 'flex:none; display:flex; align-items:center; gap:1.4cqw;';
+    header.innerHTML =
+      '<div style="flex:1; text-align:right; font-size:1.7cqw; font-weight:800;">' + escapeHtml(mgrArcade.myName) + '</div>' +
+      '<div style="display:flex; align-items:center; gap:1cqw; padding:.3cqw 1.2cqw; border-radius:.7cqw; background:var(--dt-tinta); color:var(--dt-oro-suave);">' +
+        '<span id="mgrArcadeScore" style="font-family:\'Barlow Condensed\',sans-serif; font-size:3.2cqw; font-weight:700; line-height:1;">0 — 0</span>' +
+      '</div>' +
+      '<div style="flex:1; font-size:1.7cqw; font-weight:800;">' + escapeHtml(mgrArcade.oppName) + '</div>' +
+      '<div style="flex:none; text-align:center; padding:.4cqw 1cqw; border-radius:99px; background:var(--dt-tinta); color:var(--dt-oro-suave);">' +
+        '<div id="mgrArcadeClock" style="font-family:\'Barlow Condensed\',sans-serif; font-size:1.8cqw; font-weight:700; line-height:1;">0’</div>' +
+      '</div>';
+    col.appendChild(header);
+
+    var pitchWrap = document.createElement('div'); pitchWrap.style.cssText = 'flex:1; min-height:0; display:flex; flex-direction:column; gap:.6cqw;';
+    var canvasBox = document.createElement('div'); canvasBox.style.cssText = 'flex:1; min-height:0; border-radius:1cqw; overflow:hidden; position:relative;';
+    var canvas = document.createElement('canvas'); canvas.id = 'mgrArcadeCanvas';
+    canvas.style.cssText = 'display:block; width:100%; height:100%;';
+    canvasBox.appendChild(canvas);
+    pitchWrap.appendChild(canvasBox);
+
+    var hint = document.createElement('div'); hint.style.cssText = 'flex:none; text-align:center; font-family:\'Barlow Condensed\',sans-serif; font-size:1cqw; text-transform:uppercase; letter-spacing:.06cqw; color:var(--dt-text-sec);';
+    hint.textContent = 'Flechas: moverte · Espacio: chutar con el balón, entrar a robar sin él';
+    pitchWrap.appendChild(hint);
+    col.appendChild(pitchWrap);
+
+    var resultWrap = document.createElement('div'); resultWrap.id = 'mgrArcadeResult'; resultWrap.style.cssText = 'flex:none;';
+    col.appendChild(resultWrap);
+
+    mgrArcadeAttachInput();
+    requestAnimationFrame(function(){
+      mgrArcadeResizeCanvas();
+      mgrArcade.rafId = requestAnimationFrame(mgrArcadeTick);
+    });
+  }
+  function mgrStartArcadeMatch(today, iAmHome, myList, oppList){
+    mgrArcade = {
+      active: true, finished: false, finalized: false,
+      kind: today.kind, fixture: today.fixture, iAmHome: iAmHome,
+      oppName: today.oppName, myName: state.manager.club.name,
+      myPlayers: mgrArcadeBuildTeam(myList, 'home'),
+      cpuPlayers: mgrArcadeBuildTeam(oppList, 'away'),
+      ball: { x: MGR_ARCADE_W / 2, y: MGR_ARCADE_H / 2, vx: 0, vy: 0, ownerSide: null },
+      scoreMine: 0, scoreOpp: 0,
+      elapsedMs: 0, durationMs: MGR_ARCADE_DURATION_MS,
+      timeline: [], lastToucher: null, prevToucher: null,
+      keys: {}, spaceQueued: false, freezeUntil: performance.now() + 900,
+      rafId: null, lastTs: null, controlledId: null, scale: null, offX: 0, offY: 0
+    };
+    mgrSwitchTab('partido');
+  }
+
   function mgrAdvanceDay(){
     if(!state.manager) return;
     var pendingToday = mgrMyFixtureForDay(state.manager.day);
@@ -8895,22 +9272,15 @@
     mgrApplyTraining();
     var oppList = mgrApplyWeatherToList(mgrBestLineupList(today.oppClub.squad), today.weather);
     var iAmHome = today.iAmHome;
-    var sim = careerSimulateFullMatch(iAmHome ? myList : oppList, iAmHome ? oppList : myList);
-    var myName = state.manager.club.name;
 
     if(mode === 'sim'){
+      var sim = careerSimulateFullMatch(iAmHome ? myList : oppList, iAmHome ? oppList : myList);
       if(today.kind === 'league') mgrFinalizeMyMatch(today.fixture, sim, iAmHome);
       else mgrFinalizeMyCupMatch(today.fixture, sim);
       saveState();
       mgrRenderActiveTab();
     } else {
-      mgrLiveMatch = {
-        kind: today.kind, fixture: today.fixture, iAmHome: iAmHome, sim: sim, liveStartAt: Date.now(), finalized: false,
-        homeName: iAmHome ? myName : today.oppName, awayName: iAmHome ? today.oppName : myName, weather: today.weather
-      };
-      mgrSwitchTab('partido');
-      if(mgrLiveTimer) clearInterval(mgrLiveTimer);
-      mgrLiveTimer = setInterval(mgrRenderLiveMatch, 1000);
+      mgrStartArcadeMatch(today, iAmHome, myList, oppList);
     }
   }
 
