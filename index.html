@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lucky Chips</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;700;800&family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -2764,108 +2764,46 @@
     });
   });
 
-  /* ================= CARRERAS (arcade top-down, teclado o control PS4) ================= */
-  var RACING_W = 900, RACING_H = 520, RACING_TRACK_HALF_W = 55, RACING_LAPS = 3;
-  var RACING_MAX_SPEED = 260, RACING_MAX_REV = -110, RACING_ACCEL = 220, RACING_BRAKE = 320, RACING_DRAG = 0.6;
-  var RACING_TURN_RATE = 2.6, RACING_CAR_R = 12;
-  function racingBuildTrack(){
-    var pts = [];
-    var cx = RACING_W / 2, cy = RACING_H / 2, straight = 300, r = 120, steps = 24;
-    var leftX = cx - straight / 2, rightX = cx + straight / 2, topY = cy - r, botY = cy + r;
-    pts.push({ x: leftX, y: topY });
-    pts.push({ x: rightX, y: topY });
-    for(var i = 1; i <= steps; i++){
-      var t = -Math.PI / 2 + Math.PI * (i / steps);
-      pts.push({ x: rightX + Math.cos(t) * r, y: cy + Math.sin(t) * r });
-    }
-    pts.push({ x: leftX, y: botY });
-    for(var j = 1; j <= steps; j++){
-      var t2 = Math.PI / 2 + Math.PI * (j / steps);
-      pts.push({ x: leftX + Math.cos(t2) * r, y: cy + Math.sin(t2) * r });
-    }
-    return pts;
+  /* ================= CARRERAS — "Ruta Turbo" (scroll vertical, teclado o control PS4) ================= */
+  var RACING_W = 420, RACING_H = 640;
+  var RACING_GRASS_W = 62, RACING_BORDER_W = 8;
+  var RACING_ROAD_L = RACING_GRASS_W + RACING_BORDER_W, RACING_ROAD_R = RACING_W - RACING_GRASS_W - RACING_BORDER_W;
+  var RACING_CAR_W = 52, RACING_CAR_H = 86;
+  var RACING_PLAYER_SCREEN_Y = RACING_H - 150;
+  var RACING_MIN_SPEED = 120, RACING_MAX_SPEED = 480;
+  var RACING_ACCEL = 230, RACING_BRAKE = 340, RACING_COAST_DRAG = 95;
+  var RACING_OFFROAD_FLOOR = 55, RACING_OFFROAD_DRAG = 260;
+  var RACING_STEER_SPEED = 300;
+  var RACING_FINISH_DISTANCE = 18000;
+  var RACING_PALETTE = { grass: '#4aab3f', tree: '#2f7a28', road: '#8a8d8f', border: '#d9dbd6', gold: '#ffd23f', red: '#e53935', blue: '#29b6f6', yellow: '#fdd835', ink: '#2b3136', panel: 'rgba(20,24,20,.82)', text: '#f2f4f1', textMuted: '#9aa398' };
+  function racingClamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+  function racingMakeCar(x, color, accent){
+    return { x: x, distance: 0, speed: RACING_MIN_SPEED, color: color, accent: accent, hitCooldown: 0 };
   }
-  function racingNearestOnTrack(pos, track){
-    var best = null;
-    for(var i = 0; i < track.length; i++){
-      var a = track[i], b = track[(i + 1) % track.length];
-      var dx = b.x - a.x, dy = b.y - a.y;
-      var len2 = dx * dx + dy * dy || 1;
-      var t = ((pos.x - a.x) * dx + (pos.y - a.y) * dy) / len2;
-      t = Math.max(0, Math.min(1, t));
-      var px = a.x + dx * t, py = a.y + dy * t;
-      var d = Math.hypot(pos.x - px, pos.y - py);
-      if(!best || d < best.dist) best = { segIndex: i, t: t, dist: d, x: px, y: py };
-    }
-    return best;
-  }
-  function racingAngleDiff(target, current){
-    var d = target - current;
-    while(d > Math.PI) d -= Math.PI * 2;
-    while(d < -Math.PI) d += Math.PI * 2;
-    return d;
-  }
-  function racingMakeCar(x, y, angle, color){
-    return { x: x, y: y, angle: angle, speed: 0, color: color, lastProgress: 0, totalProgress: 0, laps: 0, finished: false, finishTime: null, facingX: 1, facingY: 0 };
-  }
-  function racingUpdateCar(car, throttle, steer, dt, track){
+  function racingOnRoad(x){ return x > RACING_ROAD_L + RACING_CAR_W * 0.25 && x < RACING_ROAD_R - RACING_CAR_W * 0.25; }
+  function racingUpdateCar(car, throttle, steer, dt){
     if(throttle > 0) car.speed += throttle * RACING_ACCEL * dt;
     else if(throttle < 0) car.speed += throttle * RACING_BRAKE * dt;
-    car.speed -= car.speed * RACING_DRAG * dt;
-    car.speed = Math.max(RACING_MAX_REV, Math.min(RACING_MAX_SPEED, car.speed));
-    var speedFactor = Math.max(0.2, Math.min(1, Math.abs(car.speed) / 120));
-    car.angle += steer * RACING_TURN_RATE * dt * speedFactor * (car.speed < 0 ? -1 : 1);
-    car.x += Math.cos(car.angle) * car.speed * dt;
-    car.y += Math.sin(car.angle) * car.speed * dt;
-    var nearest = racingNearestOnTrack(car, track);
-    if(nearest.dist > RACING_TRACK_HALF_W) car.speed *= Math.pow(0.85, dt * 60);
-    var N = track.length;
-    var newProgress = nearest.segIndex + nearest.t;
-    var delta = newProgress - car.lastProgress;
-    if(delta < -N / 2) delta += N;
-    else if(delta > N / 2) delta -= N;
-    car.totalProgress += Math.max(delta, -3);
-    car.lastProgress = newProgress;
-    var newLaps = Math.floor(car.totalProgress / N);
-    if(newLaps > car.laps) car.laps = newLaps;
-    if(!car.finished && car.laps >= RACING_LAPS){ car.finished = true; car.finishTime = racing ? racing.elapsedMs : 0; }
-  }
-  function racingResolveCollision(a, b){
-    var dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
-    var minD = RACING_CAR_R * 2;
-    if(d < minD){
-      var overlap = (minD - d) / 2, nx = dx / d, ny = dy / d;
-      a.x -= nx * overlap; a.y -= ny * overlap;
-      b.x += nx * overlap; b.y += ny * overlap;
-      var rel = (a.speed + b.speed) / 2;
-      a.speed = rel * 0.6; b.speed = rel * 0.6;
-    }
-  }
-  function racingAiControl(car, track, rival){
-    var N = track.length;
-    var aheadIdx = Math.floor(car.lastProgress + 5) % N;
-    var target = track[aheadIdx];
-    var desiredAngle = Math.atan2(target.y - car.y, target.x - car.x);
-    var steer = Math.max(-1, Math.min(1, racingAngleDiff(desiredAngle, car.angle) * 2.2));
-    var farIdx = Math.floor(car.lastProgress + 12) % N;
-    var farTarget = track[farIdx];
-    var farAngle = Math.atan2(farTarget.y - target.y, farTarget.x - target.x);
-    var curveDiff = Math.abs(racingAngleDiff(farAngle, car.angle));
-    var throttle = curveDiff > 0.5 ? 0.55 : 1;
-    if(rival){
-      var gap = rival.totalProgress - car.totalProgress;
-      if(gap > 8) throttle = Math.min(1, throttle + 0.25);
-      else if(gap < -8) throttle = Math.max(0.3, throttle - 0.2);
-    }
-    return { throttle: throttle, steer: steer };
+    else if(car.speed > RACING_MIN_SPEED) car.speed -= RACING_COAST_DRAG * dt;
+    var onRoad = racingOnRoad(car.x);
+    if(!onRoad) car.speed -= RACING_OFFROAD_DRAG * dt;
+    var floor = onRoad ? RACING_MIN_SPEED : RACING_OFFROAD_FLOOR;
+    car.speed = racingClamp(car.speed, floor, RACING_MAX_SPEED);
+    car.x = racingClamp(car.x + steer * RACING_STEER_SPEED * dt, 14, RACING_W - 14);
+    car.distance += car.speed * dt;
+    if(car.hitCooldown > 0) car.hitCooldown -= dt;
   }
   var racingKeys = {};
   function racingKeyDown(e){
-    if(!racing || !racing.active) return;
-    if(e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+    if(!racing) return;
+    if(e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'ArrowLeft' || e.code === 'ArrowRight' || e.code === 'Space') e.preventDefault();
     racingKeys[e.key] = true;
+    if(e.code === 'Space') racingHandlePrimaryAction();
   }
   function racingKeyUp(e){ racingKeys[e.key] = false; }
+  function racingGamepadPrimaryPressed(gp){
+    return !!(gp.buttons[0] && gp.buttons[0].pressed) || !!(gp.buttons[9] && gp.buttons[9].pressed);
+  }
   function racingReadInput(){
     var throttle = 0, steer = 0;
     if(racingKeys.ArrowUp) throttle = 1;
@@ -2877,7 +2815,7 @@
       var gp = pads[i];
       if(!gp) continue;
       var axisX = gp.axes && gp.axes[0] ? gp.axes[0] : 0;
-      if(Math.abs(axisX) > 0.15) steer = Math.max(-1, Math.min(1, axisX));
+      if(Math.abs(axisX) > 0.15) steer = racingClamp(axisX, -1, 1);
       else if(gp.buttons[14] && gp.buttons[14].pressed) steer = -1;
       else if(gp.buttons[15] && gp.buttons[15].pressed) steer = 1;
       var r2 = gp.buttons[7] ? gp.buttons[7].value : 0;
@@ -2886,8 +2824,58 @@
       else if(gp.buttons[0] && gp.buttons[0].pressed) throttle = 1;
       if(l2 > 0.08) throttle = -l2;
       else if(gp.buttons[2] && gp.buttons[2].pressed) throttle = -1;
+      if(!racing.gamepadPrimaryLatch && racingGamepadPrimaryPressed(gp)) racingHandlePrimaryAction();
+      racing.gamepadPrimaryLatch = racingGamepadPrimaryPressed(gp);
       break;
     }
+    return { throttle: throttle, steer: steer };
+  }
+  function racingSpawnTraffic(fromDistance){
+    var kinds = [
+      { w: RACING_CAR_W, h: RACING_CAR_H, color: RACING_PALETTE.yellow, accent: '#c9a400' },
+      { w: RACING_CAR_W, h: RACING_CAR_H, color: RACING_PALETTE.blue, accent: '#0288c7' },
+      { w: RACING_CAR_W, h: RACING_CAR_H, color: RACING_PALETTE.red, accent: '#b71c1c' },
+      { w: RACING_CAR_W, h: RACING_CAR_H * 1.35, color: '#455a64', accent: '#eceff1', truck: true }
+    ];
+    var k = kinds[Math.floor(Math.random() * kinds.length)];
+    var lane = RACING_ROAD_L + 40 + Math.random() * (RACING_ROAD_R - RACING_ROAD_L - 80);
+    return { x: lane, distance: fromDistance + 500 + Math.random() * 400, speed: 90 + Math.random() * 110, w: k.w, h: k.h, color: k.color, accent: k.accent, truck: !!k.truck };
+  }
+  function racingUpdateTraffic(r, dt){
+    var frontier = Math.max(r.player.distance, r.cpu.distance);
+    if(frontier > r.nextTrafficSpawn){
+      r.traffic.push(racingSpawnTraffic(frontier));
+      r.nextTrafficSpawn = frontier + 260 + Math.random() * 220;
+    }
+    var back = Math.min(r.player.distance, r.cpu.distance);
+    r.traffic = r.traffic.filter(function(t){ t.distance += t.speed * dt; return t.distance > back - 260; });
+  }
+  function racingCheckHit(car, r){
+    if(car.hitCooldown > 0) return;
+    for(var i = 0; i < r.traffic.length; i++){
+      var t = r.traffic[i];
+      if(Math.abs(t.distance - car.distance) < (t.h + RACING_CAR_H) / 2 - 10 && Math.abs(t.x - car.x) < (t.w + RACING_CAR_W) / 2 - 10){
+        car.speed = Math.max(RACING_OFFROAD_FLOOR, car.speed * 0.45);
+        car.hitCooldown = 0.9;
+        return;
+      }
+    }
+  }
+  function racingAiControl(cpu, player, traffic){
+    var threat = null, bestGap = Infinity;
+    traffic.forEach(function(t){
+      var gap = t.distance - cpu.distance;
+      if(gap > 0 && gap < 280 && Math.abs(t.x - cpu.x) < (t.w + RACING_CAR_W) / 2 + 12){
+        if(gap < bestGap){ bestGap = gap; threat = t; }
+      }
+    });
+    var targetX = (RACING_ROAD_L + RACING_ROAD_R) / 2;
+    if(threat) targetX = threat.x < RACING_W / 2 ? Math.min(RACING_ROAD_R - 30, threat.x + 95) : Math.max(RACING_ROAD_L + 30, threat.x - 95);
+    var steer = racingClamp((targetX - cpu.x) / 60, -1, 1);
+    var throttle = (threat && bestGap < 130) ? 0.35 : 1;
+    var gap = player.distance - cpu.distance;
+    if(gap > 220) throttle = Math.min(1, throttle + 0.3);
+    else if(gap < -220) throttle = Math.max(0.15, throttle - 0.3);
     return { throttle: throttle, steer: steer };
   }
   var racing = null;
@@ -2903,43 +2891,124 @@
     racing.offX = (canvas.width - RACING_W * racing.scale) / 2;
     racing.offY = (canvas.height - RACING_H * racing.scale) / 2;
   }
-  function racingUpdateHud(){
-    var r = racing;
-    var lapEl = document.getElementById('racingLap');
-    if(lapEl) lapEl.textContent = 'Vuelta ' + Math.min(RACING_LAPS, r.player.laps + 1) + '/' + RACING_LAPS;
-    var posEl = document.getElementById('racingPos');
-    if(posEl) posEl.textContent = (r.player.totalProgress >= r.cpu.totalProgress ? '1º' : '2º');
+  function racingHandlePrimaryAction(){
+    if(!racing) return;
+    if(racing.phase === 'title') racingBeginCountdown();
+    else if(racing.phase === 'finished') racingReset();
+  }
+  function racingBeginCountdown(){
+    racing.phase = 'countdown'; racing.countdown = 3000;
+  }
+  function racingBestDistance(){
+    return parseInt(localStorage.getItem('luckyChips_racingBest') || '0', 10) || 0;
   }
   function racingShowResult(){
-    var r = racing, playerWon = r.player.finished;
+    var r = racing, playerWon = r.player.distance >= RACING_FINISH_DISTANCE;
+    var best = racingBestDistance();
+    if(Math.round(r.player.distance) > best){ localStorage.setItem('luckyChips_racingBest', String(Math.round(r.player.distance))); }
     var wrap = document.getElementById('racingResult');
     if(!wrap) return;
-    wrap.innerHTML = '<div class="message-bar ' + (playerWon ? 'win' : 'lose') + '">' + (playerWon ? '¡Ganaste la carrera!' : 'Te ganó la CPU') + '</div>' +
-      '<button type="button" class="btn btn-primary btn-block" id="racingRestartBtn" style="margin-top:8px;">Correr de nuevo</button>';
-    document.getElementById('racingRestartBtn').addEventListener('click', function(){ startRacing(); });
+    wrap.innerHTML = '<div class="message-bar ' + (playerWon ? 'win' : 'lose') + '">' + (playerWon ? '¡Ganaste la carrera!' : 'Te ganó la CPU') + '</div>';
   }
   function racingUpdate(dt){
     var r = racing;
-    if(r.countdown > 0){ r.countdown -= dt * 1000; return; }
-    if(r.finished) return;
-    r.elapsedMs += dt * 1000;
+    if(r.phase === 'title') return;
+    if(r.phase === 'countdown'){
+      r.countdown -= dt * 1000;
+      if(r.countdown <= 0) r.phase = 'racing';
+      return;
+    }
+    if(r.phase === 'finished') return;
     var input = racingReadInput();
-    racingUpdateCar(r.player, input.throttle, input.steer, dt, r.track);
-    var ai = racingAiControl(r.cpu, r.track, r.player);
-    racingUpdateCar(r.cpu, ai.throttle, ai.steer, dt, r.track);
-    racingResolveCollision(r.player, r.cpu);
-    if(r.player.finished || r.cpu.finished){ r.finished = true; racingShowResult(); }
-    racingUpdateHud();
+    racingUpdateTraffic(r, dt);
+    racingUpdateCar(r.player, input.throttle, input.steer, dt);
+    var ai = racingAiControl(r.cpu, r.player, r.traffic);
+    racingUpdateCar(r.cpu, ai.throttle, ai.steer, dt);
+    racingCheckHit(r.player, r);
+    racingCheckHit(r.cpu, r);
+    if(r.player.distance >= RACING_FINISH_DISTANCE || r.cpu.distance >= RACING_FINISH_DISTANCE){
+      r.phase = 'finished';
+      racingShowResult();
+    }
   }
-  function racingDrawCar(ctx, car){
+  function racingWorldToScreenY(distance, refDistance){ return RACING_PLAYER_SCREEN_Y - (distance - refDistance); }
+  function racingDrawCarSprite(ctx, cx, cy, w, h, color, accent, truck){
     ctx.save();
-    ctx.translate(car.x, car.y);
-    ctx.rotate(car.angle);
-    ctx.fillStyle = car.color;
-    ctx.fillRect(-14, -8, 28, 16);
-    ctx.fillStyle = 'rgba(0,0,0,.4)';
-    ctx.fillRect(6, -8, 6, 16);
+    ctx.translate(cx, cy);
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    ctx.beginPath(); ctx.roundRect(-w / 2 + 3, -h / 2 + 6, w, h, 10); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, truck ? 6 : 11); ctx.fill();
+    if(truck){
+      ctx.fillStyle = accent;
+      ctx.beginPath(); ctx.roundRect(-w / 2 + 2, -h / 2 + 34, w - 4, h - 36, 6); ctx.fill();
+    } else {
+      ctx.fillStyle = 'rgba(159,216,242,.95)';
+      ctx.beginPath(); ctx.roundRect(-w / 2 + 7, -h / 2 + 11, w - 14, h * 0.22, 4); ctx.fill();
+      ctx.fillStyle = RACING_PALETTE.ink;
+      ctx.beginPath(); ctx.roundRect(-w / 2 + 7, h / 2 - h * 0.28, w - 14, h * 0.18, 4); ctx.fill();
+      ctx.fillStyle = accent;
+      ctx.beginPath(); ctx.roundRect(-w / 2 + 9, -3, w - 18, 6, 3); ctx.fill();
+      ctx.fillRect(-w / 2 - 5, -h * 0.15, 6, 13);
+      ctx.fillRect(w / 2 - 1, -h * 0.15, 6, 13);
+    }
     ctx.restore();
+  }
+  function racingDrawTitle(ctx){
+    ctx.fillStyle = 'linear-gradient';
+    var grad = ctx.createLinearGradient(0, 0, 0, RACING_H);
+    grad.addColorStop(0, 'rgba(12,16,12,.78)'); grad.addColorStop(.55, 'rgba(12,16,12,.5)'); grad.addColorStop(1, 'rgba(12,16,12,.82)');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, RACING_W, RACING_H);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = RACING_PALETTE.gold;
+    ctx.font = '12px "Space Mono", monospace';
+    ctx.fillText('A R C A D E   ·   2 D   ·   T O P - D O W N', RACING_W / 2, 118);
+    ctx.font = '900 60px "Archivo Black", sans-serif';
+    ctx.fillStyle = '#ffffff'; ctx.fillText('RUTA', RACING_W / 2, 190);
+    ctx.fillStyle = RACING_PALETTE.gold; ctx.fillText('TURBO', RACING_W / 2, 250);
+    ctx.fillStyle = '#fff'; ctx.fillRect(RACING_W / 2 - 60, 268, 120, 5);
+    var btnY = RACING_H - 190, btnW = 240, btnH = 62;
+    ctx.fillStyle = 'rgba(184,140,0,1)'; ctx.beginPath(); ctx.roundRect(RACING_W / 2 - btnW / 2, btnY + 6, btnW, btnH, 6); ctx.fill();
+    ctx.fillStyle = RACING_PALETTE.gold; ctx.beginPath(); ctx.roundRect(RACING_W / 2 - btnW / 2, btnY, btnW, btnH, 6); ctx.fill();
+    ctx.fillStyle = RACING_PALETTE.ink; ctx.font = '900 24px "Archivo Black", sans-serif';
+    ctx.fillText('COMENZAR', RACING_W / 2, btnY + btnH / 2 + 8);
+    ctx.font = '11px "Space Mono", monospace'; ctx.fillStyle = RACING_PALETTE.text;
+    ctx.fillText('ESPACIO / X · O TOCA LA PANTALLA', RACING_W / 2, btnY + btnH + 34);
+    ctx.fillStyle = RACING_PALETTE.textMuted;
+    ctx.fillText('◀ ▶ mover · récord ' + racingBestDistance().toLocaleString('es-CO') + ' m', RACING_W / 2, btnY + btnH + 54);
+    ctx.textAlign = 'left';
+  }
+  function racingDrawRoad(ctx, refDistance){
+    ctx.fillStyle = RACING_PALETTE.grass; ctx.fillRect(0, 0, RACING_W, RACING_H);
+    ctx.fillStyle = RACING_PALETTE.border;
+    ctx.fillRect(RACING_GRASS_W, 0, RACING_BORDER_W, RACING_H);
+    ctx.fillRect(RACING_W - RACING_GRASS_W - RACING_BORDER_W, 0, RACING_BORDER_W, RACING_H);
+    ctx.fillStyle = RACING_PALETTE.road; ctx.fillRect(RACING_ROAD_L, 0, RACING_ROAD_R - RACING_ROAD_L, RACING_H);
+    var treeOffset = ((refDistance % 200) + 200) % 200;
+    ctx.fillStyle = RACING_PALETTE.tree;
+    for(var side = 0; side < 2; side++){
+      var cx = side === 0 ? 31 : RACING_W - 31;
+      for(var y = -200; y < RACING_H + 200; y += 200){
+        var yy = y - treeOffset;
+        ctx.beginPath(); ctx.arc(cx, yy + 40, 22, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx, yy + 140, 22, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    var dashOffset = ((refDistance % 112) + 112) % 112;
+    ctx.setLineDash([56, 56]); ctx.lineDashOffset = -dashOffset; ctx.lineWidth = 10;
+    [ [140, '#ffffff'], [210, RACING_PALETTE.gold], [280, '#ffffff'] ].forEach(function(d){
+      ctx.strokeStyle = d[1]; ctx.beginPath(); ctx.moveTo(d[0], 0); ctx.lineTo(d[0], RACING_H); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    var finishY = racingWorldToScreenY(RACING_FINISH_DISTANCE, refDistance);
+    if(finishY > -40 && finishY < RACING_H + 40){
+      ctx.save(); ctx.beginPath(); ctx.rect(RACING_ROAD_L, finishY - 10, RACING_ROAD_R - RACING_ROAD_L, 20); ctx.clip();
+      for(var cx2 = RACING_ROAD_L; cx2 < RACING_ROAD_R; cx2 += 14){
+        ctx.fillStyle = ((cx2 - RACING_ROAD_L) / 14) % 2 === 0 ? '#111' : '#fff';
+        ctx.fillRect(cx2, finishY - 10, 14, 20);
+      }
+      ctx.restore();
+    }
   }
   function racingDraw(){
     var canvas = document.getElementById('racingCanvas');
@@ -2947,25 +3016,65 @@
     var ctx = canvas.getContext('2d');
     var r = racing;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = '#0b3d18';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#17191a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(r.scale, 0, 0, r.scale, r.offX, r.offY);
-    ctx.lineWidth = RACING_TRACK_HALF_W * 2;
-    ctx.strokeStyle = '#333'; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    ctx.beginPath();
-    r.track.forEach(function(p, i){ if(i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
-    ctx.closePath(); ctx.stroke();
-    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.setLineDash([14, 14]);
-    ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(r.track[0].x - 2, r.track[0].y - RACING_TRACK_HALF_W, 4, RACING_TRACK_HALF_W * 2);
-    racingDrawCar(ctx, r.cpu);
-    racingDrawCar(ctx, r.player);
-    if(r.countdown > 0){
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 48px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(Math.ceil(r.countdown / 1000) > 0 ? String(Math.ceil(r.countdown / 1000)) : 'GO', canvas.width / 2, canvas.height / 2);
+    if(r.phase === 'title'){
+      racingDrawRoad(ctx, performance.now() / 6);
+      racingDrawTitle(ctx);
+      return;
+    }
+    racingDrawRoad(ctx, r.player.distance);
+    r.traffic.forEach(function(t){
+      var y = racingWorldToScreenY(t.distance, r.player.distance);
+      if(y > -100 && y < RACING_H + 100) racingDrawCarSprite(ctx, t.x, y, t.w, t.h, t.color, t.accent, t.truck);
+    });
+    var cpuY = racingWorldToScreenY(r.cpu.distance, r.player.distance);
+    racingDrawCarSprite(ctx, r.cpu.x, cpuY, RACING_CAR_W, RACING_CAR_H, '#e53935', '#b71c1c');
+    racingDrawCarSprite(ctx, r.player.x, RACING_PLAYER_SCREEN_Y, RACING_CAR_W, RACING_CAR_H, '#ffffff', RACING_PALETTE.red);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = RACING_PALETTE.panel; ctx.beginPath(); ctx.roundRect(16, 16, 118, 50, 5); ctx.fill();
+    ctx.fillStyle = RACING_PALETTE.textMuted; ctx.font = '10px "Space Mono", monospace';
+    ctx.fillText('DISTANCIA', 28, 34);
+    ctx.fillStyle = '#fff'; ctx.font = '900 22px "Archivo Black", sans-serif';
+    ctx.fillText(Math.round(r.player.distance).toLocaleString('es-CO') + ' m', 28, 56);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = RACING_PALETTE.panel; ctx.beginPath(); ctx.roundRect(RACING_W - 134, 16, 118, 50, 5); ctx.fill();
+    ctx.fillStyle = RACING_PALETTE.textMuted; ctx.font = '10px "Space Mono", monospace';
+    ctx.fillText('VELOCIDAD', RACING_W - 28, 34);
+    ctx.fillStyle = RACING_PALETTE.gold; ctx.font = '900 22px "Archivo Black", sans-serif';
+    ctx.fillText(Math.round(r.player.speed), RACING_W - 28, 56);
+    ctx.textAlign = 'left';
+
+    var gap = Math.round(r.player.distance - r.cpu.distance);
+    ctx.fillStyle = RACING_PALETTE.panel; ctx.beginPath(); ctx.roundRect(RACING_W / 2 - 70, 16, 140, 30, 5); ctx.fill();
+    ctx.fillStyle = gap >= 0 ? '#8ef2a0' : '#ff8a80'; ctx.font = '11px "Space Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillText((gap >= 0 ? 'VAS +' : 'TE SACA ') + Math.abs(gap) + ' m', RACING_W / 2, 35);
+    ctx.textAlign = 'left';
+
+    if(r.phase === 'countdown'){
+      ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(0, 0, RACING_W, RACING_H);
+      ctx.fillStyle = '#fff'; ctx.font = '900 64px "Archivo Black", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      var n = Math.ceil(r.countdown / 1000);
+      ctx.fillText(n > 0 ? String(n) : '¡YA!', RACING_W / 2, RACING_H / 2);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+    if(r.phase === 'finished'){
+      var won = r.player.distance >= RACING_FINISH_DISTANCE;
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, RACING_W, RACING_H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = won ? RACING_PALETTE.gold : RACING_PALETTE.red;
+      ctx.font = '900 36px "Archivo Black", sans-serif';
+      ctx.fillText(won ? '¡GANASTE!' : 'TE GANÓ LA CPU', RACING_W / 2, RACING_H / 2 - 40);
+      ctx.fillStyle = '#fff'; ctx.font = '13px "Space Mono", monospace';
+      ctx.fillText('Distancia: ' + Math.round(r.player.distance).toLocaleString('es-CO') + ' m', RACING_W / 2, RACING_H / 2);
+      var btnY = RACING_H / 2 + 40, btnW = 220, btnH = 56;
+      ctx.fillStyle = 'rgba(184,140,0,1)'; ctx.beginPath(); ctx.roundRect(RACING_W / 2 - btnW / 2, btnY + 5, btnW, btnH, 6); ctx.fill();
+      ctx.fillStyle = RACING_PALETTE.gold; ctx.beginPath(); ctx.roundRect(RACING_W / 2 - btnW / 2, btnY, btnW, btnH, 6); ctx.fill();
+      ctx.fillStyle = RACING_PALETTE.ink; ctx.font = '900 20px "Archivo Black", sans-serif';
+      ctx.fillText('REINTENTAR', RACING_W / 2, btnY + btnH / 2 + 7);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     }
   }
   function racingTick(ts){
@@ -2977,14 +3086,25 @@
     racingDraw();
     if(racing && racing.active) racing.rafId = requestAnimationFrame(racingTick);
   }
+  function racingReset(){
+    var resultEl = document.getElementById('racingResult');
+    if(resultEl) resultEl.innerHTML = '';
+    racing.phase = 'title'; racing.countdown = 0;
+    racing.player = racingMakeCar((RACING_ROAD_L + RACING_ROAD_R) / 2 - 40, '#ffffff', RACING_PALETTE.red);
+    racing.cpu = racingMakeCar((RACING_ROAD_L + RACING_ROAD_R) / 2 + 40, '#e53935', '#b71c1c');
+    racing.traffic = []; racing.nextTrafficSpawn = 500;
+  }
+  function racingCanvasClick(e){
+    if(!racing) return;
+    racingHandlePrimaryAction();
+  }
   function startRacing(){
-    var track = racingBuildTrack();
-    var startAngle = Math.atan2(track[1].y - track[0].y, track[1].x - track[0].x);
     racing = {
-      active: true, finished: false, track: track,
-      player: racingMakeCar(track[0].x, track[0].y - 14, startAngle, '#f4c542'),
-      cpu: racingMakeCar(track[0].x, track[0].y + 14, startAngle, '#e0503a'),
-      elapsedMs: 0, countdown: 3000, scale: null, offX: 0, offY: 0, rafId: null, lastTs: null
+      active: true, phase: 'title', countdown: 0,
+      player: racingMakeCar((RACING_ROAD_L + RACING_ROAD_R) / 2 - 40, '#ffffff', RACING_PALETTE.red),
+      cpu: racingMakeCar((RACING_ROAD_L + RACING_ROAD_R) / 2 + 40, '#e53935', '#b71c1c'),
+      traffic: [], nextTrafficSpawn: 500,
+      scale: null, offX: 0, offY: 0, rafId: null, lastTs: null, gamepadPrimaryLatch: false
     };
     var resultEl = document.getElementById('racingResult');
     if(resultEl) resultEl.innerHTML = '';
@@ -2997,23 +3117,22 @@
     window.removeEventListener('keydown', racingKeyDown);
     window.removeEventListener('keyup', racingKeyUp);
     window.removeEventListener('resize', racingOnResize);
+    var canvas = document.getElementById('racingCanvas');
+    if(canvas) canvas.removeEventListener('click', racingCanvasClick);
     racing = null;
   }
   function renderRacingEntry(){
     var root = document.getElementById('racingRoot');
     root.innerHTML =
-      '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
-        '<span class="bet-label" id="racingLap">Vuelta 1/' + RACING_LAPS + '</span>' +
-        '<span class="bet-label" id="racingPos">1º</span>' +
+      '<div style="border-radius:16px; overflow:hidden; aspect-ratio:420/640; max-width:420px; margin:0 auto; background:#17191a;">' +
+        '<canvas id="racingCanvas" style="display:block; width:100%; height:100%; cursor:pointer;"></canvas>' +
       '</div>' +
-      '<div style="border-radius:16px; overflow:hidden; aspect-ratio:900/520; background:#0b3d18;">' +
-        '<canvas id="racingCanvas" style="display:block; width:100%; height:100%;"></canvas>' +
-      '</div>' +
-      '<p class="message-bar" style="margin-top:8px;">Flechas o control PS4 (stick / gatillos R2-L2): moverte y acelerar/frenar</p>' +
+      '<p class="message-bar" style="margin-top:8px; text-align:center;">Flechas o control PS4 (stick / gatillos R2-L2): moverte y acelerar/frenar · Espacio o X para empezar</p>' +
       '<div id="racingResult" style="margin-top:8px;"></div>';
     window.addEventListener('keydown', racingKeyDown);
     window.addEventListener('keyup', racingKeyUp);
     window.addEventListener('resize', racingOnResize);
+    document.getElementById('racingCanvas').addEventListener('click', racingCanvasClick);
     startRacing();
   }
 
