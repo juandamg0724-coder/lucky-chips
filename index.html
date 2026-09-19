@@ -8855,8 +8855,10 @@
     return list.map(function(entry, i){
       var slot = slots[i] || slots[slots.length - 1];
       var x = side === 'home' ? slot.x : (MGR_ARCADE_W - slot.x);
+      var full = side === 'home' ? mgrPlayerById(entry.id) : mgrFindCpuPlayerById(entry.id);
       return {
         id: entry.id, name: entry.name, position: entry.position, grl: entry.grl, side: side,
+        number: (full && full.number) ? full.number : (i + 1),
         homeX: x, homeY: slot.y, x: x, y: slot.y, vx: 0, vy: 0, facingX: side === 'home' ? 1 : -1, facingY: 0
       };
     });
@@ -8879,13 +8881,21 @@
     a.prevToucher = a.lastToucher;
     a.lastToucher = { name: p.name, side: p.side };
   }
-  function mgrArcadeShoot(p, targetX, targetY){
+  function mgrArcadeKick(p, targetX, targetY, powerBase){
     var a = mgrArcade;
     var dx = targetX - p.x, dy = targetY - p.y, d = Math.hypot(dx, dy) || 1;
-    var power = 480 + (p.grl - 60) * 2.2;
+    var power = powerBase + (p.grl - 60) * 1.4;
     a.ball.vx = dx / d * power; a.ball.vy = dy / d * power;
     a.ball.ownerSide = null;
     mgrArcadeTouch(p);
+  }
+  function mgrArcadeShoot(p, targetX, targetY){ mgrArcadeKick(p, targetX, targetY, 480); }
+  function mgrArcadePass(p, targetX, targetY){ mgrArcadeKick(p, targetX, targetY, 250); }
+  function mgrArcadeGkTarget(p, ball){
+    var goalMidY = (MGR_ARCADE_GOAL_TOP + MGR_ARCADE_GOAL_BOTTOM) / 2;
+    var targetY = goalMidY + (ball.y - goalMidY) * 0.35;
+    targetY = Math.max(MGR_ARCADE_GOAL_TOP + 12, Math.min(MGR_ARCADE_GOAL_BOTTOM - 12, targetY));
+    return { x: p.homeX, y: targetY };
   }
   function mgrArcadeTackleAttempt(tackler, newOwnerSide){
     var a = mgrArcade;
@@ -8956,20 +8966,40 @@
 
     a.myPlayers.forEach(function(p){
       if(p === controlled) return;
+      if(p.position === 'GK'){ var gkT1 = mgrArcadeGkTarget(p, a.ball); mgrArcadeSeek(p, gkT1.x, gkT1.y, MGR_ARCADE_PLAYER_SPEED * 0.8); return; }
       var tx = p.homeX + (a.ball.x - MGR_ARCADE_W * 0.5) * 0.18;
       var ty = p.homeY + (a.ball.y - MGR_ARCADE_H * 0.5) * 0.18;
       mgrArcadeSeek(p, tx, ty, MGR_ARCADE_PLAYER_SPEED * 0.72);
     });
 
+    // IA del rival: el más cercano al balón presiona o conduce, un defensor marca en corto
+    // al atacante mío más peligroso, el resto sostiene una línea que sube o baja según quién
+    // tenga el balón, y el arquero se mueve sobre la línea para achicar el ángulo de tiro.
     var cpuChaser = mgrArcadeNearest(a.cpuPlayers, a.ball);
+    var cpuHasBall = a.ball.ownerSide === 'away';
+    var myAttackerThreat = null, bestThreatX = -Infinity;
+    a.myPlayers.forEach(function(p){ if(p.position !== 'GK' && p.x > bestThreatX){ bestThreatX = p.x; myAttackerThreat = p; } });
+    var cpuMarker = null;
+    if(myAttackerThreat && !cpuHasBall){
+      var markCandidates = a.cpuPlayers.filter(function(p){ return p !== cpuChaser && p.position !== 'GK'; });
+      cpuMarker = mgrArcadeNearest(markCandidates.length ? markCandidates : a.cpuPlayers, myAttackerThreat);
+    }
     a.cpuPlayers.forEach(function(p){
+      if(p.position === 'GK'){ var gkT2 = mgrArcadeGkTarget(p, a.ball); mgrArcadeSeek(p, gkT2.x, gkT2.y, MGR_ARCADE_PLAYER_SPEED * 0.8); return; }
       if(p === cpuChaser){
-        mgrArcadeSeek(p, a.ball.x, a.ball.y, MGR_ARCADE_PLAYER_SPEED * 0.98);
-      } else {
-        var tx = p.homeX + (a.ball.x - MGR_ARCADE_W * 0.5) * 0.15;
-        var ty = p.homeY + (a.ball.y - MGR_ARCADE_H * 0.5) * 0.15;
-        mgrArcadeSeek(p, tx, ty, MGR_ARCADE_PLAYER_SPEED * 0.68);
+        if(cpuHasBall) mgrArcadeSeek(p, Math.max(20, a.ball.x - 26), a.ball.y + (Math.random() - 0.5) * 14, MGR_ARCADE_PLAYER_SPEED * 0.92);
+        else mgrArcadeSeek(p, a.ball.x, a.ball.y, MGR_ARCADE_PLAYER_SPEED * 0.98);
+        return;
       }
+      if(p === cpuMarker){
+        var markX = myAttackerThreat.x + (MGR_ARCADE_W - myAttackerThreat.x) * 0.22;
+        mgrArcadeSeek(p, markX, myAttackerThreat.y, MGR_ARCADE_PLAYER_SPEED * 0.78);
+        return;
+      }
+      var pushBias = cpuHasBall ? -60 : 15;
+      var tx = p.homeX + pushBias + (a.ball.x - MGR_ARCADE_W * 0.5) * 0.15;
+      var ty = p.homeY + (a.ball.y - MGR_ARCADE_H * 0.5) * 0.15;
+      mgrArcadeSeek(p, tx, ty, MGR_ARCADE_PLAYER_SPEED * 0.68);
     });
 
     a.myPlayers.concat(a.cpuPlayers).forEach(function(p){
@@ -8978,14 +9008,31 @@
       p.y = Math.max(MGR_ARCADE_PLAYER_R, Math.min(MGR_ARCADE_H - MGR_ARCADE_PLAYER_R, p.y));
     });
 
-    if(mgrArcadeDist(cpuChaser, a.ball) < MGR_ARCADE_KICK_R && a.ball.ownerSide !== 'home'){
-      if(a.ball.x < MGR_ARCADE_W * 0.42 && Math.random() < 0.045){
-        mgrArcadeShoot(cpuChaser, 0, MGR_ARCADE_GOAL_TOP + (MGR_ARCADE_GOAL_BOTTOM - MGR_ARCADE_GOAL_TOP) * Math.random());
+    // Decisión del portador del balón en la CPU: tira si tiene ángulo claro, pasa al
+    // compañero más adelantado y desmarcado, o si no conduce hacia el arco.
+    if(cpuHasBall && mgrArcadeDist(cpuChaser, a.ball) < MGR_ARCADE_KICK_R * 1.4){
+      var goalMidY = (MGR_ARCADE_GOAL_TOP + MGR_ARCADE_GOAL_BOTTOM) / 2;
+      var distToGoal = mgrArcadeDist(cpuChaser, { x: 0, y: goalMidY });
+      var alignedWithGoal = Math.abs(cpuChaser.y - goalMidY) < 130;
+      var bestMate = null, bestScore = -Infinity;
+      a.cpuPlayers.forEach(function(p){
+        if(p === cpuChaser || p.position === 'GK') return;
+        var marker = mgrArcadeNearest(a.myPlayers, p);
+        var openness = mgrArcadeDist(marker, p);
+        var advance = MGR_ARCADE_W - p.x;
+        var score = advance * 0.02 + openness * 0.04;
+        if(score > bestScore){ bestScore = score; bestMate = p; }
+      });
+      if(distToGoal < 260 && alignedWithGoal && Math.random() < 0.05){
+        mgrArcadeShoot(cpuChaser, 0, MGR_ARCADE_GOAL_TOP + (MGR_ARCADE_GOAL_BOTTOM - MGR_ARCADE_GOAL_TOP) * (0.28 + Math.random() * 0.44));
+      } else if(bestMate && bestMate.x < cpuChaser.x - 50 && Math.random() < 0.035){
+        mgrArcadePass(cpuChaser, bestMate.x, bestMate.y);
       }
     }
     if(a.ball.ownerSide === 'home'){
-      var tackler = mgrArcadeNearest(a.cpuPlayers, a.ball);
-      if(mgrArcadeDist(tackler, a.ball) < MGR_ARCADE_TACKLE_R && Math.random() < 0.02) mgrArcadeTackleAttempt(tackler, 'away');
+      var tackleCandidates = a.cpuPlayers.filter(function(p){ return p.position !== 'GK'; });
+      var tackler = mgrArcadeNearest(tackleCandidates.length ? tackleCandidates : a.cpuPlayers, a.ball);
+      if(mgrArcadeDist(tackler, a.ball) < MGR_ARCADE_TACKLE_R && Math.random() < 0.03) mgrArcadeTackleAttempt(tackler, 'away');
     }
 
     a.ball.vx *= 0.985; a.ball.vy *= 0.985;
@@ -9032,6 +9079,10 @@
   function mgrArcadeDrawPlayer(ctx, p, color, highlight){
     ctx.beginPath(); ctx.fillStyle = color; ctx.arc(p.x, p.y, MGR_ARCADE_PLAYER_R, 0, Math.PI * 2); ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.stroke();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = 'bold 10px Arial, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(p.number), p.x, p.y + 0.5);
     if(highlight){
       ctx.beginPath(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.4; ctx.arc(p.x, p.y, MGR_ARCADE_PLAYER_R + 4, 0, Math.PI * 2); ctx.stroke();
     }
@@ -9579,14 +9630,16 @@
     if(!enFormaList.length){ enFormaRow.innerHTML = '<p class="dt-row-detail">Sin datos todavía.</p>'; }
     enFormaList.forEach(function(entry, entryIdx){
       var p = entry.p;
-      var card = document.createElement('div'); card.style.cssText = 'position:relative; border-radius:.8cqw; overflow:hidden; background:rgba(255,255,255,.07); cursor:pointer;';
+      var posColor = MGR_DT_POS_COLOR[p.position] || 'var(--dt-text-mono)';
+      var card = document.createElement('div'); card.style.cssText = 'position:relative; border-radius:.8cqw; overflow:hidden; background:rgba(255,255,255,.07); cursor:pointer; display:flex; flex-direction:column; justify-content:space-between; padding:.55cqw;';
       card.innerHTML =
-        '<img src="' + mgrAvatarUrlAt(state.manager.club.name, entryIdx) + '" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">' +
-        '<div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(6,10,26,.92) 0%, rgba(6,10,26,.25) 45%, rgba(6,10,26,0) 70%);"></div>' +
-        '<div style="position:absolute; left:.5cqw; top:.45cqw; padding:.1cqw .5cqw; border-radius:99px; background:var(--dt-oro); color:var(--dt-tinta); font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700;">' + p.ovr + '</div>' +
-        '<div style="position:absolute; left:.5cqw; right:.5cqw; bottom:.45cqw;">' +
-          '<div style="font-size:0.92cqw; font-weight:800; line-height:1.1; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</div>' +
-          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.85cqw; text-transform:uppercase; letter-spacing:.04cqw; color:rgba(255,255,255,.85);">' + p.position + ' · ' + entry.tag + '</div>' +
+        '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+          '<div style="padding:.1cqw .5cqw; border-radius:99px; background:var(--dt-oro); color:var(--dt-tinta); font-family:\'Barlow Condensed\',sans-serif; font-size:1.1cqw; font-weight:700;">' + p.ovr + '</div>' +
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.85cqw; font-weight:700; color:' + posColor + ';">' + p.position + '</div>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:0.95cqw; font-weight:800; line-height:1.15; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(p.name) + '</div>' +
+          '<div style="font-family:\'Barlow Condensed\',sans-serif; font-size:0.85cqw; text-transform:uppercase; letter-spacing:.04cqw; color:var(--dt-text-sec);">' + escapeHtml(entry.tag) + '</div>' +
         '</div>';
       card.style.aspectRatio = '3/4';
       card.addEventListener('click', function(id){ return function(){ mgrOpenSquadPlayerId = id; mgrSwitchTab('plantilla'); }; }(p.id));
@@ -9654,20 +9707,12 @@
   }
 
   var MGR_DT_POS_COLOR = { GK: 'var(--dt-ambar)', DEF: 'var(--dt-azul)', MID: 'var(--dt-verde)', FWD: 'var(--dt-rojo)' };
-  var MGR_AVATAR_COUNT = 5;
-  function mgrAvatarHash(id){
-    var s = String(id); var h = 0;
-    for(var i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) >>> 0; }
-    return h;
-  }
-  function mgrAvatarUrl(id){
-    return 'assets/jugador-' + ((mgrAvatarHash(id) % MGR_AVATAR_COUNT) + 1) + '.webp';
-  }
-  function mgrAvatarUrlAt(seedId, offset){
-    return 'assets/jugador-' + (((mgrAvatarHash(seedId) + offset) % MGR_AVATAR_COUNT) + 1) + '.webp';
-  }
+  // Sin fotos de jugador: en su lugar, una placa con iniciales coloreada según el puesto.
   function mgrAvatarBox(id, w, h){
-    return '<div style="width:' + w + '; height:' + h + '; border-radius:.8cqw; overflow:hidden; flex:none; background:rgba(255,255,255,.07);"><img src="' + mgrAvatarUrl(id) + '" alt="" style="width:100%; height:100%; object-fit:cover; display:block;"></div>';
+    var p = mgrPlayerById(id) || mgrFindCpuPlayerById(id);
+    var initials = p ? p.name.split(/\s+/).map(function(part){ return part[0] || ''; }).slice(0, 2).join('').toUpperCase() : '';
+    var color = MGR_DT_POS_COLOR[p ? p.position : ''] || 'var(--dt-text-mono)';
+    return '<div style="width:' + w + '; height:' + h + '; border-radius:.8cqw; overflow:hidden; flex:none; background:rgba(255,255,255,.07); display:flex; align-items:center; justify-content:center; font-family:\'Barlow Condensed\',sans-serif; font-weight:700; font-size:1.7cqw; color:' + color + ';">' + escapeHtml(initials) + '</div>';
   }
   var mgrOpenSquadPlayerId = null;
   var mgrOpenCanteraId = null;
