@@ -1437,6 +1437,16 @@
           <span class="game-meta">Desde 10 fichas</span>
           <span class="tile-arrow">→</span>
         </button>
+        <button class="game-tile wide ornate" data-goto="racing">
+          <span style="display:flex; align-items:center; gap:12px;">
+            <span class="icon-badge icon-orange">🏎️</span>
+            <span>
+              <span class="game-name" style="display:block;">Carreras</span>
+              <span class="game-meta">Arcade top-down · control PS4 o teclado</span>
+            </span>
+          </span>
+          <span class="tile-arrow">→</span>
+        </button>
         <button class="game-tile wide ornate" data-goto="match">
           <span style="display:flex; align-items:center; gap:12px;">
             <span class="icon-badge icon-green">⚽</span>
@@ -1721,6 +1731,16 @@
         <button class="btn btn-ruby" id="minesCashoutBtn" disabled>Retirar</button>
         <button class="btn btn-primary" id="minesPlayBtn">Jugar</button>
       </div>
+    </section>
+
+    <!-- CARRERAS -->
+    <section class="view" data-view="racing" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Carreras</h2>
+        <span style="width:32px;"></span>
+      </div>
+      <div id="racingRoot"></div>
     </section>
 
     <!-- MATCH (SPORTS BETTING) -->
@@ -2705,6 +2725,7 @@
     teardownChessListeners();
     teardownCareerListeners();
     if(name !== 'manager'){ mgrClosePlayerSheet(); mgrCloseTransferSheet(); document.body.classList.remove('dt-cockpit-mode'); }
+    if(name !== 'racing') teardownRacing();
 
     if(name === 'hub'){ refreshHub(); dailyTimerId = setInterval(refreshHub, 1000); }
     if(name === 'store'){ renderStore(); renderSobres(); }
@@ -2715,6 +2736,7 @@
     if(name === 'chess'){ renderChessEntry(); }
     if(name === 'career'){ renderCareerEntry(); }
     if(name === 'manager'){ renderManagerEntry(); }
+    if(name === 'racing'){ renderRacingEntry(); }
   }
 
   function selectStoreTab(tab){
@@ -2741,6 +2763,259 @@
       if(el) el.hidden = !el.hidden;
     });
   });
+
+  /* ================= CARRERAS (arcade top-down, teclado o control PS4) ================= */
+  var RACING_W = 900, RACING_H = 520, RACING_TRACK_HALF_W = 55, RACING_LAPS = 3;
+  var RACING_MAX_SPEED = 260, RACING_MAX_REV = -110, RACING_ACCEL = 220, RACING_BRAKE = 320, RACING_DRAG = 0.6;
+  var RACING_TURN_RATE = 2.6, RACING_CAR_R = 12;
+  function racingBuildTrack(){
+    var pts = [];
+    var cx = RACING_W / 2, cy = RACING_H / 2, straight = 300, r = 120, steps = 24;
+    var leftX = cx - straight / 2, rightX = cx + straight / 2, topY = cy - r, botY = cy + r;
+    pts.push({ x: leftX, y: topY });
+    pts.push({ x: rightX, y: topY });
+    for(var i = 1; i <= steps; i++){
+      var t = -Math.PI / 2 + Math.PI * (i / steps);
+      pts.push({ x: rightX + Math.cos(t) * r, y: cy + Math.sin(t) * r });
+    }
+    pts.push({ x: leftX, y: botY });
+    for(var j = 1; j <= steps; j++){
+      var t2 = Math.PI / 2 + Math.PI * (j / steps);
+      pts.push({ x: leftX + Math.cos(t2) * r, y: cy + Math.sin(t2) * r });
+    }
+    return pts;
+  }
+  function racingNearestOnTrack(pos, track){
+    var best = null;
+    for(var i = 0; i < track.length; i++){
+      var a = track[i], b = track[(i + 1) % track.length];
+      var dx = b.x - a.x, dy = b.y - a.y;
+      var len2 = dx * dx + dy * dy || 1;
+      var t = ((pos.x - a.x) * dx + (pos.y - a.y) * dy) / len2;
+      t = Math.max(0, Math.min(1, t));
+      var px = a.x + dx * t, py = a.y + dy * t;
+      var d = Math.hypot(pos.x - px, pos.y - py);
+      if(!best || d < best.dist) best = { segIndex: i, t: t, dist: d, x: px, y: py };
+    }
+    return best;
+  }
+  function racingAngleDiff(target, current){
+    var d = target - current;
+    while(d > Math.PI) d -= Math.PI * 2;
+    while(d < -Math.PI) d += Math.PI * 2;
+    return d;
+  }
+  function racingMakeCar(x, y, angle, color){
+    return { x: x, y: y, angle: angle, speed: 0, color: color, lastProgress: 0, totalProgress: 0, laps: 0, finished: false, finishTime: null, facingX: 1, facingY: 0 };
+  }
+  function racingUpdateCar(car, throttle, steer, dt, track){
+    if(throttle > 0) car.speed += throttle * RACING_ACCEL * dt;
+    else if(throttle < 0) car.speed += throttle * RACING_BRAKE * dt;
+    car.speed -= car.speed * RACING_DRAG * dt;
+    car.speed = Math.max(RACING_MAX_REV, Math.min(RACING_MAX_SPEED, car.speed));
+    var speedFactor = Math.max(0.2, Math.min(1, Math.abs(car.speed) / 120));
+    car.angle += steer * RACING_TURN_RATE * dt * speedFactor * (car.speed < 0 ? -1 : 1);
+    car.x += Math.cos(car.angle) * car.speed * dt;
+    car.y += Math.sin(car.angle) * car.speed * dt;
+    var nearest = racingNearestOnTrack(car, track);
+    if(nearest.dist > RACING_TRACK_HALF_W) car.speed *= Math.pow(0.85, dt * 60);
+    var N = track.length;
+    var newProgress = nearest.segIndex + nearest.t;
+    var delta = newProgress - car.lastProgress;
+    if(delta < -N / 2) delta += N;
+    else if(delta > N / 2) delta -= N;
+    car.totalProgress += Math.max(delta, -3);
+    car.lastProgress = newProgress;
+    var newLaps = Math.floor(car.totalProgress / N);
+    if(newLaps > car.laps) car.laps = newLaps;
+    if(!car.finished && car.laps >= RACING_LAPS){ car.finished = true; car.finishTime = racing ? racing.elapsedMs : 0; }
+  }
+  function racingResolveCollision(a, b){
+    var dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
+    var minD = RACING_CAR_R * 2;
+    if(d < minD){
+      var overlap = (minD - d) / 2, nx = dx / d, ny = dy / d;
+      a.x -= nx * overlap; a.y -= ny * overlap;
+      b.x += nx * overlap; b.y += ny * overlap;
+      var rel = (a.speed + b.speed) / 2;
+      a.speed = rel * 0.6; b.speed = rel * 0.6;
+    }
+  }
+  function racingAiControl(car, track, rival){
+    var N = track.length;
+    var aheadIdx = Math.floor(car.lastProgress + 5) % N;
+    var target = track[aheadIdx];
+    var desiredAngle = Math.atan2(target.y - car.y, target.x - car.x);
+    var steer = Math.max(-1, Math.min(1, racingAngleDiff(desiredAngle, car.angle) * 2.2));
+    var farIdx = Math.floor(car.lastProgress + 12) % N;
+    var farTarget = track[farIdx];
+    var farAngle = Math.atan2(farTarget.y - target.y, farTarget.x - target.x);
+    var curveDiff = Math.abs(racingAngleDiff(farAngle, car.angle));
+    var throttle = curveDiff > 0.5 ? 0.55 : 1;
+    if(rival){
+      var gap = rival.totalProgress - car.totalProgress;
+      if(gap > 8) throttle = Math.min(1, throttle + 0.25);
+      else if(gap < -8) throttle = Math.max(0.3, throttle - 0.2);
+    }
+    return { throttle: throttle, steer: steer };
+  }
+  var racingKeys = {};
+  function racingKeyDown(e){
+    if(!racing || !racing.active) return;
+    if(e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+    racingKeys[e.key] = true;
+  }
+  function racingKeyUp(e){ racingKeys[e.key] = false; }
+  function racingReadInput(){
+    var throttle = 0, steer = 0;
+    if(racingKeys.ArrowUp) throttle = 1;
+    else if(racingKeys.ArrowDown) throttle = -1;
+    if(racingKeys.ArrowLeft) steer = -1;
+    else if(racingKeys.ArrowRight) steer = 1;
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for(var i = 0; i < pads.length; i++){
+      var gp = pads[i];
+      if(!gp) continue;
+      var axisX = gp.axes && gp.axes[0] ? gp.axes[0] : 0;
+      if(Math.abs(axisX) > 0.15) steer = Math.max(-1, Math.min(1, axisX));
+      else if(gp.buttons[14] && gp.buttons[14].pressed) steer = -1;
+      else if(gp.buttons[15] && gp.buttons[15].pressed) steer = 1;
+      var r2 = gp.buttons[7] ? gp.buttons[7].value : 0;
+      var l2 = gp.buttons[6] ? gp.buttons[6].value : 0;
+      if(r2 > 0.08) throttle = r2;
+      else if(gp.buttons[0] && gp.buttons[0].pressed) throttle = 1;
+      if(l2 > 0.08) throttle = -l2;
+      else if(gp.buttons[2] && gp.buttons[2].pressed) throttle = -1;
+      break;
+    }
+    return { throttle: throttle, steer: steer };
+  }
+  var racing = null;
+  function racingOnResize(){ racingResizeCanvas(); }
+  function racingResizeCanvas(){
+    var canvas = document.getElementById('racingCanvas');
+    if(!canvas || !racing) return;
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    racing.scale = Math.min(canvas.width / RACING_W, canvas.height / RACING_H);
+    racing.offX = (canvas.width - RACING_W * racing.scale) / 2;
+    racing.offY = (canvas.height - RACING_H * racing.scale) / 2;
+  }
+  function racingUpdateHud(){
+    var r = racing;
+    var lapEl = document.getElementById('racingLap');
+    if(lapEl) lapEl.textContent = 'Vuelta ' + Math.min(RACING_LAPS, r.player.laps + 1) + '/' + RACING_LAPS;
+    var posEl = document.getElementById('racingPos');
+    if(posEl) posEl.textContent = (r.player.totalProgress >= r.cpu.totalProgress ? '1º' : '2º');
+  }
+  function racingShowResult(){
+    var r = racing, playerWon = r.player.finished;
+    var wrap = document.getElementById('racingResult');
+    if(!wrap) return;
+    wrap.innerHTML = '<div class="message-bar ' + (playerWon ? 'win' : 'lose') + '">' + (playerWon ? '¡Ganaste la carrera!' : 'Te ganó la CPU') + '</div>' +
+      '<button type="button" class="btn btn-primary btn-block" id="racingRestartBtn" style="margin-top:8px;">Correr de nuevo</button>';
+    document.getElementById('racingRestartBtn').addEventListener('click', function(){ startRacing(); });
+  }
+  function racingUpdate(dt){
+    var r = racing;
+    if(r.countdown > 0){ r.countdown -= dt * 1000; return; }
+    if(r.finished) return;
+    r.elapsedMs += dt * 1000;
+    var input = racingReadInput();
+    racingUpdateCar(r.player, input.throttle, input.steer, dt, r.track);
+    var ai = racingAiControl(r.cpu, r.track, r.player);
+    racingUpdateCar(r.cpu, ai.throttle, ai.steer, dt, r.track);
+    racingResolveCollision(r.player, r.cpu);
+    if(r.player.finished || r.cpu.finished){ r.finished = true; racingShowResult(); }
+    racingUpdateHud();
+  }
+  function racingDrawCar(ctx, car){
+    ctx.save();
+    ctx.translate(car.x, car.y);
+    ctx.rotate(car.angle);
+    ctx.fillStyle = car.color;
+    ctx.fillRect(-14, -8, 28, 16);
+    ctx.fillStyle = 'rgba(0,0,0,.4)';
+    ctx.fillRect(6, -8, 6, 16);
+    ctx.restore();
+  }
+  function racingDraw(){
+    var canvas = document.getElementById('racingCanvas');
+    if(!canvas || !racing) return;
+    var ctx = canvas.getContext('2d');
+    var r = racing;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#0b3d18';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(r.scale, 0, 0, r.scale, r.offX, r.offY);
+    ctx.lineWidth = RACING_TRACK_HALF_W * 2;
+    ctx.strokeStyle = '#333'; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath();
+    r.track.forEach(function(p, i){ if(i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+    ctx.closePath(); ctx.stroke();
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.setLineDash([14, 14]);
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(r.track[0].x - 2, r.track[0].y - RACING_TRACK_HALF_W, 4, RACING_TRACK_HALF_W * 2);
+    racingDrawCar(ctx, r.cpu);
+    racingDrawCar(ctx, r.player);
+    if(r.countdown > 0){
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 48px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(Math.ceil(r.countdown / 1000) > 0 ? String(Math.ceil(r.countdown / 1000)) : 'GO', canvas.width / 2, canvas.height / 2);
+    }
+  }
+  function racingTick(ts){
+    if(!racing || !racing.active) return;
+    if(!racing.scale) racingResizeCanvas();
+    var dt = racing.lastTs ? Math.min(0.05, (ts - racing.lastTs) / 1000) : 0.016;
+    racing.lastTs = ts;
+    racingUpdate(dt);
+    racingDraw();
+    if(racing && racing.active) racing.rafId = requestAnimationFrame(racingTick);
+  }
+  function startRacing(){
+    var track = racingBuildTrack();
+    var startAngle = Math.atan2(track[1].y - track[0].y, track[1].x - track[0].x);
+    racing = {
+      active: true, finished: false, track: track,
+      player: racingMakeCar(track[0].x, track[0].y - 14, startAngle, '#f4c542'),
+      cpu: racingMakeCar(track[0].x, track[0].y + 14, startAngle, '#e0503a'),
+      elapsedMs: 0, countdown: 3000, scale: null, offX: 0, offY: 0, rafId: null, lastTs: null
+    };
+    var resultEl = document.getElementById('racingResult');
+    if(resultEl) resultEl.innerHTML = '';
+    requestAnimationFrame(function(){ racingResizeCanvas(); if(racing) racing.rafId = requestAnimationFrame(racingTick); });
+  }
+  function teardownRacing(){
+    if(!racing) return;
+    racing.active = false;
+    if(racing.rafId) cancelAnimationFrame(racing.rafId);
+    window.removeEventListener('keydown', racingKeyDown);
+    window.removeEventListener('keyup', racingKeyUp);
+    window.removeEventListener('resize', racingOnResize);
+    racing = null;
+  }
+  function renderRacingEntry(){
+    var root = document.getElementById('racingRoot');
+    root.innerHTML =
+      '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+        '<span class="bet-label" id="racingLap">Vuelta 1/' + RACING_LAPS + '</span>' +
+        '<span class="bet-label" id="racingPos">1º</span>' +
+      '</div>' +
+      '<div style="border-radius:16px; overflow:hidden; aspect-ratio:900/520; background:#0b3d18;">' +
+        '<canvas id="racingCanvas" style="display:block; width:100%; height:100%;"></canvas>' +
+      '</div>' +
+      '<p class="message-bar" style="margin-top:8px;">Flechas o control PS4 (stick / gatillos R2-L2): moverte y acelerar/frenar</p>' +
+      '<div id="racingResult" style="margin-top:8px;"></div>';
+    window.addEventListener('keydown', racingKeyDown);
+    window.addEventListener('keyup', racingKeyUp);
+    window.addEventListener('resize', racingOnResize);
+    startRacing();
+  }
 
   /* ================= HUB ================= */
   function fmtCountdown(ms){
