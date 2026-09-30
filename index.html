@@ -1008,27 +1008,47 @@
   .chess-board{
     display:grid; grid-template-columns:repeat(8, 1fr); grid-template-rows:repeat(8, 1fr);
     width:100%; aspect-ratio:1;
-    border:5px solid var(--accent-dim); border-radius:8px; overflow:hidden;
-    box-shadow:var(--shadow);
+    border-radius:6px; overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
   }
   .chess-sq{ position:relative; display:flex; align-items:center; justify-content:center; border:none; padding:0; margin:0; cursor:pointer; }
-  .chess-sq.light{ background:#b8966a; }
-  .chess-sq.dark{ background:#3c2211; }
-  .chess-sq.selected{ box-shadow: inset 0 0 0 3px var(--accent-bright); }
-  .chess-sq.legal-dest::after{ content:''; position:absolute; width:26%; height:26%; border-radius:50%; background:rgba(212,175,55,.55); }
-  .chess-sq.capture-dest{ box-shadow: inset 0 0 0 3px var(--ruby-bright); }
-  .chess-sq.last-from, .chess-sq.last-to{ box-shadow: inset 0 0 0 2px rgba(212,175,55,.55); }
-  .chess-piece{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; user-select:none; }
-  .chess-piece .cp-svg{ width:78%; height:78%; overflow:visible; filter:drop-shadow(0 2px 2px rgba(0,0,0,.45)); }
-  .chess-piece.white .cp-shape{ fill:#f8f2e3; stroke:#241206; stroke-width:1.6; stroke-linejoin:round; }
-  .chess-piece.white .cp-eye{ fill:#241206; }
-  .chess-piece.black .cp-shape{ fill:#1b0f08; stroke:#f0d98a; stroke-width:1; stroke-linejoin:round; }
-  .chess-piece.black .cp-eye{ fill:#f0d98a; }
+  .chess-sq.light{ background:#ebecd0; }
+  .chess-sq.dark{ background:#769656; }
+  .chess-sq.selected{ box-shadow: inset 0 0 0 999px rgba(255,255,60,.45); }
+  .chess-sq.legal-dest::after{ content:''; position:absolute; width:32%; height:32%; border-radius:50%; background:rgba(20,20,10,.16); }
+  .chess-sq.light.legal-dest::after{ background:rgba(20,20,10,.13); }
+  .chess-sq.capture-dest::after{ content:''; position:absolute; inset:4%; border-radius:50%; box-shadow: inset 0 0 0 4px rgba(20,20,10,.22); }
+  .chess-sq.in-check::before{ content:''; position:absolute; inset:0; background:radial-gradient(circle, rgba(255,40,20,.85) 0%, rgba(255,40,20,.45) 45%, rgba(255,40,20,0) 78%); pointer-events:none; }
+  .chess-sq .chess-coord{ position:absolute; font-size:.6rem; font-weight:800; line-height:1; pointer-events:none; opacity:.75; }
+  .chess-sq .chess-coord.file{ right:3px; bottom:2px; }
+  .chess-sq .chess-coord.rank{ left:3px; top:2px; }
+  .chess-sq.light .chess-coord{ color:#769656; }
+  .chess-sq.dark .chess-coord{ color:#ebecd0; }
+  .chess-piece{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; user-select:none; transition:transform .12s ease; }
+  .chess-sq.clickable-piece:hover .chess-piece{ transform:scale(1.06); }
+  .chess-piece .cp-svg{ width:82%; height:82%; overflow:visible; filter:drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+  .chess-piece.white .cp-shape{ fill:#fbfaf7; stroke:#3a3a38; stroke-width:1.2; stroke-linejoin:round; }
+  .chess-piece.black .cp-shape{ fill:#2b2926; stroke:#0b0b0a; stroke-width:1.2; stroke-linejoin:round; }
   .chess-status{ text-align:center; font-weight:700; font-size:.92rem; min-height:1.3em; color:var(--text); }
   .chess-status.check{ color:var(--ruby-bright); }
   .chess-log{ width:100%; max-height:100px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:6px; font-size:.76rem; color:var(--text-muted); font-family:'Space Mono', monospace; }
   .chess-players-row{ display:flex; justify-content:space-between; font-size:.82rem; color:var(--text-muted); }
   .chess-players-row b{ color:var(--text); }
+  .chess-chat{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+  .chess-chat-log{ display:flex; flex-direction:column; gap:4px; max-height:130px; overflow-y:auto; padding:8px 10px; background:var(--bg-elevated); border-radius:10px; border:1px solid var(--line-soft); }
+  .chess-chat-msg{ font-size:.82rem; line-height:1.35; }
+  .chess-chat-msg b{ color:var(--accent-bright); }
+  .chess-chat-msg.me b{ color:var(--ruby-bright); }
+  .chess-chat-row{ display:flex; gap:6px; }
+  .chess-chat-row input{ flex:1; min-width:0; }
+  .chess-quick-emojis{ display:flex; gap:6px; flex-wrap:wrap; }
+  .chess-quick-emoji{ font-size:1.1rem; padding:4px 8px; border-radius:8px; background:var(--bg-elevated); border:1px solid var(--line-soft); cursor:pointer; }
+  .chess-quick-emoji:hover{ background:var(--bg-panel-2); }
+  .league-rank-tabs{ display:flex; gap:8px; margin-bottom:10px; }
+  .league-rank-tab-btn.active{
+    background:linear-gradient(120deg, var(--neon-cyan-bright), var(--neon-purple));
+    color:var(--accent-ink); border-color:transparent; box-shadow:0 0 14px -3px var(--neon-purple);
+  }
 
 </style>
 </head>
@@ -1641,6 +1661,10 @@
 
         <div class="league-card ornate">
           <p class="league-card-title">📊 Ranking en vivo</p>
+          <div class="league-rank-tabs">
+            <button class="btn btn-ghost btn-sm league-rank-tab-btn active" data-rank-metric="coins">🪙 Fichas</button>
+            <button class="btn btn-ghost btn-sm league-rank-tab-btn" data-rank-metric="chessElo">♟️ ELO Ajedrez</button>
+          </div>
           <div class="league-members" id="leagueMembersList"></div>
         </div>
 
@@ -1757,6 +1781,22 @@
         <p class="paytable-title" style="margin-top:14px;">Historial de la mesa</p>
         <div class="poker-log" id="pokerLog"></div>
 
+        <div class="chess-chat" id="pokerChatPanel" hidden>
+          <p class="bet-label">Chat de la mesa</p>
+          <div class="chess-chat-log" id="pokerChatLog"></div>
+          <div class="chess-quick-emojis">
+            <button type="button" class="chess-quick-emoji" data-emoji="👍">👍</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="🤝">🤝</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😂">😂</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😮">😮</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="🃏">🃏</button>
+          </div>
+          <div class="chess-chat-row">
+            <input class="text-input" id="pokerChatInput" type="text" maxlength="120" placeholder="Escribe algo…">
+            <button class="btn btn-gold btn-sm" id="pokerChatSendBtn">Enviar</button>
+          </div>
+        </div>
+
         <button class="btn btn-ghost btn-block" id="leavePokerTableBtn" style="margin-top:12px;">Salir de la mesa</button>
       </div>
     </section>
@@ -1852,6 +1892,21 @@
         <div class="chess-board" id="chessBoard"></div>
         <p class="bet-label" style="margin-top:10px;">Historial</p>
         <div class="chess-log" id="chessLog"></div>
+        <div class="chess-chat" id="chessChatPanel" hidden>
+          <p class="bet-label">Chat</p>
+          <div class="chess-chat-log" id="chessChatLog"></div>
+          <div class="chess-quick-emojis">
+            <button type="button" class="chess-quick-emoji" data-emoji="👍">👍</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="🤝">🤝</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😂">😂</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😮">😮</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="👏">👏</button>
+          </div>
+          <div class="chess-chat-row">
+            <input class="text-input" id="chessChatInput" type="text" maxlength="120" placeholder="Escribe algo…">
+            <button class="btn btn-gold btn-sm" id="chessChatSendBtn">Enviar</button>
+          </div>
+        </div>
         <button class="btn btn-ghost btn-block" id="leaveChessBtn" style="margin-top:12px;">Salir / Rendirse</button>
       </div>
     </section>
@@ -4252,25 +4307,47 @@
     if(!db || !state.leagueCode) return;
     leagueMembersUnsub = db.collection('leagues/' + state.leagueCode + '/members')
       .orderBy('coins', 'desc').limit(50)
-      .onSnapshot(function(snap){ renderLeagueMembersList(snap); }, function(){ leagueMsg('Conexión con la liga interrumpida'); });
+      .onSnapshot(function(snap){ leagueMembersSnap = snap; renderLeagueMembersList(snap); }, function(){ leagueMsg('Conexión con la liga interrumpida'); });
   }
   function teardownLeagueListener(){
     if(leagueMembersUnsub){ leagueMembersUnsub(); leagueMembersUnsub = null; }
+    leagueMembersSnap = null;
   }
+
+  var leagueMembersSnap = null;
+  var leagueRankMetric = 'coins';
+  function leagueSelectRankMetric(metric){
+    leagueRankMetric = metric;
+    document.querySelectorAll('.league-rank-tab-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-rank-metric') === metric);
+    });
+    renderLeagueMembersList(leagueMembersSnap);
+  }
+  document.querySelectorAll('.league-rank-tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ leagueSelectRankMetric(btn.getAttribute('data-rank-metric')); });
+  });
 
   function renderLeagueMembersList(snap){
     var el = document.getElementById('leagueMembersList');
     if(!el) return;
     if(!snap || snap.empty){ el.innerHTML = '<p class="league-empty">Aún no hay nadie en el ranking.</p>'; return; }
     el.innerHTML = '';
-    snap.docs.forEach(function(doc, i){
-      var m = doc.data() || {};
+    var metric = leagueRankMetric;
+    var rows = snap.docs.map(function(doc){ return { id: doc.id, m: doc.data() || {} }; });
+    rows.sort(function(a, b){
+      var av = metric === 'chessElo' ? (a.m.chessElo || 1200) : (a.m.coins || 0);
+      var bv = metric === 'chessElo' ? (b.m.chessElo || 1200) : (b.m.coins || 0);
+      return bv - av;
+    });
+    rows.forEach(function(item, i){
+      var m = item.m;
+      var val = metric === 'chessElo' ? Math.round(m.chessElo || 1200) : Math.round(m.coins || 0);
       var row = document.createElement('div');
-      row.className = 'league-row' + (doc.id === state.playerId ? ' me' : '');
+      row.className = 'league-row' + (item.id === state.playerId ? ' me' : '');
       row.innerHTML =
         '<span class="league-rank">' + (i + 1) + '</span>' +
         '<span class="league-name">' + escapeHtml(m.name || 'Jugador') + '</span>' +
-        '<span class="league-coins">' + Math.round(m.coins || 0).toLocaleString('es-CO') + '</span>';
+        '<span class="league-coins">' + val.toLocaleString('es-CO') + '</span>';
       el.appendChild(row);
     });
   }
@@ -5203,7 +5280,45 @@
 
     renderPokerActions(t, mySeatIdx);
     renderPokerLog(t);
+    renderPokerChat(t);
   }
+
+  function renderPokerChat(t){
+    var panel = document.getElementById('pokerChatPanel');
+    if(!panel) return;
+    if(pokerMode === 'cpu' || !currentPokerTableRef){ panel.hidden = true; return; }
+    panel.hidden = false;
+    var log = document.getElementById('pokerChatLog');
+    var chat = (t && t.chat) || [];
+    log.innerHTML = chat.slice(-40).map(function(m){
+      return '<p class="chess-chat-msg' + (m.id === state.playerId ? ' me' : '') + '"><b>' + escapeHtml(m.name || 'Jugador') + ':</b> ' + escapeHtml(m.text) + '</p>';
+    }).join('');
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function pokerSendChat(text){
+    text = (text || '').trim().slice(0, 120);
+    if(!text || pokerMode === 'cpu' || !currentPokerTableRef || !currentPokerTableData) return;
+    var chat = (currentPokerTableData.chat || []).concat([{ id: state.playerId, name: state.playerName || 'Jugador', text: text, ts: Date.now() }]);
+    if(chat.length > 40) chat = chat.slice(-40);
+    currentPokerTableRef.set({ chat: chat }, { merge: true }).catch(function(){});
+  }
+
+  document.getElementById('pokerChatSendBtn').addEventListener('click', function(){
+    var input = document.getElementById('pokerChatInput');
+    pokerSendChat(input.value);
+    input.value = '';
+  });
+  document.getElementById('pokerChatInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      pokerSendChat(this.value);
+      this.value = '';
+    }
+  });
+  document.querySelectorAll('#pokerChatPanel .chess-quick-emoji').forEach(function(btn){
+    btn.addEventListener('click', function(){ pokerSendChat(btn.getAttribute('data-emoji')); });
+  });
 
   function renderPokerLobby(){
     document.getElementById('pokerTableView').hidden = true;
@@ -5304,14 +5419,14 @@
     ['bP','bP','bP','bP','bP','bP','bP','bP'],
     ['bR','bN','bB','bQ','bK','bB','bN','bR']
   ];
-  var CHESS_PIECE_BASE = '<rect class="cp-shape" x="9" y="36" width="27" height="5" rx="2"/>';
+  var CHESS_PIECE_BASE = '<path class="cp-shape" d="M13 37c0-1.4 1.1-2.4 2.5-2.4h14c1.4 0 2.5 1 2.5 2.4H13z"/><rect class="cp-shape" x="10.5" y="37" width="24" height="3.2" rx="1.4"/>';
   var CHESS_PIECE_SHAPES = {
-    P: '<circle class="cp-shape" cx="22.5" cy="13" r="6.5"/><path class="cp-shape" d="M16 25 Q16 16 22.5 16 Q29 16 29 25 Z"/><rect class="cp-shape" x="14" y="25" width="17" height="4" rx="2"/>' + CHESS_PIECE_BASE,
-    R: '<rect class="cp-shape" x="12" y="8" width="5" height="6"/><rect class="cp-shape" x="20" y="8" width="5" height="6"/><rect class="cp-shape" x="28" y="8" width="5" height="6"/><rect class="cp-shape" x="12" y="13" width="21" height="5"/><path class="cp-shape" d="M14 18 L31 18 L29 33 L16 33 Z"/>' + CHESS_PIECE_BASE,
-    N: '<path class="cp-shape" d="M30 36 C29 30 26 28 23 26 C27 23 29 18 26 13 C24 10 20 9 17 11 C13 14 11 19 11 24 C9 27 8 30 9 33 C10 35 12 34 13 32 L14 36 Z"/><circle class="cp-eye" cx="16" cy="17" r="1.1"/>' + CHESS_PIECE_BASE,
-    B: '<circle class="cp-shape" cx="22.5" cy="8" r="2.4"/><path class="cp-shape" d="M22.5 11 C27 14 29 20 27 29 C26 32 24 34 22.5 34 C21 34 19 32 18 29 C16 20 18 14 22.5 11 Z"/><rect class="cp-shape" x="15" y="30" width="15" height="4" rx="2"/>' + CHESS_PIECE_BASE,
-    Q: '<circle class="cp-shape" cx="12" cy="10" r="2.3"/><circle class="cp-shape" cx="22.5" cy="7" r="2.6"/><circle class="cp-shape" cx="33" cy="10" r="2.3"/><circle class="cp-shape" cx="17" cy="12" r="2"/><circle class="cp-shape" cx="28" cy="12" r="2"/><path class="cp-shape" d="M12 13 L15 28 L30 28 L33 13 L27 20 L22.5 10 L18 20 Z"/><rect class="cp-shape" x="14" y="28" width="17" height="4" rx="2"/>' + CHESS_PIECE_BASE,
-    K: '<rect class="cp-shape" x="21" y="3" width="3" height="8"/><rect class="cp-shape" x="18" y="6" width="9" height="3"/><path class="cp-shape" d="M22.5 12 C28 15 30 21 28 30 C27 33 25 35 22.5 35 C20 35 18 33 17 30 C15 21 17 15 22.5 12 Z"/><rect class="cp-shape" x="14" y="30" width="17" height="4" rx="2"/>' + CHESS_PIECE_BASE
+    P: '<circle class="cp-shape" cx="22.5" cy="11.5" r="5.6"/><path class="cp-shape" d="M22.5 16.6c-3.4 0-6.2 3.2-6.2 7.1 0 2.3 1 4.3 2.6 5.7L15.3 34h14.4l-3.6-4.6c1.6-1.4 2.6-3.4 2.6-5.7 0-3.9-2.8-7.1-6.2-7.1z"/>' + CHESS_PIECE_BASE,
+    R: '<path class="cp-shape" d="M11.5 9h4.6v4h4v-4h4.8v4h4v-4h4.6v6.4h-22z"/><path class="cp-shape" d="M13 15.4h19l-1.2 4.4h-16.6z"/><path class="cp-shape" d="M14.4 19.8h16.2l-1 13.4h-14.2z"/>' + CHESS_PIECE_BASE,
+    N: '<path class="cp-shape" d="M30 34.5 C29 29 26.5 27 23.3 25.2 C27.3 22 29.5 17.3 26.5 12.6 C24.5 9.5 20.3 8.4 17 10.4 C13 12.9 10.8 17.6 10.8 22.4 C9 25.2 8 28.3 9 31.3 C9.8 33.4 11.8 32.2 12.8 30.2 L13.8 34.5 Z"/><circle class="cp-shape" cx="15.7" cy="16.4" r="1" stroke-width=".5"/>' + CHESS_PIECE_BASE,
+    B: '<circle class="cp-shape" cx="22.5" cy="7.4" r="2.1"/><path class="cp-shape" d="M22.5 10.4c4.6 3 7 8.4 5.7 15-.5 2.9-2 5.7-3.9 7.7-.6.7-1 1.6-.8 2.6h-2c.2-1-.2-1.9-.8-2.6-1.9-2-3.4-4.8-3.9-7.7-1.3-6.6 1.1-12 5.7-15z"/><path class="cp-shape" d="M19.3 19.6l3.2 3.2 3.2-3.2" stroke-width="1.3" fill="none"/><rect class="cp-shape" x="19" y="29.5" width="7" height="3.6" rx="1"/>' + CHESS_PIECE_BASE,
+    Q: '<circle class="cp-shape" cx="10.8" cy="11.6" r="2.1"/><circle class="cp-shape" cx="22.5" cy="7.6" r="2.4"/><circle class="cp-shape" cx="34.2" cy="11.6" r="2.1"/><circle class="cp-shape" cx="16.4" cy="9.8" r="1.9"/><circle class="cp-shape" cx="28.6" cy="9.8" r="1.9"/><path class="cp-shape" d="M11.4 13.6l2.3 13.4h17.6l2.3-13.4-5.4 5.8-5.7-8.6-5.7 8.6z"/><rect class="cp-shape" x="13.8" y="27" width="17.4" height="3.8" rx="1.2"/>' + CHESS_PIECE_BASE,
+    K: '<rect class="cp-shape" x="21.2" y="2.6" width="2.6" height="7.4"/><rect class="cp-shape" x="18.6" y="5" width="7.8" height="2.6"/><path class="cp-shape" d="M22.5 11.4c5.3 3.1 8 9.3 6.4 16.6-.6 2.9-2.3 5.7-4.2 7.7-.7.8-1.2 1.8-.9 2.9h-2.6c.3-1.1-.2-2.1-.9-2.9-1.9-2-3.6-4.8-4.2-7.7-1.6-7.3 1.1-13.5 6.4-16.6z"/><rect class="cp-shape" x="13.8" y="30.4" width="17.4" height="3.8" rx="1.2"/>' + CHESS_PIECE_BASE
   };
   function chessPieceSvg(type){
     return '<svg viewBox="0 0 45 45" class="cp-svg">' + CHESS_PIECE_SHAPES[type] + '</svg>';
@@ -5731,6 +5846,9 @@
     var rowOrder = myColor === 'b' ? [0,1,2,3,4,5,6,7] : [7,6,5,4,3,2,1,0];
     var colOrder = myColor === 'b' ? [7,6,5,4,3,2,1,0] : [0,1,2,3,4,5,6,7];
     var legalForSelected = chessSelected ? chessLegalMoves(pos, pos.turn).filter(function(mv){ return mv.from.r === chessSelected.r && mv.from.c === chessSelected.c; }) : [];
+    var checkedColor = chessKingInCheck(pos.board, pos.turn) ? pos.turn : null;
+    var checkedKingSq = checkedColor ? chessFindKing(pos.board, checkedColor) : null;
+    var lastRow = rowOrder[rowOrder.length - 1];
     rowOrder.forEach(function(r){
       colOrder.forEach(function(c){
         var sq = document.createElement('button');
@@ -5740,9 +5858,15 @@
         if(chessSelected && chessSelected.r === r && chessSelected.c === c) cls += ' selected';
         var destMove = chessFindMoveTo(legalForSelected, r, c);
         if(destMove) cls += (pos.board[r][c] || destMove.enPassant) ? ' capture-dest' : ' legal-dest';
-        sq.className = cls;
+        if(checkedKingSq && checkedKingSq.r === r && checkedKingSq.c === c) cls += ' in-check';
         var piece = pos.board[r][c];
-        if(piece) sq.innerHTML = '<span class="chess-piece ' + (chessColorOf(piece) === 'w' ? 'white' : 'black') + '">' + chessPieceSvg(chessTypeOf(piece)) + '</span>';
+        if(piece && chessColorOf(piece) === pos.turn) cls += ' clickable-piece';
+        sq.className = cls;
+        var coordHtml = '';
+        if(c === colOrder[0]) coordHtml += '<span class="chess-coord rank">' + (r + 1) + '</span>';
+        if(r === lastRow) coordHtml += '<span class="chess-coord file">' + 'abcdefgh'[c] + '</span>';
+        if(piece) sq.innerHTML = coordHtml + '<span class="chess-piece ' + (chessColorOf(piece) === 'w' ? 'white' : 'black') + '">' + chessPieceSvg(chessTypeOf(piece)) + '</span>';
+        else sq.innerHTML = coordHtml;
         sq.addEventListener('click', (function(rr, cc){ return function(){ chessSquareClick(rr, cc); }; })(r, c));
         boardEl.appendChild(sq);
       });
@@ -5750,7 +5874,45 @@
     renderChessStatus(pos, myColor);
     renderChessLog();
     renderChessPlayersRow();
+    renderChessChat();
   }
+
+  function renderChessChat(){
+    var panel = document.getElementById('chessChatPanel');
+    if(!panel) return;
+    if(chessMode !== 'online' || !chessOnlineData){ panel.hidden = true; return; }
+    panel.hidden = false;
+    var log = document.getElementById('chessChatLog');
+    var chat = chessOnlineData.chat || [];
+    log.innerHTML = chat.slice(-40).map(function(m){
+      return '<p class="chess-chat-msg' + (m.id === state.playerId ? ' me' : '') + '"><b>' + escapeHtml(m.name || 'Jugador') + ':</b> ' + escapeHtml(m.text) + '</p>';
+    }).join('');
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function chessSendChat(text){
+    text = (text || '').trim().slice(0, 120);
+    if(!text || !chessOnlineRef || !chessOnlineData) return;
+    var chat = (chessOnlineData.chat || []).concat([{ id: state.playerId, name: state.playerName || 'Jugador', text: text, ts: Date.now() }]);
+    if(chat.length > 40) chat = chat.slice(-40);
+    chessOnlineRef.set({ chat: chat }, { merge: true }).catch(function(){});
+  }
+
+  document.getElementById('chessChatSendBtn').addEventListener('click', function(){
+    var input = document.getElementById('chessChatInput');
+    chessSendChat(input.value);
+    input.value = '';
+  });
+  document.getElementById('chessChatInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      chessSendChat(this.value);
+      this.value = '';
+    }
+  });
+  document.querySelectorAll('#chessChatPanel .chess-quick-emoji').forEach(function(btn){
+    btn.addEventListener('click', function(){ chessSendChat(btn.getAttribute('data-emoji')); });
+  });
 
   function renderChessStatus(pos, myColor){
     var el = document.getElementById('chessStatus');
