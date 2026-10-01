@@ -231,6 +231,21 @@
   .game-name{ font-family:'Fraunces', serif; font-weight:600; font-size:1.05rem; }
   .game-meta{ color:var(--text-faint); font-size:.76rem; }
 
+  .hub-section-title{ text-transform:uppercase; letter-spacing:1.2px; font-size:.72rem; font-weight:700; color:var(--text-faint); margin:24px 2px 10px; display:flex; align-items:center; gap:6px; }
+  .league-banner{
+    display:flex; align-items:center; gap:14px; width:100%;
+    background:linear-gradient(120deg, rgba(212,175,55,.16), rgba(179,18,42,.16));
+    border:1px solid var(--accent-dim); border-radius:var(--radius-lg); padding:16px 18px;
+    cursor:pointer; box-shadow:var(--shadow-sm); color:var(--text); text-align:left;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .league-banner:active{ transform:scale(.98); }
+  .league-banner:hover{ border-color:var(--accent-bright); }
+  .league-banner-text{ flex:1; min-width:0; }
+  .league-banner-title{ font-family:'Fraunces', serif; font-weight:600; font-size:1.05rem; }
+  .league-banner-sub{ color:var(--text-faint); font-size:.8rem; margin-top:2px; }
+  .league-banner .tile-arrow{ position:static; margin-left:4px; flex:none; }
+
   /* ---------- buttons & chips (shared) ---------- */
   .btn{
     border:none;
@@ -1110,6 +1125,16 @@
         <button class="btn btn-gold btn-sm" id="dailyBtn">Reclamar</button>
       </div>
 
+      <button class="league-banner ornate" data-goto="league" style="margin-top:16px;">
+        <span class="icon-badge icon-pink">👥</span>
+        <span class="league-banner-text">
+          <span class="league-banner-title">Liga de Amigos</span>
+          <span class="league-banner-sub" id="leagueTileMeta">Únete con un código</span>
+        </span>
+        <span class="tile-arrow">→</span>
+      </button>
+
+      <p class="hub-section-title">🎮 Juegos offline</p>
       <div class="game-grid">
         <button class="game-tile ornate" data-goto="slots">
           <span class="icon-badge">🎰</span>
@@ -1165,12 +1190,10 @@
           </span>
           <span class="tile-arrow">→</span>
         </button>
-        <button class="game-tile ornate" data-goto="league">
-          <span class="icon-badge icon-pink">👥</span>
-          <span class="game-name">Liga de Amigos</span>
-          <span class="game-meta" id="leagueTileMeta">Únete con un código</span>
-          <span class="tile-arrow">→</span>
-        </button>
+      </div>
+
+      <p class="hub-section-title">🌐 Juegos en línea (con tu liga)</p>
+      <div class="game-grid">
         <button class="game-tile wide ornate" data-goto="poker">
           <span style="display:flex; align-items:center; gap:12px;">
             <span class="icon-badge">🃏</span>
