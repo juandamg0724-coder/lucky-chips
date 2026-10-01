@@ -347,6 +347,33 @@
   .trivia-review-text{ color:var(--text-muted); line-height:1.45; }
   .trivia-review-text b{ color:var(--text); }
 
+  /* ---------- domino ---------- */
+  .domino-board{ display:flex; flex-direction:column; gap:14px; background:var(--bg-elevated); border:1px solid var(--line); border-radius:var(--radius-lg); padding:14px; box-shadow:var(--shadow-sm); }
+  .domino-opponents{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .domino-opp-badge{ display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:var(--bg-panel); border:1px solid var(--line-soft); font-size:.78rem; }
+  .domino-opp-badge.turn{ border-color:var(--neon-green-bright); box-shadow:0 0 0 1px var(--neon-green-bright) inset; }
+  .domino-opp-name{ font-weight:700; }
+  .domino-opp-count{ color:var(--text-faint); font-family:'Space Mono', monospace; }
+  .domino-meta-row{ display:flex; justify-content:space-between; font-size:.8rem; color:var(--text-muted); }
+  .domino-chain-wrap{ overflow-x:auto; padding:6px 2px; }
+  .domino-chain{ display:flex; gap:2px; width:max-content; margin:0 auto; }
+  .domino-end-buttons{ display:flex; gap:10px; justify-content:center; }
+  .domino-end-btn{ flex:1; max-width:220px; }
+  .domino-hand-label{ display:flex; justify-content:space-between; align-items:center; }
+  .domino-hand{ display:flex; gap:6px; overflow-x:auto; padding:8px 2px; }
+  .domino-tile{ flex:none; display:flex; background:#f4ecd8; border:2px solid #1a1a1a; border-radius:6px; box-shadow:0 2px 4px rgba(0,0,0,.35); }
+  .domino-half{ width:26px; height:26px; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); padding:3px; gap:1px; box-sizing:border-box; }
+  .domino-half:first-child{ border-right:2px solid #1a1a1a; }
+  .domino-pip{ border-radius:50%; }
+  .domino-pip.filled{ background:#1a1a1a; }
+  .domino-tile.big .domino-half{ width:32px; height:32px; }
+  .domino-tile.hand-tile{ cursor:pointer; transition:transform .12s ease, box-shadow .12s ease; }
+  .domino-tile.hand-tile:not(.disabled):hover{ transform:translateY(-6px); box-shadow:0 8px 14px rgba(0,0,0,.4); }
+  .domino-tile.selected{ box-shadow:0 0 0 3px var(--neon-cyan-bright); }
+  .domino-tile.disabled{ opacity:.35; cursor:default; }
+  .domino-actions-row{ display:flex; gap:10px; }
+  .domino-actions-row button{ flex:1; }
+
   /* ---------- slots ---------- */
   .slot-machine{
     background:var(--bg-panel);
@@ -1099,7 +1126,6 @@
     background:linear-gradient(120deg, var(--neon-cyan-bright), var(--neon-purple));
     color:var(--accent-ink); border-color:transparent; box-shadow:0 0 14px -3px var(--neon-purple);
   }
-
 </style>
 </head>
 <body>
@@ -1255,6 +1281,16 @@
             <span>
               <span class="game-name" style="display:block;">Ajedrez con Apuestas</span>
               <span class="game-meta">Contra la CPU o tu liga</span>
+            </span>
+          </span>
+          <span class="tile-arrow">→</span>
+        </button>
+        <button class="game-tile wide ornate" data-goto="domino">
+          <span style="display:flex; align-items:center; gap:12px;">
+            <span class="icon-badge icon-cyan">🎲</span>
+            <span>
+              <span class="game-name" style="display:block;">Dominó con Apuestas</span>
+              <span class="game-meta">Contra la CPU o tu liga · 2 a 4 jugadores</span>
             </span>
           </span>
           <span class="tile-arrow">→</span>
@@ -2049,6 +2085,135 @@
       </div>
     </section>
 
+    <!-- DOMINO (vs CPU or league) -->
+    <section class="view" data-view="domino" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Dominó</h2>
+        <button class="btn-info" data-toggle="dominoRulesPanel">i</button>
+      </div>
+
+      <p class="league-msg" id="dominoMsgBar"></p>
+
+      <div class="paytable" id="dominoRulesPanel" hidden>
+        <p class="paytable-title">Cómo se juega</p>
+        <p class="rules-text">Dominó clásico de bloqueo, de 2 a 4 jugadores, con 28 fichas (dobles del 0 al 6). Cada quien recibe 7 fichas. En tu turno, juega una ficha que tenga un número igual al de alguno de los dos extremos de la fila.</p>
+        <ul class="rules-list">
+          <li>Si no tienes ninguna ficha jugable, <b>roba</b> del montón hasta que puedas jugar o se acabe.</li>
+          <li>Si el montón está vacío y no puedes jugar, <b>pasas</b> el turno.</li>
+          <li>Ganas al quedarte sin fichas (<b>¡Dominó!</b>) o, si la partida se traba (nadie puede jugar), gana quien tenga menos puntos sumando los números de sus fichas restantes.</li>
+        </ul>
+        <p class="rules-text">Todos apuestan la misma cantidad al empezar. El ganador se lleva el bote completo; si hay empate en el bloqueo, el bote se reparte entre los empatados.</p>
+      </div>
+
+      <div class="league-card ornate" id="dominoCpuPanel" style="margin-bottom:12px;">
+        <p class="league-card-title">🤖 Jugar contra la CPU</p>
+        <p class="league-card-sub">Practica en cualquier momento, sin conexión ni liga, contra jugadores robot.</p>
+        <p class="bet-label" style="margin-top:10px;">Apuesta</p>
+        <div class="chip-select" id="dominoCpuBuyInChips">
+          <button class="chip-btn" data-amount="100">100</button>
+          <button class="chip-btn active" data-amount="250">250</button>
+          <button class="chip-btn" data-amount="500">500</button>
+        </div>
+        <p class="bet-label" style="margin-top:10px;">Rivales CPU</p>
+        <div class="chip-select" id="dominoCpuCountChips">
+          <button class="chip-btn" data-amount="1">1</button>
+          <button class="chip-btn active" data-amount="2">2</button>
+          <button class="chip-btn" data-amount="3">3</button>
+        </div>
+        <button class="btn btn-gold btn-block" id="createCpuDominoTableBtn" style="margin-top:10px;">Jugar contra la CPU</button>
+      </div>
+
+      <div id="dominoOnlineSection">
+        <p class="paytable-title">Jugar en línea con tu liga</p>
+
+        <div class="league-card ornate" id="dominoOfflinePanel" hidden>
+          <p class="league-card-title">No se pudo conectar</p>
+          <p class="league-card-sub">No logramos conectar con el servidor. Revisa tu conexión e intenta de nuevo.</p>
+          <button class="btn btn-primary btn-block" id="dominoOfflineRetryBtn">Reintentar</button>
+        </div>
+
+        <div id="dominoNoLeague" hidden>
+          <p class="poker-empty-hint">Únete a una liga de amigos primero: el dominó en línea se juega entre los miembros de tu liga.</p>
+          <button class="btn btn-primary btn-block" data-goto="league">Ir a Liga de Amigos</button>
+        </div>
+
+        <div id="dominoLobby" hidden>
+          <div class="league-card ornate" style="margin-bottom:12px;">
+            <p class="league-card-title">Crear una mesa</p>
+            <p class="league-card-sub">Elige la apuesta y cuántos jugadores en total.</p>
+            <div class="chip-select" id="dominoBuyInChips">
+              <button class="chip-btn" data-amount="100">100</button>
+              <button class="chip-btn active" data-amount="250">250</button>
+              <button class="chip-btn" data-amount="500">500</button>
+            </div>
+            <p class="bet-label" style="margin-top:8px;">Jugadores</p>
+            <div class="chip-select" id="dominoMaxSeatsChips">
+              <button class="chip-btn" data-amount="2">2</button>
+              <button class="chip-btn active" data-amount="3">3</button>
+              <button class="chip-btn" data-amount="4">4</button>
+            </div>
+            <button class="btn btn-primary btn-block" id="createDominoTableBtn" style="margin-top:10px;">Crear mesa</button>
+          </div>
+
+          <p class="paytable-title">Mesas de tu liga</p>
+          <div class="poker-lobby-list" id="dominoLobbyList"></div>
+        </div>
+      </div>
+
+      <div id="dominoTableView" hidden>
+        <div class="league-card ornate" id="dominoWaitingPanel" hidden style="margin-bottom:12px;">
+          <p class="league-card-title">Esperando jugadores</p>
+          <div class="poker-lobby-list" id="dominoWaitingSeats" style="margin-top:8px;"></div>
+          <button class="btn btn-gold btn-block" id="dominoStartBtn" style="margin-top:10px;" hidden>Iniciar partida</button>
+        </div>
+
+        <div class="league-card ornate" id="dominoResultCard" hidden style="margin-bottom:12px; text-align:center;">
+          <p class="paytable-title" id="dominoResultTitle">Resultado</p>
+          <p class="message-bar" id="dominoResultText"></p>
+        </div>
+
+        <div class="domino-board" id="dominoBoardEl">
+          <div class="domino-opponents" id="dominoOpponents"></div>
+          <div class="domino-meta-row">
+            <span id="dominoPotLabel">Bote: 0</span>
+            <span id="dominoBoneyardLabel">Montón: 0</span>
+          </div>
+          <div class="domino-chain-wrap"><div class="domino-chain" id="dominoChain"></div></div>
+          <div class="domino-end-buttons" id="dominoEndButtons" hidden></div>
+          <div class="domino-hand-label">
+            <span class="bet-label">Tus fichas</span>
+            <span id="dominoTurnLabel" class="bet-label"></span>
+          </div>
+          <div class="domino-hand" id="dominoHand"></div>
+          <div class="domino-actions-row">
+            <button class="btn btn-ruby" id="dominoDrawBtn" disabled>Robar</button>
+            <button class="btn btn-ghost" id="dominoPassBtn" disabled>Pasar</button>
+          </div>
+        </div>
+
+        <p class="paytable-title" id="dominoLogTitle" style="margin-top:14px;">Historial de la mesa</p>
+        <div class="poker-log" id="dominoLog"></div>
+
+        <div class="chess-chat" id="dominoChatPanel" hidden>
+          <p class="bet-label">Chat de la mesa</p>
+          <div class="chess-chat-log" id="dominoChatLog"></div>
+          <div class="chess-quick-emojis">
+            <button type="button" class="chess-quick-emoji" data-emoji="👍">👍</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="🤝">🤝</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😂">😂</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😮">😮</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="🎲">🎲</button>
+          </div>
+          <div class="chess-chat-row">
+            <input class="text-input" id="dominoChatInput" type="text" maxlength="120" placeholder="Escribe algo…">
+            <button class="btn btn-gold btn-sm" id="dominoChatSendBtn">Enviar</button>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost btn-block" id="leaveDominoTableBtn" style="margin-top:12px;">Salir de la mesa</button>
+      </div>
+    </section>
 
   </main>
 
@@ -2151,7 +2316,7 @@
   function defaultState(){
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1, ownedBorders:['none'], activeBorder:'none', sobreHistory:[],
-      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, chessElo:1200 };
+      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, chessElo:1200 };
   }
   var state = loadState();
 
@@ -2210,6 +2375,7 @@
     teardownLeagueListener();
     teardownPokerListeners();
     teardownChessListeners();
+    teardownDominoListeners();
     if(name !== 'racing') teardownRacing();
     if(name !== 'trivia') teardownTrivia();
 
@@ -2222,6 +2388,7 @@
     if(name === 'chess'){ renderChessEntry(); }
     if(name === 'racing'){ renderRacingEntry(); }
     if(name === 'trivia'){ renderTriviaEntry(); }
+    if(name === 'domino'){ renderDominoEntry(); }
   }
 
   function selectStoreTab(tab){
@@ -6597,6 +6764,738 @@
   }
 
   document.getElementById('triviaPlayAgainBtn').addEventListener('click', renderTriviaEntry);
+
+  /* ================= DOMINO ================= */
+  var DOMINO_CPU_NAMES = ['CPU Tono', 'CPU Mara', 'CPU Lucho'];
+  var DOMINO_PIPS = { 0: [], 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+
+  function dominoAllTiles(){
+    var t = [];
+    for(var a = 0; a <= 6; a++){ for(var b = a; b <= 6; b++){ t.push({ a: a, b: b }); } }
+    return t;
+  }
+  function dominoShuffleArr(arr){
+    var a = arr.slice();
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+  function dominoDeal(numPlayers){
+    var tiles = dominoShuffleArr(dominoAllTiles());
+    var hands = [];
+    for(var i = 0; i < numPlayers; i++){ hands.push(tiles.splice(0, 7)); }
+    return { hands: hands, boneyard: tiles };
+  }
+  function dominoTileSum(tile){ return tile.a + tile.b; }
+  function dominoHandSum(hand){ return hand.reduce(function(s, t){ return s + dominoTileSum(t); }, 0); }
+  function dominoMakeSeat(playerId, name){ return { playerId: playerId, name: name, hand: [], passed: false }; }
+  function dominoFindStartingSeat(seats){
+    var best = 0, bestVal = -1;
+    seats.forEach(function(s, idx){
+      if(!s) return;
+      s.hand.forEach(function(tile){
+        if(tile.a === tile.b && tile.a > bestVal){ bestVal = tile.a; best = idx; }
+      });
+    });
+    return best;
+  }
+
+  function dominoOpenEnds(t){
+    if(!t.chain || !t.chain.length) return { left: null, right: null };
+    return { left: t.chain[0].a, right: t.chain[t.chain.length - 1].b };
+  }
+  function dominoValidEndsForTile(tile, openLeft, openRight, chainEmpty){
+    if(chainEmpty) return ['left'];
+    var ends = [];
+    if(tile.a === openLeft || tile.b === openLeft) ends.push('left');
+    if(tile.a === openRight || tile.b === openRight) ends.push('right');
+    return ends;
+  }
+  function dominoHandValidMoves(hand, openLeft, openRight, chainEmpty){
+    var moves = [];
+    hand.forEach(function(tile, idx){
+      dominoValidEndsForTile(tile, openLeft, openRight, chainEmpty).forEach(function(end){
+        moves.push({ tileIdx: idx, end: end });
+      });
+    });
+    return moves;
+  }
+  function dominoPlaceTile(t, tile, end){
+    var ends = dominoOpenEnds(t);
+    if(!t.chain.length){ t.chain.push({ a: tile.a, b: tile.b }); return; }
+    if(end === 'left'){
+      var matchL = ends.left, otherL = tile.a === matchL ? tile.b : tile.a;
+      t.chain.unshift({ a: otherL, b: matchL });
+    } else {
+      var matchR = ends.right, otherR = tile.a === matchR ? tile.b : tile.a;
+      t.chain.push({ a: matchR, b: otherR });
+    }
+  }
+  function dominoNextSeat(t, from){
+    var n = t.seats.length;
+    for(var i = 1; i <= n; i++){
+      var idx = (from + i) % n;
+      if(t.seats[idx]) return idx;
+    }
+    return from;
+  }
+  function dominoActiveSeatCount(t){ return t.seats.filter(Boolean).length; }
+
+  function dominoCheckWinByEmptyHand(t, seatIdx){
+    var seat = t.seats[seatIdx];
+    if(seat.hand.length === 0){
+      t.status = 'finished';
+      t.result = { reason: 'domino', seatIdx: seatIdx, playerId: seat.playerId, name: seat.name, amount: t.pot };
+      t.log.push(seat.name + ' se quedó sin fichas — ¡Dominó! Gana el bote.');
+      return true;
+    }
+    return false;
+  }
+  function dominoResolveBlocked(t){
+    var bestSum = Infinity, bestIdxs = [];
+    t.seats.forEach(function(s, idx){
+      if(!s) return;
+      var sum = dominoHandSum(s.hand);
+      if(sum < bestSum){ bestSum = sum; bestIdxs = [idx]; }
+      else if(sum === bestSum){ bestIdxs.push(idx); }
+    });
+    t.status = 'finished';
+    if(bestIdxs.length === 1){
+      var idx = bestIdxs[0], winner = t.seats[idx];
+      t.result = { reason: 'blocked', seatIdx: idx, playerId: winner.playerId, name: winner.name, amount: t.pot };
+      t.log.push('Partida trabada. Gana ' + winner.name + ' con ' + bestSum + ' puntos en mano.');
+    } else {
+      var share = Math.floor(t.pot / bestIdxs.length);
+      var names = bestIdxs.map(function(i){ return t.seats[i].name; });
+      t.result = { reason: 'tie', seatIdxs: bestIdxs, amount: share };
+      t.log.push('Partida trabada y empate a ' + bestSum + ' puntos entre ' + names.join(', ') + '. Se reparte el bote.');
+    }
+  }
+
+  function dominoApplyPlay(t, seatIdx, tileIdx, end){
+    var seat = t.seats[seatIdx];
+    var tile = seat.hand[tileIdx];
+    dominoPlaceTile(t, tile, end);
+    seat.hand.splice(tileIdx, 1);
+    t.passStreak = 0;
+    t.log.push(seat.name + ' jugó [' + tile.a + '|' + tile.b + ']');
+    if(!dominoCheckWinByEmptyHand(t, seatIdx)) t.turnSeat = dominoNextSeat(t, seatIdx);
+    t.updatedAt = Date.now();
+    return t;
+  }
+  function dominoApplyDraw(t, seatIdx){
+    var seat = t.seats[seatIdx];
+    var tile = t.boneyard.pop();
+    if(tile) seat.hand.push(tile);
+    t.updatedAt = Date.now();
+    return t;
+  }
+  function dominoApplyPass(t, seatIdx){
+    var seat = t.seats[seatIdx];
+    t.log.push(seat.name + ' pasó turno');
+    t.passStreak = (t.passStreak || 0) + 1;
+    if(t.passStreak >= dominoActiveSeatCount(t)) dominoResolveBlocked(t);
+    else t.turnSeat = dominoNextSeat(t, seatIdx);
+    t.updatedAt = Date.now();
+    return t;
+  }
+
+  function dominoCpuPlayTurn(t){
+    var seatIdx = t.turnSeat;
+    var seat = t.seats[seatIdx];
+    var ends = dominoOpenEnds(t);
+    var moves = dominoHandValidMoves(seat.hand, ends.left, ends.right, t.chain.length === 0);
+    while(!moves.length && t.boneyard.length){
+      dominoApplyDraw(t, seatIdx);
+      ends = dominoOpenEnds(t);
+      moves = dominoHandValidMoves(seat.hand, ends.left, ends.right, t.chain.length === 0);
+    }
+    if(!moves.length){ dominoApplyPass(t, seatIdx); return t; }
+    moves.sort(function(a, b){ return dominoTileSum(seat.hand[b.tileIdx]) - dominoTileSum(seat.hand[a.tileIdx]); });
+    var mv = moves[0];
+    dominoApplyPlay(t, seatIdx, mv.tileIdx, mv.end);
+    return t;
+  }
+
+  function dominoMsg(text){
+    var el = document.getElementById('dominoMsgBar');
+    if(el) el.textContent = text || '';
+  }
+
+  /* ---- modo CPU (local, sin conexión) ---- */
+  var dominoMode = null; // null | 'cpu'
+  var localDominoTable = null;
+  var dominoCpuTimer = null;
+  var dominoSelectedTileIdx = null;
+
+  function isDominoCpuSeat(s){ return !!s && typeof s.playerId === 'string' && s.playerId.indexOf('cpu') === 0; }
+
+  function createCpuDominoTable(buyIn, numCpus){
+    if(state.balance < buyIn){ dominoMsg('Fichas insuficientes'); return; }
+    ensurePlayerId();
+    var myName = state.playerName || 'Tú';
+    var total = Math.min(4, Math.max(2, numCpus + 1));
+    var deal = dominoDeal(total);
+    var seats = new Array(4).fill(null);
+    seats[0] = dominoMakeSeat(state.playerId, myName); seats[0].hand = deal.hands[0];
+    for(var i = 1; i < total; i++){
+      seats[i] = dominoMakeSeat('cpu' + i, DOMINO_CPU_NAMES[i - 1] || ('CPU ' + i));
+      seats[i].hand = deal.hands[i];
+    }
+    addBalance(-buyIn);
+    localDominoTable = {
+      isLocal: true, buyIn: buyIn, maxSeats: total, seats: seats, boneyard: deal.boneyard,
+      chain: [], turnSeat: dominoFindStartingSeat(seats), status: 'playing', passStreak: 0, pot: buyIn * total,
+      result: null, log: ['Mesa contra la CPU creada'], chat: [], updatedAt: Date.now()
+    };
+    dominoMode = 'cpu';
+    renderDominoEntry();
+    dominoMaybeScheduleCpu();
+  }
+
+  function dominoMaybeScheduleCpu(){
+    if(dominoCpuTimer){ clearTimeout(dominoCpuTimer); dominoCpuTimer = null; }
+    var t = localDominoTable;
+    if(!t || t.status !== 'playing') return;
+    var seat = t.seats[t.turnSeat];
+    if(!isDominoCpuSeat(seat)) return;
+    dominoCpuTimer = setTimeout(function(){
+      dominoCpuPlayTurn(localDominoTable);
+      renderDominoTable(localDominoTable);
+      if(localDominoTable.status === 'finished'){ dominoFinishLocal(); return; }
+      dominoMaybeScheduleCpu();
+    }, 700 + Math.random() * 600);
+  }
+
+  function dominoFinishLocal(){
+    var t = localDominoTable;
+    var mySeat = tableSeatIndex(t, state.playerId);
+    var payout = dominoMyPayout(t, mySeat);
+    if(payout > 0) addBalance(payout);
+    renderDominoTable(t);
+    dominoShowResultBanner(t, payout);
+  }
+
+  function dominoMyPayout(t, mySeat){
+    var res = t.result;
+    if(!res) return 0;
+    if(res.reason === 'tie') return res.seatIdxs.indexOf(mySeat) !== -1 ? res.amount : 0;
+    return res.seatIdx === mySeat ? res.amount : 0;
+  }
+
+  function dominoShowResultBanner(t, payout){
+    var card = document.getElementById('dominoResultCard');
+    var title = document.getElementById('dominoResultTitle');
+    var text = document.getElementById('dominoResultText');
+    var res = t.result;
+    if(!res){ card.hidden = true; return; }
+    card.hidden = false;
+    title.textContent = res.reason === 'domino' ? '¡Dominó!' : (res.reason === 'tie' ? 'Partida trabada — empate' : 'Partida trabada');
+    if(payout > 0){
+      text.textContent = 'Ganaste ' + payout.toLocaleString('es-CO') + ' fichas';
+      text.className = 'message-bar win';
+    } else {
+      text.textContent = 'Perdiste tu apuesta';
+      text.className = 'message-bar lose';
+    }
+  }
+
+  function leaveDominoTable(){
+    if(dominoMode === 'cpu'){
+      clearTimeout(dominoCpuTimer);
+      localDominoTable = null;
+      dominoMode = null;
+      renderDominoEntry();
+      return;
+    }
+    teardownDominoListeners();
+    state.currentDominoTable = null; saveState();
+    renderDominoEntry();
+  }
+
+  /* ---- modo en línea (liga) ---- */
+  var currentDominoTableRef = null;
+  var currentDominoTableData = null;
+  var dominoTableUnsub = null;
+  var dominoLobbyUnsub = null;
+  var dominoPayoutHandled = {};
+
+  function teardownDominoListeners(){
+    if(dominoTableUnsub){ dominoTableUnsub(); dominoTableUnsub = null; }
+    if(dominoLobbyUnsub){ dominoLobbyUnsub(); dominoLobbyUnsub = null; }
+    currentDominoTableRef = null; currentDominoTableData = null;
+  }
+
+  function subscribeDominoLobby(){
+    if(dominoLobbyUnsub){ dominoLobbyUnsub(); dominoLobbyUnsub = null; }
+    if(!db || !state.leagueCode) return;
+    dominoLobbyUnsub = db.collection('leagues/' + state.leagueCode + '/dominoTables')
+      .where('status', '!=', 'finished').limit(20)
+      .onSnapshot(function(snap){ renderDominoLobbyList(snap); }, function(){ dominoMsg('No se pudieron cargar las mesas'); });
+  }
+
+  function renderDominoLobbyList(snap){
+    var el = document.getElementById('dominoLobbyList');
+    if(!el) return;
+    if(!snap || snap.empty){ el.innerHTML = '<p class="league-empty">Aún no hay mesas abiertas. ¡Crea la primera!</p>'; return; }
+    el.innerHTML = '';
+    snap.docs.forEach(function(doc){
+      var t = doc.data();
+      var seated = t.seats.filter(Boolean).length;
+      var iAmIn = tableSeatIndex(t, state.playerId) !== -1;
+      var full = seated >= t.maxSeats;
+      var row = document.createElement('div');
+      row.className = 'poker-table-row';
+      row.innerHTML =
+        '<div class="poker-table-info">' +
+          '<span class="poker-table-stakes">Apuesta ' + t.buyIn.toLocaleString('es-CO') + ' · ' + t.maxSeats + ' jugadores</span>' +
+          '<span class="poker-table-meta">' + seated + '/' + t.maxSeats + ' sentados · ' + (t.status === 'playing' ? 'En juego' : 'Esperando') + '</span>' +
+        '</div>';
+      var btn = document.createElement('button');
+      btn.className = 'btn btn-sm ' + (iAmIn ? 'btn-gold' : 'btn-ghost');
+      btn.textContent = iAmIn ? 'Volver a la mesa' : (full ? 'Llena' : (t.status !== 'waiting' ? 'En juego' : 'Sentarme'));
+      btn.disabled = !iAmIn && (full || t.status !== 'waiting');
+      btn.addEventListener('click', function(){
+        if(iAmIn){ state.currentDominoTable = { code: state.leagueCode, id: doc.id }; saveState(); renderDominoEntry(); }
+        else { joinDominoTable(doc.id, t.buyIn); }
+      });
+      row.appendChild(btn);
+      el.appendChild(row);
+    });
+  }
+
+  function createDominoTable(buyIn, maxSeats){
+    if(!db || !state.leagueCode){ dominoMsg('La liga no está disponible ahora'); return; }
+    if(!state.playerName){ dominoMsg('Primero elige tu nombre en la liga'); return; }
+    if(state.balance < buyIn){ dominoMsg('Fichas insuficientes para esa apuesta'); return; }
+    ensurePlayerId();
+    var seats = new Array(4).fill(null);
+    seats[0] = dominoMakeSeat(state.playerId, state.playerName);
+    var tableRef = db.collection('leagues/' + state.leagueCode + '/dominoTables').doc();
+    addBalance(-buyIn);
+    tableRef.set({
+      createdAt: Date.now(), createdBy: state.playerId, hostId: state.playerId,
+      buyIn: buyIn, maxSeats: maxSeats, status: 'waiting', seats: seats,
+      boneyard: [], chain: [], turnSeat: -1, passStreak: 0, pot: buyIn,
+      result: null, log: ['Mesa creada por ' + state.playerName], chat: [], updatedAt: Date.now()
+    }).then(function(){
+      state.currentDominoTable = { code: state.leagueCode, id: tableRef.id };
+      saveState();
+      renderDominoEntry();
+    }).catch(function(){ addBalance(buyIn); dominoMsg('No se pudo crear la mesa'); });
+  }
+
+  function joinDominoTable(tableId, buyIn){
+    if(!db || !state.leagueCode) return;
+    if(state.balance < buyIn){ dominoMsg('Fichas insuficientes para esa apuesta'); return; }
+    ensurePlayerId();
+    var ref = db.doc('leagues/' + state.leagueCode + '/dominoTables/' + tableId);
+    addBalance(-buyIn);
+    ref.get().then(function(snap){
+      if(!snap.exists){ addBalance(buyIn); dominoMsg('La mesa ya no existe'); return; }
+      var t = snap.data();
+      var idx = tableSeatIndex(t, state.playerId);
+      if(idx !== -1){
+        addBalance(buyIn);
+        state.currentDominoTable = { code: state.leagueCode, id: tableId }; saveState(); renderDominoEntry();
+        return;
+      }
+      if(t.status !== 'waiting'){ addBalance(buyIn); dominoMsg('Esa mesa ya empezó'); return; }
+      var seats = t.seats.slice();
+      var freeIdx = -1;
+      for(var i = 0; i < t.maxSeats; i++){ if(!seats[i]){ freeIdx = i; break; } }
+      if(freeIdx === -1){ addBalance(buyIn); dominoMsg('La mesa está llena'); return; }
+      seats[freeIdx] = dominoMakeSeat(state.playerId, state.playerName);
+      ref.set({
+        seats: seats, pot: (t.pot || 0) + buyIn,
+        log: (t.log || []).concat([state.playerName + ' se sentó en la mesa'])
+      }, { merge: true }).then(function(){
+        state.currentDominoTable = { code: state.leagueCode, id: tableId };
+        saveState();
+        renderDominoEntry();
+      }).catch(function(){ addBalance(buyIn); dominoMsg('No se pudo unir a la mesa'); });
+    }).catch(function(){ addBalance(buyIn); dominoMsg('No se pudo unir a la mesa'); });
+  }
+
+  function startDominoGame(){
+    var t = currentDominoTableData, ref = currentDominoTableRef;
+    if(!t || !ref || t.hostId !== state.playerId) return;
+    var total = t.seats.filter(Boolean).length;
+    if(total < 2){ dominoMsg('Necesitas al menos 2 jugadores'); return; }
+    var deal = dominoDeal(total);
+    var seats = t.seats.slice();
+    var di = 0;
+    for(var i = 0; i < seats.length; i++){
+      if(seats[i]){ seats[i] = { playerId: seats[i].playerId, name: seats[i].name, hand: deal.hands[di], passed: false }; di++; }
+    }
+    ref.set({
+      seats: seats, boneyard: deal.boneyard, chain: [], status: 'playing',
+      turnSeat: dominoFindStartingSeat(seats), passStreak: 0, result: null,
+      log: (t.log || []).concat(['¡Empezó la partida!']), updatedAt: Date.now()
+    }, { merge: true }).catch(function(){ dominoMsg('No se pudo iniciar la partida'); });
+  }
+
+  function openDominoTable(tableId){
+    teardownDominoListeners();
+    if(!db){ dominoMsg('El dominó en línea no está disponible ahora'); return; }
+    var ref = db.doc('leagues/' + state.leagueCode + '/dominoTables/' + tableId);
+    currentDominoTableRef = ref;
+    dominoTableUnsub = ref.onSnapshot(function(snap){
+      if(!snap.exists){
+        dominoMsg('La mesa terminó');
+        state.currentDominoTable = null; saveState();
+        teardownDominoListeners();
+        renderDominoLobby();
+        return;
+      }
+      currentDominoTableData = snap.data();
+      renderDominoTable(currentDominoTableData);
+      maybeHandleDominoPayout(tableId);
+    }, function(){ dominoMsg('Conexión perdida con la mesa'); });
+  }
+
+  function renderDominoLobby(){
+    document.getElementById('dominoTableView').hidden = true;
+    document.getElementById('dominoLobby').hidden = false;
+    subscribeDominoLobby();
+  }
+
+  function dominoCloneTable(t){
+    return {
+      seats: t.seats.map(function(s){ return s ? { playerId: s.playerId, name: s.name, hand: s.hand.map(function(tile){ return { a: tile.a, b: tile.b }; }), passed: !!s.passed } : null; }),
+      boneyard: (t.boneyard || []).map(function(tile){ return { a: tile.a, b: tile.b }; }),
+      chain: (t.chain || []).map(function(c){ return { a: c.a, b: c.b }; }),
+      turnSeat: t.turnSeat, passStreak: t.passStreak || 0, status: t.status,
+      result: t.result || null, log: (t.log || []).slice(), pot: t.pot || 0
+    };
+  }
+  function dominoPatchFrom(next){
+    return {
+      seats: next.seats, boneyard: next.boneyard, chain: next.chain, turnSeat: next.turnSeat,
+      passStreak: next.passStreak, status: next.status, result: next.result, log: next.log,
+      pot: next.pot, updatedAt: Date.now()
+    };
+  }
+  function dominoMySeatIdx(t){ return tableSeatIndex(t, state.playerId); }
+
+  function postDominoPlay(tileIdx, end){
+    var t = currentDominoTableData, ref = currentDominoTableRef;
+    if(!t || !ref) return;
+    var mySeat = dominoMySeatIdx(t);
+    if(mySeat === -1 || t.turnSeat !== mySeat || t.status !== 'playing') return;
+    var next = dominoCloneTable(t);
+    dominoApplyPlay(next, mySeat, tileIdx, end);
+    ref.set(dominoPatchFrom(next), { merge: true }).catch(function(){ dominoMsg('No se pudo jugar la ficha'); });
+  }
+  function postDominoDraw(){
+    var t = currentDominoTableData, ref = currentDominoTableRef;
+    if(!t || !ref) return;
+    var mySeat = dominoMySeatIdx(t);
+    if(mySeat === -1 || t.turnSeat !== mySeat || t.status !== 'playing' || !t.boneyard.length) return;
+    var next = dominoCloneTable(t);
+    dominoApplyDraw(next, mySeat);
+    ref.set(dominoPatchFrom(next), { merge: true }).catch(function(){ dominoMsg('No se pudo robar ficha'); });
+  }
+  function postDominoPass(){
+    var t = currentDominoTableData, ref = currentDominoTableRef;
+    if(!t || !ref) return;
+    var mySeat = dominoMySeatIdx(t);
+    if(mySeat === -1 || t.turnSeat !== mySeat || t.status !== 'playing') return;
+    var next = dominoCloneTable(t);
+    dominoApplyPass(next, mySeat);
+    ref.set(dominoPatchFrom(next), { merge: true }).catch(function(){ dominoMsg('No se pudo pasar turno'); });
+  }
+
+  function maybeHandleDominoPayout(tableId){
+    var t = currentDominoTableData;
+    if(!t || t.status !== 'finished' || !t.result) return;
+    if(dominoPayoutHandled[tableId]) return;
+    if(t.result.claimed && t.result.claimed[state.playerId]) return;
+    dominoPayoutHandled[tableId] = true;
+    if(currentDominoTableRef){
+      var patch = {}; patch['result.claimed.' + state.playerId] = true;
+      currentDominoTableRef.update(patch).catch(function(){});
+    }
+    var mySeat = dominoMySeatIdx(t);
+    var payout = dominoMyPayout(t, mySeat);
+    if(payout > 0) addBalance(payout);
+    dominoShowResultBanner(t, payout);
+  }
+
+  /* ---- render compartido (cpu + online) ---- */
+  function dominoHalfEl(val){
+    var half = document.createElement('div');
+    half.className = 'domino-half';
+    var active = DOMINO_PIPS[val] || [];
+    for(var i = 0; i < 9; i++){
+      var pip = document.createElement('span');
+      pip.className = 'domino-pip' + (active.indexOf(i) !== -1 ? ' filled' : '');
+      half.appendChild(pip);
+    }
+    return half;
+  }
+  function dominoTileEl(a, b, big){
+    var el = document.createElement('div');
+    el.className = 'domino-tile' + (big ? ' big' : '');
+    el.appendChild(dominoHalfEl(a));
+    el.appendChild(dominoHalfEl(b));
+    return el;
+  }
+
+  function renderDominoEntry(){
+    document.getElementById('dominoMsgBar').textContent = '';
+    var cpuPanel = document.getElementById('dominoCpuPanel');
+    var onlineSection = document.getElementById('dominoOnlineSection');
+    var noLeague = document.getElementById('dominoNoLeague');
+    var lobby = document.getElementById('dominoLobby');
+    var tableView = document.getElementById('dominoTableView');
+    var offlinePanel = document.getElementById('dominoOfflinePanel');
+
+    if(dominoMode === 'cpu' && localDominoTable){
+      cpuPanel.hidden = true; onlineSection.hidden = true;
+      lobby.hidden = true; tableView.hidden = false;
+      renderDominoTable(localDominoTable);
+      return;
+    }
+    cpuPanel.hidden = false;
+    onlineSection.hidden = false;
+
+    if(!db){
+      noLeague.hidden = true; lobby.hidden = true; tableView.hidden = true;
+      if(dbReady){ offlinePanel.hidden = false; } else { offlinePanel.hidden = true; }
+      return;
+    }
+    offlinePanel.hidden = true;
+    if(!state.leagueCode || !state.playerName){
+      noLeague.hidden = false; lobby.hidden = true; tableView.hidden = true;
+      teardownDominoListeners();
+      return;
+    }
+    noLeague.hidden = true;
+    if(state.currentDominoTable && state.currentDominoTable.code === state.leagueCode){
+      lobby.hidden = true; tableView.hidden = false;
+      openDominoTable(state.currentDominoTable.id);
+    } else {
+      teardownDominoListeners();
+      tableView.hidden = true; lobby.hidden = false;
+      subscribeDominoLobby();
+    }
+  }
+
+  function renderDominoTable(t){
+    document.getElementById('dominoLobby').hidden = true;
+    document.getElementById('dominoTableView').hidden = false;
+
+    var waitingPanel = document.getElementById('dominoWaitingPanel');
+    var boardEl = document.getElementById('dominoBoardEl');
+    if(t.status === 'waiting'){
+      waitingPanel.hidden = false;
+      boardEl.style.display = 'none';
+      document.getElementById('dominoLogTitle').style.display = 'none';
+      document.getElementById('dominoLog').style.display = 'none';
+      renderDominoWaitingRoom(t);
+      renderDominoChat(t);
+      return;
+    }
+    waitingPanel.hidden = true;
+    boardEl.style.display = '';
+    document.getElementById('dominoLogTitle').style.display = '';
+    document.getElementById('dominoLog').style.display = '';
+
+    var mySeat = dominoMySeatIdx(t);
+    var ends = dominoOpenEnds(t);
+
+    var oppEl = document.getElementById('dominoOpponents');
+    oppEl.innerHTML = '';
+    t.seats.forEach(function(s, idx){
+      if(!s || idx === mySeat) return;
+      var badge = document.createElement('span');
+      badge.className = 'domino-opp-badge' + (idx === t.turnSeat ? ' turn' : '');
+      badge.innerHTML = '<span class="domino-opp-name">' + escapeHtml(s.name) + '</span><span class="domino-opp-count">' + s.hand.length + ' 🎲</span>';
+      oppEl.appendChild(badge);
+    });
+
+    document.getElementById('dominoPotLabel').textContent = 'Bote: ' + (t.pot || 0).toLocaleString('es-CO');
+    document.getElementById('dominoBoneyardLabel').textContent = 'Montón: ' + (t.boneyard ? t.boneyard.length : 0);
+
+    var chainEl = document.getElementById('dominoChain');
+    chainEl.innerHTML = '';
+    (t.chain || []).forEach(function(tile){ chainEl.appendChild(dominoTileEl(tile.a, tile.b, false)); });
+
+    var logEl = document.getElementById('dominoLog');
+    logEl.innerHTML = (t.log || []).slice(-14).reverse().map(function(line){ return '<p>' + escapeHtml(line) + '</p>'; }).join('');
+
+    var card = document.getElementById('dominoResultCard');
+    if(t.status === 'finished' && t.result){
+      dominoShowResultBanner(t, dominoMyPayout(t, mySeat));
+    } else {
+      card.hidden = true;
+    }
+
+    renderDominoHandAndActions(t, mySeat, ends);
+    renderDominoChat(t);
+  }
+
+  function renderDominoWaitingRoom(t){
+    var el = document.getElementById('dominoWaitingSeats');
+    el.innerHTML = '';
+    t.seats.forEach(function(s){
+      if(!s) return;
+      var row = document.createElement('div');
+      row.className = 'poker-table-row';
+      row.innerHTML = '<div class="poker-table-info"><span class="poker-table-stakes">' + escapeHtml(s.name) + (s.playerId === t.hostId ? ' (anfitrión)' : '') + '</span></div>';
+      el.appendChild(row);
+    });
+    var startBtn = document.getElementById('dominoStartBtn');
+    var seated = t.seats.filter(Boolean).length;
+    if(t.hostId === state.playerId && seated >= 2){
+      startBtn.hidden = false;
+      startBtn.onclick = startDominoGame;
+    } else {
+      startBtn.hidden = true;
+    }
+  }
+
+  function renderDominoHandAndActions(t, mySeat, ends){
+    var handEl = document.getElementById('dominoHand');
+    var drawBtn = document.getElementById('dominoDrawBtn');
+    var passBtn = document.getElementById('dominoPassBtn');
+    var endButtonsEl = document.getElementById('dominoEndButtons');
+    var turnLabel = document.getElementById('dominoTurnLabel');
+    endButtonsEl.hidden = true; endButtonsEl.innerHTML = '';
+    handEl.innerHTML = '';
+
+    if(mySeat === -1 || !t.seats[mySeat]){
+      drawBtn.disabled = true; passBtn.disabled = true; turnLabel.textContent = '';
+      return;
+    }
+    var myTurn = t.status === 'playing' && t.turnSeat === mySeat;
+    turnLabel.textContent = t.status !== 'playing' ? '' : (myTurn ? 'Tu turno' : (((t.seats[t.turnSeat] || {}).name || '') + ' está jugando…'));
+
+    var hand = t.seats[mySeat].hand || [];
+    var chainEmpty = !t.chain || !t.chain.length;
+    var moves = myTurn ? dominoHandValidMoves(hand, ends.left, ends.right, chainEmpty) : [];
+    var canPlaySomething = moves.length > 0;
+
+    hand.forEach(function(tile, idx){
+      var tileMoves = moves.filter(function(m){ return m.tileIdx === idx; });
+      var el = dominoTileEl(tile.a, tile.b, true);
+      el.classList.add('hand-tile');
+      if(!myTurn || !tileMoves.length) el.classList.add('disabled');
+      if(dominoSelectedTileIdx === idx) el.classList.add('selected');
+      el.addEventListener('click', function(){
+        if(!myTurn || !tileMoves.length) return;
+        if(tileMoves.length === 1){
+          dominoResolveMove(tileMoves[0].tileIdx, tileMoves[0].end);
+        } else {
+          dominoSelectedTileIdx = idx;
+          renderDominoHandAndActions(t, mySeat, ends);
+          dominoShowEndChooser(ends);
+        }
+      });
+      handEl.appendChild(el);
+    });
+
+    drawBtn.disabled = !(myTurn && !canPlaySomething && t.boneyard && t.boneyard.length);
+    passBtn.disabled = !(myTurn && !canPlaySomething && (!t.boneyard || !t.boneyard.length));
+  }
+
+  function dominoShowEndChooser(ends){
+    var el = document.getElementById('dominoEndButtons');
+    el.innerHTML = '';
+    el.hidden = false;
+    var leftBtn = document.createElement('button');
+    leftBtn.className = 'btn btn-ghost domino-end-btn';
+    leftBtn.textContent = 'Jugar a la izquierda (' + ends.left + ')';
+    leftBtn.addEventListener('click', function(){ dominoResolveMove(dominoSelectedTileIdx, 'left'); });
+    var rightBtn = document.createElement('button');
+    rightBtn.className = 'btn btn-ghost domino-end-btn';
+    rightBtn.textContent = 'Jugar a la derecha (' + ends.right + ')';
+    rightBtn.addEventListener('click', function(){ dominoResolveMove(dominoSelectedTileIdx, 'right'); });
+    el.appendChild(leftBtn); el.appendChild(rightBtn);
+  }
+
+  function dominoResolveMove(tileIdx, end){
+    dominoSelectedTileIdx = null;
+    document.getElementById('dominoEndButtons').hidden = true;
+    if(dominoMode === 'cpu'){
+      var t = localDominoTable;
+      var mySeat = dominoMySeatIdx(t);
+      dominoApplyPlay(t, mySeat, tileIdx, end);
+      renderDominoTable(t);
+      if(t.status === 'finished'){ dominoFinishLocal(); return; }
+      dominoMaybeScheduleCpu();
+      return;
+    }
+    postDominoPlay(tileIdx, end);
+  }
+
+  function renderDominoChat(t){
+    var panel = document.getElementById('dominoChatPanel');
+    if(!panel) return;
+    if(dominoMode === 'cpu' || !currentDominoTableRef){ panel.hidden = true; return; }
+    panel.hidden = false;
+    var log = document.getElementById('dominoChatLog');
+    var chat = (t && t.chat) || [];
+    log.innerHTML = chat.slice(-40).map(function(m){
+      return '<p class="chess-chat-msg' + (m.id === state.playerId ? ' me' : '') + '"><b>' + escapeHtml(m.name || 'Jugador') + ':</b> ' + escapeHtml(m.text) + '</p>';
+    }).join('');
+    log.scrollTop = log.scrollHeight;
+  }
+  function dominoSendChat(text){
+    text = (text || '').trim().slice(0, 120);
+    if(!text || dominoMode === 'cpu' || !currentDominoTableRef || !currentDominoTableData) return;
+    var chat = (currentDominoTableData.chat || []).concat([{ id: state.playerId, name: state.playerName || 'Jugador', text: text, ts: Date.now() }]);
+    if(chat.length > 40) chat = chat.slice(-40);
+    currentDominoTableRef.set({ chat: chat }, { merge: true }).catch(function(){});
+  }
+
+  var dominoCpuBuyIn = wireChipSelect('dominoCpuBuyInChips', 250);
+  var dominoCpuCount = wireChipSelect('dominoCpuCountChips', 2);
+  document.getElementById('createCpuDominoTableBtn').addEventListener('click', function(){
+    createCpuDominoTable(dominoCpuBuyIn.get(), dominoCpuCount.get());
+  });
+
+  var dominoBuyIn = wireChipSelect('dominoBuyInChips', 250);
+  var dominoMaxSeats = wireChipSelect('dominoMaxSeatsChips', 3);
+  document.getElementById('createDominoTableBtn').addEventListener('click', function(){
+    createDominoTable(dominoBuyIn.get(), dominoMaxSeats.get());
+  });
+  document.getElementById('dominoOfflineRetryBtn').addEventListener('click', function(){ initDb(); renderDominoEntry(); });
+  document.getElementById('leaveDominoTableBtn').addEventListener('click', leaveDominoTable);
+  document.getElementById('dominoDrawBtn').addEventListener('click', function(){
+    if(dominoMode === 'cpu'){
+      var t = localDominoTable;
+      dominoApplyDraw(t, dominoMySeatIdx(t));
+      renderDominoTable(t);
+      return;
+    }
+    postDominoDraw();
+  });
+  document.getElementById('dominoPassBtn').addEventListener('click', function(){
+    if(dominoMode === 'cpu'){
+      var t = localDominoTable;
+      dominoApplyPass(t, dominoMySeatIdx(t));
+      renderDominoTable(t);
+      if(t.status === 'finished'){ dominoFinishLocal(); return; }
+      dominoMaybeScheduleCpu();
+      return;
+    }
+    postDominoPass();
+  });
+  document.getElementById('dominoChatSendBtn').addEventListener('click', function(){
+    var input = document.getElementById('dominoChatInput');
+    dominoSendChat(input.value);
+    input.value = '';
+  });
+  document.getElementById('dominoChatInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); dominoSendChat(this.value); this.value = ''; }
+  });
+  document.querySelectorAll('#dominoChatPanel .chess-quick-emoji').forEach(function(btn){
+    btn.addEventListener('click', function(){ dominoSendChat(btn.getAttribute('data-emoji')); });
+  });
 
   /* ================= INIT ================= */
   applyTheme(state.activeTheme);
