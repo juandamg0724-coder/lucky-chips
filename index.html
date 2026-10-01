@@ -312,6 +312,41 @@
   .message-bar.win{ color:var(--neon-green-bright); text-shadow:0 0 12px rgba(31,232,154,.5); }
   .message-bar.lose{ color:var(--ruby-bright); text-shadow:0 0 12px rgba(255,45,107,.45); }
 
+  /* ---------- trivia (preguntados) ---------- */
+  .trivia-category-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .trivia-cat-btn{
+    display:flex; flex-direction:column; align-items:flex-start; gap:4px;
+    padding:14px 16px; border-radius:var(--radius-lg); border:2px dashed var(--accent-dim);
+    background:var(--bg-panel); color:var(--text); cursor:pointer; text-align:left;
+  }
+  .trivia-cat-btn .trivia-cat-icon{ font-size:1.4rem; }
+  .trivia-cat-btn .trivia-cat-name{ font-family:'Fraunces', serif; font-weight:600; font-size:.92rem; }
+  .trivia-cat-btn.active{
+    border-style:solid; border-color:var(--neon-cyan-bright);
+    background:radial-gradient(circle at 30% 20%, rgba(34,211,238,.18), var(--bg-panel) 70%);
+    box-shadow:0 0 16px -4px var(--neon-cyan);
+  }
+  .trivia-progress-row{ display:flex; justify-content:space-between; align-items:center; font-size:.82rem; color:var(--text-muted); margin-bottom:6px; }
+  .trivia-timer-track{ height:6px; border-radius:99px; background:var(--bg-elevated); overflow:hidden; margin-bottom:16px; }
+  .trivia-timer-fill{ height:100%; background:linear-gradient(90deg, var(--neon-cyan-bright), var(--neon-purple)); transition:width 1s linear; }
+  .trivia-timer-fill.urgent{ background:linear-gradient(90deg, var(--ruby-bright), #ff8a5c); }
+  .trivia-question{ font-family:'Fraunces', serif; font-weight:600; font-size:1.15rem; line-height:1.4; margin-bottom:18px; min-height:3.2em; }
+  .trivia-options{ display:flex; flex-direction:column; gap:10px; }
+  .trivia-option-btn{
+    padding:14px 16px; border-radius:var(--radius-lg); border:2px solid var(--line);
+    background:var(--bg-elevated); color:var(--text); font-size:.92rem; font-weight:600; text-align:left; cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .trivia-option-btn:active{ transform:scale(.98); }
+  .trivia-option-btn.correct{ border-color:var(--neon-green-bright); background:rgba(31,232,154,.15); color:var(--neon-green-bright); }
+  .trivia-option-btn.wrong{ border-color:var(--ruby-bright); background:rgba(255,45,107,.12); color:var(--ruby-bright); }
+  .trivia-option-btn.disabled{ pointer-events:none; opacity:.7; }
+  .trivia-result-review{ display:flex; flex-direction:column; gap:8px; margin-top:14px; max-height:280px; overflow-y:auto; }
+  .trivia-review-item{ display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:var(--bg-elevated); font-size:.82rem; }
+  .trivia-review-icon{ flex:none; }
+  .trivia-review-text{ color:var(--text-muted); line-height:1.45; }
+  .trivia-review-text b{ color:var(--text); }
+
   /* ---------- slots ---------- */
   .slot-machine{
     background:var(--bg-panel);
@@ -1190,6 +1225,16 @@
           </span>
           <span class="tile-arrow">→</span>
         </button>
+        <button class="game-tile wide ornate" data-goto="trivia">
+          <span style="display:flex; align-items:center; gap:12px;">
+            <span class="icon-badge icon-purple">🧠</span>
+            <span>
+              <span class="game-name" style="display:block;">Preguntados</span>
+              <span class="game-meta">5 temáticas · 10 preguntas por partida</span>
+            </span>
+          </span>
+          <span class="tile-arrow">→</span>
+        </button>
       </div>
 
       <p class="hub-section-title">🌐 Juegos en línea (con tu liga)</p>
@@ -1571,6 +1616,76 @@
       <p class="rl-hint" id="matchSlipTotal">Aún no has apostado en este partido</p>
     </section>
 
+    <!-- TRIVIA (PREGUNTADOS) -->
+    <section class="view" data-view="trivia" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Preguntados</h2>
+        <button class="btn-info" data-toggle="triviaRulesPanel">i</button>
+      </div>
+
+      <div class="paytable" id="triviaRulesPanel" hidden>
+        <p class="paytable-title">Cómo se juega</p>
+        <p class="rules-text">Elige una temática y una apuesta. Responde 10 preguntas de opción múltiple, una a la vez, con 15 segundos para cada una. Entre más aciertos, mayor tu premio.</p>
+        <div class="paytable-row"><span>10 de 10</span><b>x8</b></div>
+        <div class="paytable-row"><span>9 de 10</span><b>x4</b></div>
+        <div class="paytable-row"><span>8 de 10</span><b>x2.5</b></div>
+        <div class="paytable-row"><span>7 de 10</span><b>x1.5</b></div>
+        <div class="paytable-row"><span>6 de 10</span><b>x1 (recuperas tu apuesta)</b></div>
+        <div class="paytable-row"><span>5 de 10</span><b>x0.5</b></div>
+        <div class="paytable-row"><span>0 a 4 de 10</span><b>Pierdes la apuesta</b></div>
+      </div>
+
+      <div id="triviaSetup">
+        <p class="bet-label">Elige una temática</p>
+        <div class="trivia-category-grid" id="triviaCategoryGrid">
+          <button type="button" class="trivia-cat-btn" data-cat="geografia">
+            <span class="trivia-cat-icon">🌍</span><span class="trivia-cat-name">Geografía</span>
+          </button>
+          <button type="button" class="trivia-cat-btn" data-cat="historia">
+            <span class="trivia-cat-icon">🏛️</span><span class="trivia-cat-name">Historia</span>
+          </button>
+          <button type="button" class="trivia-cat-btn" data-cat="ciencia">
+            <span class="trivia-cat-icon">🔬</span><span class="trivia-cat-name">Ciencia</span>
+          </button>
+          <button type="button" class="trivia-cat-btn" data-cat="deportes">
+            <span class="trivia-cat-icon">⚽</span><span class="trivia-cat-name">Deportes</span>
+          </button>
+          <button type="button" class="trivia-cat-btn" data-cat="espectaculos">
+            <span class="trivia-cat-icon">🎬</span><span class="trivia-cat-name">Espectáculos</span>
+          </button>
+        </div>
+        <p class="bet-label" style="margin-top:16px;">Apuesta</p>
+        <div class="chip-select" id="triviaChips">
+          <button class="chip-btn" data-amount="50">50</button>
+          <button class="chip-btn active" data-amount="100">100</button>
+          <button class="chip-btn" data-amount="250">250</button>
+        </div>
+        <p class="message-bar" id="triviaSetupMsg" style="margin-top:10px;"></p>
+        <button class="btn btn-gold btn-block" id="triviaStartBtn" disabled>Elige una temática</button>
+      </div>
+
+      <div id="triviaPlay" hidden>
+        <div class="trivia-progress-row">
+          <span id="triviaProgressLabel">Pregunta 1/10</span>
+          <span id="triviaTimerLabel">15s</span>
+        </div>
+        <div class="trivia-timer-track"><div class="trivia-timer-fill" id="triviaTimerFill" style="width:100%;"></div></div>
+        <p class="trivia-question" id="triviaQuestionText"></p>
+        <div class="trivia-options" id="triviaOptions"></div>
+      </div>
+
+      <div id="triviaResult" hidden>
+        <div class="league-card ornate" style="text-align:center;">
+          <p class="paytable-title" id="triviaResultTitle">¡Terminaste!</p>
+          <p class="gold-text" id="triviaResultScore" style="margin:6px 0; font-size:2rem; font-weight:700;">0/10</p>
+          <p class="message-bar" id="triviaResultPayout"></p>
+        </div>
+        <div class="trivia-result-review" id="triviaReviewList"></div>
+        <button class="btn btn-gold btn-block" id="triviaPlayAgainBtn" style="margin-top:14px;">Jugar de nuevo</button>
+      </div>
+    </section>
+
     <!-- STORE -->
     <section class="view" data-view="store" hidden>
       <div class="hub-hero" style="padding-top:10px;">
@@ -1945,6 +2060,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="trivia-questions.js"></script>
 <script>
 (function(){
   "use strict";
@@ -2095,6 +2211,7 @@
     teardownPokerListeners();
     teardownChessListeners();
     if(name !== 'racing') teardownRacing();
+    if(name !== 'trivia') teardownTrivia();
 
     if(name === 'hub'){ refreshHub(); dailyTimerId = setInterval(refreshHub, 1000); }
     if(name === 'store'){ renderStore(); renderSobres(); }
@@ -2104,6 +2221,7 @@
     if(name === 'poker'){ renderPokerEntry(); pokerTimerId = setInterval(pokerTick, 1000); }
     if(name === 'chess'){ renderChessEntry(); }
     if(name === 'racing'){ renderRacingEntry(); }
+    if(name === 'trivia'){ renderTriviaEntry(); }
   }
 
   function selectStoreTab(tab){
@@ -6319,6 +6437,166 @@
   document.getElementById('createChessMatchBtn').addEventListener('click', function(){
     createChessMatch(chessBet.get(), chessColor.get());
   });
+
+  /* ================= TRIVIA (PREGUNTADOS) ================= */
+  var TRIVIA_CAT_LABELS = { geografia:'Geografía', historia:'Historia', ciencia:'Ciencia', deportes:'Deportes', espectaculos:'Espectáculos' };
+  var TRIVIA_QUESTION_COUNT = 10;
+  var TRIVIA_TIME_PER_Q = 15;
+  var TRIVIA_PAYOUTS = { 10:8, 9:4, 8:2.5, 7:1.5, 6:1, 5:0.5 };
+
+  var triviaBet = wireChipSelect('triviaChips', 100);
+  var triviaSelectedCategory = null;
+  var triviaQuestions = [];
+  var triviaIndex = 0;
+  var triviaCorrect = 0;
+  var triviaCurrentBet = 0;
+  var triviaTimerId = null;
+  var triviaTimeLeft = 0;
+  var triviaAnswered = false;
+  var triviaReview = [];
+
+  function triviaShuffleArr(arr){
+    var a = arr.slice();
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function triviaMsg(text){
+    var el = document.getElementById('triviaSetupMsg');
+    if(el) el.textContent = text || '';
+  }
+
+  document.querySelectorAll('.trivia-cat-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.trivia-cat-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      triviaSelectedCategory = btn.getAttribute('data-cat');
+      triviaMsg('');
+      var startBtn = document.getElementById('triviaStartBtn');
+      startBtn.disabled = false;
+      startBtn.textContent = 'Jugar ' + (TRIVIA_CAT_LABELS[triviaSelectedCategory] || '');
+    });
+  });
+
+  function renderTriviaEntry(){
+    document.getElementById('triviaPlay').hidden = true;
+    document.getElementById('triviaResult').hidden = true;
+    document.getElementById('triviaSetup').hidden = false;
+    triviaMsg('');
+  }
+
+  function teardownTrivia(){
+    if(triviaTimerId){ clearInterval(triviaTimerId); triviaTimerId = null; }
+  }
+
+  document.getElementById('triviaStartBtn').addEventListener('click', function(){
+    if(!triviaSelectedCategory) return;
+    var bet = triviaBet.get();
+    if(state.balance < bet){ triviaMsg('Fichas insuficientes'); return; }
+    var bank = (typeof TRIVIA_BANK !== 'undefined' && TRIVIA_BANK[triviaSelectedCategory]) || [];
+    if(bank.length < TRIVIA_QUESTION_COUNT){ triviaMsg('Esta temática no está disponible todavía'); return; }
+    addBalance(-bet);
+    triviaCurrentBet = bet;
+    triviaQuestions = triviaShuffleArr(bank).slice(0, TRIVIA_QUESTION_COUNT);
+    triviaIndex = 0;
+    triviaCorrect = 0;
+    triviaReview = [];
+    document.getElementById('triviaSetup').hidden = true;
+    document.getElementById('triviaResult').hidden = true;
+    document.getElementById('triviaPlay').hidden = false;
+    triviaShowQuestion();
+  });
+
+  function triviaUpdateTimerUI(){
+    document.getElementById('triviaTimerLabel').textContent = triviaTimeLeft + 's';
+    var fill = document.getElementById('triviaTimerFill');
+    var pct = Math.max(0, triviaTimeLeft / TRIVIA_TIME_PER_Q * 100);
+    fill.style.width = pct + '%';
+    fill.classList.toggle('urgent', triviaTimeLeft <= 5);
+  }
+
+  function triviaShowQuestion(){
+    if(triviaTimerId){ clearInterval(triviaTimerId); triviaTimerId = null; }
+    triviaAnswered = false;
+    var q = triviaQuestions[triviaIndex];
+    document.getElementById('triviaProgressLabel').textContent = 'Pregunta ' + (triviaIndex + 1) + '/' + TRIVIA_QUESTION_COUNT + ' · ' + (TRIVIA_CAT_LABELS[triviaSelectedCategory] || '');
+    document.getElementById('triviaQuestionText').textContent = q.q;
+    var optsEl = document.getElementById('triviaOptions');
+    optsEl.innerHTML = '';
+    var order = triviaShuffleArr(q.opts.map(function(_, i){ return i; }));
+    order.forEach(function(origIdx){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'trivia-option-btn';
+      b.textContent = q.opts[origIdx];
+      b.setAttribute('data-opt-idx', origIdx);
+      b.addEventListener('click', function(){ triviaAnswer(origIdx, q); });
+      optsEl.appendChild(b);
+    });
+    triviaTimeLeft = TRIVIA_TIME_PER_Q;
+    triviaUpdateTimerUI();
+    triviaTimerId = setInterval(function(){
+      triviaTimeLeft--;
+      triviaUpdateTimerUI();
+      if(triviaTimeLeft <= 0) triviaAnswer(-1, q);
+    }, 1000);
+  }
+
+  function triviaAnswer(pickedIdx, q){
+    if(triviaAnswered) return;
+    triviaAnswered = true;
+    if(triviaTimerId){ clearInterval(triviaTimerId); triviaTimerId = null; }
+    var correct = pickedIdx === q.correct;
+    if(correct) triviaCorrect++;
+    triviaReview.push({
+      q: q.q, correctText: q.opts[q.correct],
+      pickedText: pickedIdx >= 0 ? q.opts[pickedIdx] : null,
+      correct: correct
+    });
+    var btns = Array.prototype.slice.call(document.querySelectorAll('#triviaOptions .trivia-option-btn'));
+    btns.forEach(function(btn){
+      var idx = parseInt(btn.getAttribute('data-opt-idx'), 10);
+      btn.classList.add('disabled');
+      if(idx === q.correct) btn.classList.add('correct');
+      else if(idx === pickedIdx) btn.classList.add('wrong');
+    });
+    setTimeout(function(){
+      triviaIndex++;
+      if(triviaIndex >= TRIVIA_QUESTION_COUNT) triviaFinish();
+      else triviaShowQuestion();
+    }, 1100);
+  }
+
+  function triviaFinish(){
+    document.getElementById('triviaPlay').hidden = true;
+    document.getElementById('triviaResult').hidden = false;
+    var mult = TRIVIA_PAYOUTS[triviaCorrect] || 0;
+    var payout = Math.round(triviaCurrentBet * mult);
+    if(payout > 0) addBalance(payout);
+    document.getElementById('triviaResultScore').textContent = triviaCorrect + '/' + TRIVIA_QUESTION_COUNT;
+    var title = document.getElementById('triviaResultTitle');
+    var payoutText = document.getElementById('triviaResultPayout');
+    if(mult > 0){
+      title.textContent = triviaCorrect === TRIVIA_QUESTION_COUNT ? '¡Puntaje perfecto!' : '¡Bien jugado!';
+      payoutText.textContent = 'Ganaste ' + payout.toLocaleString('es-CO') + ' fichas (x' + mult + ')';
+      payoutText.className = 'message-bar win';
+    } else {
+      title.textContent = 'Casi...';
+      payoutText.textContent = 'Perdiste tu apuesta de ' + triviaCurrentBet.toLocaleString('es-CO') + ' fichas';
+      payoutText.className = 'message-bar lose';
+    }
+    var reviewEl = document.getElementById('triviaReviewList');
+    reviewEl.innerHTML = triviaReview.map(function(r, i){
+      var detail = r.correct ? '' : (r.pickedText ? ' · Tu respuesta: ' + escapeHtml(r.pickedText) : ' · No respondiste a tiempo');
+      return '<div class="trivia-review-item"><span class="trivia-review-icon">' + (r.correct ? '✅' : '❌') + '</span>' +
+        '<span class="trivia-review-text"><b>' + (i + 1) + '. ' + escapeHtml(r.q) + '</b><br>Correcta: ' + escapeHtml(r.correctText) + detail + '</span></div>';
+    }).join('');
+  }
+
+  document.getElementById('triviaPlayAgainBtn').addEventListener('click', renderTriviaEntry);
 
   /* ================= INIT ================= */
   applyTheme(state.activeTheme);
