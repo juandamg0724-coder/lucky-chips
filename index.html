@@ -760,62 +760,7 @@
     background:rgba(31,232,154,.1); border:1px solid rgba(31,232,154,.3); border-radius:999px;
     padding:7px 12px;
   }
-  .sobre-tiers{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
-  .sobre-card{
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-    background:var(--bg-elevated); border:1px solid var(--line); border-radius:16px;
-    padding:16px 6px 14px;
-  }
-  .sobre-card[data-tier="plata"]{ border-color:#9fb1c4; }
-  .sobre-card[data-tier="oro"]{ border-color:var(--accent-dim); }
-  .sobre-icon{ font-size:2rem; }
-  .sobre-name{ font-family:var(--pixel-font); font-weight:400; font-size:.72rem; line-height:1.5; }
-  .sobre-price{ font-family:'Space Mono', monospace; font-size:.68rem; color:var(--text-faint); }
-
-  .sobre-reveal{
-    display:flex; flex-direction:column; align-items:center; gap:8px;
-    background:var(--bg-panel); border:1px solid var(--line); border-radius:18px;
-    padding:24px 14px; text-align:center;
-    animation: sobre-pop .4s cubic-bezier(.2,1.4,.4,1) both;
-  }
-  @keyframes sobre-pop{ from{ opacity:0; transform:scale(.7); } to{ opacity:1; transform:scale(1); } }
-  @media (prefers-reduced-motion: reduce){ .sobre-reveal{ animation:none; } }
-  .sobre-reveal-icon{ font-size:3rem; filter:drop-shadow(0 0 14px rgba(255,62,200,.55)); }
-  .sobre-reveal-label{ font-family:var(--pixel-font); font-weight:400; font-size:.82rem; line-height:1.5; }
-
-  .sobre-effects{ display:flex; gap:8px; flex-wrap:wrap; }
-  .sobre-effect-badge{
-    background:rgba(255,207,46,.12); border:1px solid rgba(255,207,46,.35); color:var(--accent-bright);
-    padding:5px 11px; border-radius:999px; font-size:.74rem; font-weight:700;
-  }
-
-  .border-swatches{ display:flex; gap:10px; flex-wrap:wrap; }
-  .border-swatch{
-    width:46px; height:46px; border-radius:50%; border:2px solid var(--line);
-    background:var(--bg-elevated); cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    font-size:1.1rem; color:var(--text-faint);
-  }
-  .border-swatch.active{ border-color:var(--neon-cyan-bright); box-shadow:0 0 0 2px var(--neon-cyan-bright) inset; }
-  .border-swatch.locked{ opacity:.3; cursor:not-allowed; }
-
-  .sobre-history-list{ display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; }
-  .sobre-history-item{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    background:var(--bg-elevated); border:1px solid var(--line); border-radius:10px;
-    padding:7px 11px; font-size:.76rem;
-  }
-  .sobre-history-item .sh-tier{ color:var(--text-faint); font-size:.66rem; text-transform:uppercase; letter-spacing:.5px; }
-
-  .balance-chip.border-bronce{ box-shadow:var(--shadow-sm), 0 0 0 2px #cd7f32; }
-  .balance-chip.border-plata{ box-shadow:var(--shadow-sm), 0 0 0 2px #c9d3dc, 0 0 12px -2px #c9d3dc; }
-  .balance-chip.border-oro{ box-shadow:var(--shadow-sm), 0 0 0 2px var(--accent-bright), 0 0 14px -2px var(--accent-bright); }
-  .balance-chip.border-diamante{
-    box-shadow:var(--shadow-sm), 0 0 0 2px var(--neon-cyan-bright), 0 0 16px -2px var(--neon-cyan-bright);
-    animation: diamond-pulse 2.4s ease-in-out infinite;
-  }
   @keyframes diamond-pulse{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.3); } }
-  @media (prefers-reduced-motion: reduce){ .balance-chip.border-diamante{ animation:none; } }
 
   /* ---------- profile avatar & frames ---------- */
   .profile-row{ display:flex; align-items:center; gap:10px; }
@@ -1155,6 +1100,54 @@
   .impostor-vote-btn:disabled{ opacity:.5; cursor:not-allowed; }
   .impostor-vote-btn.voted{ border-color:var(--neon-cyan-bright); box-shadow:0 0 0 1px var(--neon-cyan-bright) inset; }
 
+  /* ---------- carreras: controles táctiles ---------- */
+  .racing-touch-controls{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding:0 4px; max-width:420px; margin-left:auto; margin-right:auto; }
+  .racing-pad-group{ display:flex; gap:10px; }
+  .racing-pad-btn{
+    width:56px; height:56px; border:3px solid #000; border-radius:var(--radius-md);
+    background:var(--bg-elevated); color:var(--text); font-size:1.3rem; box-shadow:var(--shadow-sm);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    -webkit-user-select:none; user-select:none; touch-action:none;
+  }
+  .racing-pad-btn:active{ background:var(--neon-cyan); color:var(--accent-ink); transform:translate(2px,2px); box-shadow:none; }
+
+  /* ---------- rellenar botellas ---------- */
+  .ws-top-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .ws-board{ display:flex; flex-wrap:wrap; gap:14px; justify-content:center; padding:14px 0; }
+  .ws-bottle{
+    display:flex; flex-direction:column; cursor:pointer;
+    width:52px; height:176px; border:3px solid #000; border-radius:0 0 var(--radius-md) var(--radius-md);
+    overflow:hidden; background:var(--bg-elevated); box-shadow:var(--shadow-sm);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .ws-bottle.selected{ transform:translateY(-12px); box-shadow:0 0 0 3px var(--neon-cyan-bright), var(--shadow); }
+  .ws-layer{ flex:1; }
+  .ws-levels-overlay{
+    position:fixed; inset:0; background:rgba(5,5,15,.82); z-index:50;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .ws-levels-card{
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius-lg);
+    padding:18px; width:100%; max-width:380px; max-height:85vh; overflow-y:auto;
+  }
+  .ws-levels-grid{ display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-top:10px; }
+  .ws-level-btn{
+    aspect-ratio:1; border:2px solid var(--line); border-radius:var(--radius-sm);
+    background:var(--bg-elevated); color:var(--text); font-weight:700; cursor:pointer;
+  }
+  .ws-level-btn.active{ border-color:var(--neon-cyan-bright); box-shadow:0 0 0 1px var(--neon-cyan-bright) inset; }
+  .ws-level-btn:disabled{ opacity:.35; cursor:not-allowed; }
+
+  /* ---------- snake ---------- */
+  .snake-touch-controls{ display:flex; justify-content:center; margin-top:10px; }
+  .snake-dpad{ display:grid; grid-template-columns:repeat(3, 56px); grid-template-rows:repeat(3, 56px); gap:6px; }
+  .snake-dpad-btn{
+    border:3px solid #000; border-radius:var(--radius-md); background:var(--bg-elevated); color:var(--text);
+    font-size:1.2rem; box-shadow:var(--shadow-sm); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; -webkit-user-select:none; user-select:none; touch-action:none;
+  }
+  .snake-dpad-btn:active{ background:var(--neon-green); color:var(--accent-ink); transform:translate(2px,2px); box-shadow:none; }
+
   /* ---------- blackjack en línea ---------- */
   .bjo-dealer{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 0 14px; }
   .bjo-seats-row{ display:flex; gap:10px; overflow-x:auto; padding:4px 2px 12px; }
@@ -1283,6 +1276,18 @@
           <span class="icon-badge icon-orange">💣</span>
           <span class="game-name">Minas</span>
           <span class="game-meta">Desde 10 fichas</span>
+          <span class="tile-arrow">→</span>
+        </button>
+        <button class="game-tile ornate" data-goto="watersort">
+          <span class="icon-badge icon-green">🧪</span>
+          <span class="game-name">Rellenar Botellas</span>
+          <span class="game-meta">20 niveles · sin apuesta</span>
+          <span class="tile-arrow">→</span>
+        </button>
+        <button class="game-tile ornate" data-goto="snake">
+          <span class="icon-badge icon-cyan">🐍</span>
+          <span class="game-name">Snake</span>
+          <span class="game-meta">Teclado o control PS4</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile wide ornate" data-goto="racing">
@@ -1880,58 +1885,15 @@
       <div class="hub-hero" style="padding-top:10px;">
         <p class="eyebrow">Tienda</p>
         <h1 class="gold-text" style="font-size:1.5rem;">Tienda Lucky Chips</h1>
-        <p class="hub-sub">Sobres sorpresa y estilos nuevos para tu casino, todo con las fichas que ganes jugando.</p>
+        <p class="hub-sub">Temas de color y personalización, todo con las fichas que ganes jugando.</p>
       </div>
 
       <div class="match-toolbar">
-        <button class="btn btn-ghost btn-sm store-tab-btn active" data-store-tab="sobres">🧧 Sobres</button>
-        <button class="btn btn-ghost btn-sm store-tab-btn" data-store-tab="temas">🎨 Temas</button>
+        <button class="btn btn-ghost btn-sm store-tab-btn active" data-store-tab="temas">🎨 Temas</button>
         <button class="btn btn-ghost btn-sm store-tab-btn" data-store-tab="perfil">🧑‍🎤 Perfil</button>
       </div>
 
-      <div class="store-tab-panel" data-store-panel="sobres">
-        <p class="hub-sub">Compra un sobre y descubre tu premio sorpresa: fichas extra, giros gratis en Tragamonedas, un multiplicador para tu próximo giro, o un borde exclusivo para tu saldo.</p>
-
-        <div class="sobre-reveal" id="sobreReveal" hidden>
-          <span class="sobre-reveal-icon" id="sobreRevealIcon">🧧</span>
-          <p class="sobre-reveal-label" id="sobreRevealLabel"></p>
-        </div>
-
-        <div class="sobre-tiers">
-          <div class="sobre-card ornate" data-tier="bronce">
-            <span class="sobre-icon">🧧</span>
-            <p class="sobre-name">Bronce</p>
-            <p class="sobre-price" id="sobrePriceBronce">100 fichas</p>
-            <button class="btn btn-gold btn-sm sobre-open-btn" data-tier="bronce">Abrir</button>
-          </div>
-          <div class="sobre-card ornate" data-tier="plata">
-            <span class="sobre-icon">🧧</span>
-            <p class="sobre-name">Plata</p>
-            <p class="sobre-price" id="sobrePricePlata">300 fichas</p>
-            <button class="btn btn-gold btn-sm sobre-open-btn" data-tier="plata">Abrir</button>
-          </div>
-          <div class="sobre-card ornate" data-tier="oro">
-            <span class="sobre-icon">🧧</span>
-            <p class="sobre-name">Oro</p>
-            <p class="sobre-price" id="sobrePriceOro">750 fichas</p>
-            <button class="btn btn-gold btn-sm sobre-open-btn" data-tier="oro">Abrir</button>
-          </div>
-        </div>
-
-        <div class="sobre-effects" id="sobreEffects" hidden></div>
-
-        <div>
-          <p class="paytable-title">Tus bordes de saldo</p>
-          <div class="border-swatches" id="borderSwatches"></div>
-        </div>
-
-        <div>
-          <p class="paytable-title">Historial de sobres</p>
-          <div class="sobre-history-list" id="sobreHistoryList"></div>
-        </div>
-      </div>
-
-      <div class="store-tab-panel" data-store-panel="temas" hidden>
+      <div class="store-tab-panel" data-store-panel="temas">
         <div class="theme-grid" id="themeGrid"></div>
       </div>
 
@@ -2180,13 +2142,7 @@
 
       <div class="league-card ornate" id="chessCpuPanel" style="margin-bottom:12px;">
         <p class="league-card-title">🤖 Jugar contra la CPU</p>
-        <p class="league-card-sub">Practica en cualquier momento, sin conexión ni liga.</p>
-        <p class="bet-label" style="margin-top:10px;">Apuesta</p>
-        <div class="chip-select" id="chessCpuBetChips">
-          <button class="chip-btn" data-amount="100">100</button>
-          <button class="chip-btn active" data-amount="300">300</button>
-          <button class="chip-btn" data-amount="600">600</button>
-        </div>
+        <p class="league-card-sub">Practica gratis en cualquier momento, sin conexión ni liga.</p>
         <p class="bet-label" style="margin-top:10px;">Tus piezas</p>
         <div class="choice-row" id="chessCpuColorChips">
           <button class="choice-btn" data-amount="w">Blancas</button>
@@ -2287,13 +2243,7 @@
 
       <div class="league-card ornate" id="dominoCpuPanel" style="margin-bottom:12px;">
         <p class="league-card-title">🤖 Jugar contra la CPU</p>
-        <p class="league-card-sub">Practica en cualquier momento, sin conexión ni liga, contra jugadores robot.</p>
-        <p class="bet-label" style="margin-top:10px;">Apuesta</p>
-        <div class="chip-select" id="dominoCpuBuyInChips">
-          <button class="chip-btn" data-amount="100">100</button>
-          <button class="chip-btn active" data-amount="250">250</button>
-          <button class="chip-btn" data-amount="500">500</button>
-        </div>
+        <p class="league-card-sub">Practica gratis en cualquier momento, sin conexión ni liga, contra jugadores robot.</p>
         <p class="bet-label" style="margin-top:10px;">Rivales CPU</p>
         <div class="chip-select" id="dominoCpuCountChips">
           <button class="chip-btn" data-amount="1">1</button>
@@ -2406,13 +2356,7 @@
 
       <div class="league-card ornate" id="tttCpuPanel" style="margin-bottom:12px;">
         <p class="league-card-title">🤖 Jugar contra la CPU</p>
-        <p class="league-card-sub">Practica en cualquier momento, sin conexión ni liga.</p>
-        <p class="bet-label" style="margin-top:10px;">Apuesta</p>
-        <div class="chip-select" id="tttCpuBetChips">
-          <button class="chip-btn" data-amount="50">50</button>
-          <button class="chip-btn active" data-amount="100">100</button>
-          <button class="chip-btn" data-amount="250">250</button>
-        </div>
+        <p class="league-card-sub">Practica gratis en cualquier momento, sin conexión ni liga.</p>
         <p class="bet-label" style="margin-top:10px;">Tu símbolo</p>
         <div class="choice-row" id="tttCpuMarkChips">
           <button class="choice-btn" data-amount="X">X</button>
@@ -2602,6 +2546,59 @@
       </div>
     </section>
 
+    <!-- WATER SORT (Rellenar Botellas) -->
+    <section class="view" data-view="watersort" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Rellenar Botellas</h2>
+        <button class="btn-info" data-toggle="wsRulesPanel">i</button>
+      </div>
+
+      <div class="paytable" id="wsRulesPanel" hidden>
+        <p class="paytable-title">Cómo se juega</p>
+        <p class="rules-text">Cada botella tiene capas de líquido de colores. Toca una botella para elegirla y luego toca otra para verter: solo puedes verter sobre una botella vacía o cuyo color de arriba sea igual al tuyo. Ganas el nivel cuando cada botella tenga un solo color (o esté vacía).</p>
+      </div>
+
+      <div class="ws-top-row">
+        <p class="bet-label" id="wsLevelLabel">Nivel 1/20</p>
+        <button class="btn btn-ghost btn-sm" id="wsLevelsBtn">Niveles</button>
+      </div>
+
+      <div class="ws-board" id="wsBoard"></div>
+
+      <p class="message-bar" id="wsMessage"></p>
+
+      <div class="action-row">
+        <button class="btn btn-ghost" id="wsUndoBtn">Deshacer</button>
+        <button class="btn btn-ghost" id="wsRestartBtn">Reiniciar</button>
+      </div>
+
+      <div class="league-card ornate" id="wsResultCard" hidden style="margin-top:12px; text-align:center;">
+        <p class="paytable-title" id="wsResultTitle">¡Nivel completado!</p>
+        <p class="message-bar win" id="wsResultText"></p>
+        <button class="btn btn-gold btn-block" id="wsNextBtn" style="margin-top:8px;">Siguiente nivel</button>
+      </div>
+
+      <div class="ws-levels-overlay" id="wsLevelsOverlay" hidden>
+        <div class="ws-levels-card ornate">
+          <p class="league-card-title">Niveles</p>
+          <div class="ws-levels-grid" id="wsLevelsGrid"></div>
+          <button class="btn btn-ghost btn-block" id="wsLevelsCloseBtn" style="margin-top:10px;">Cerrar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SNAKE -->
+    <section class="view" data-view="snake" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Snake</h2>
+        <span style="width:36px;"></span>
+      </div>
+
+      <div id="snakeRoot"></div>
+    </section>
+
   </main>
 
   <nav class="bottomnav">
@@ -2702,9 +2699,10 @@
 
   function defaultState(){
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
-      freeSpins:0, pendingSlotMultiplier:1, ownedBorders:['none'], activeBorder:'none', sobreHistory:[],
+      freeSpins:0, pendingSlotMultiplier:1,
       ownedAvatars:['dado'], activeAvatar:'dado', ownedFrames:['none'], activeFrame:'none',
-      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, chessElo:1200 };
+      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, chessElo:1200,
+      racingLevel:1, waterSortLevel:1 };
   }
   var state = loadState();
 
@@ -2770,9 +2768,10 @@
     teardownBjoListeners();
     if(name !== 'racing') teardownRacing();
     if(name !== 'trivia') teardownTrivia();
+    if(name !== 'snake') teardownSnake();
 
     if(name === 'hub'){ refreshHub(); dailyTimerId = setInterval(refreshHub, 1000); }
-    if(name === 'store'){ renderStore(); renderSobres(); renderAvatarGrid(); renderFrameGrid(); renderProfilePreview(); }
+    if(name === 'store'){ renderStore(); renderAvatarGrid(); renderFrameGrid(); renderProfilePreview(); }
     if(name === 'match'){ renderMatch(); matchTimerId = setInterval(renderMatch, 1000); }
     if(name === 'slots'){ refreshSlotBoostUI(); }
     if(name === 'league'){ renderLeague(); leagueTimerId = setInterval(function(){ if(state.leagueCode) syncLeagueMember(); }, 20000); }
@@ -2784,6 +2783,8 @@
     if(name === 'tictactoe'){ renderTttEntry(); }
     if(name === 'impostor'){ renderImpostorEntry(); impostorTimerId = setInterval(impostorTick, 1000); }
     if(name === 'blackjack'){ renderBjoEntry(); }
+    if(name === 'watersort'){ renderWaterSortEntry(); }
+    if(name === 'snake'){ renderSnakeEntry(); }
   }
 
   function selectStoreTab(tab){
@@ -2822,6 +2823,8 @@
   var RACING_OFFROAD_FLOOR = 55, RACING_OFFROAD_DRAG = 260;
   var RACING_STEER_SPEED = 300;
   var RACING_FINISH_DISTANCE = 18000;
+  var RACING_MAX_LEVEL = 10;
+  function racingLevelFinish(level){ return RACING_FINISH_DISTANCE + (level - 1) * 6000; }
   var RACING_PALETTE = { grass: '#4aab3f', tree: '#2f7a28', road: '#8a8d8f', border: '#d9dbd6', gold: '#ffd23f', red: '#e53935', blue: '#29b6f6', yellow: '#fdd835', ink: '#2b3136', panel: 'rgba(20,24,20,.82)', text: '#f2f4f1', textMuted: '#9aa398' };
   function racingClamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
   function racingMakeCar(x, color, accent){
@@ -2835,7 +2838,7 @@
     var onRoad = racingOnRoad(car.x);
     if(!onRoad) car.speed -= RACING_OFFROAD_DRAG * dt;
     var floor = onRoad ? RACING_MIN_SPEED : RACING_OFFROAD_FLOOR;
-    car.speed = racingClamp(car.speed, floor, RACING_MAX_SPEED);
+    car.speed = racingClamp(car.speed, floor, RACING_MAX_SPEED * (car.speedBoost || 1));
     car.x = racingClamp(car.x + steer * RACING_STEER_SPEED * dt, 14, RACING_W - 14);
     car.distance += car.speed * dt;
     if(car.hitCooldown > 0) car.hitCooldown -= dt;
@@ -2880,9 +2883,9 @@
   function racingSpawnTraffic(fromDistance){
     var kinds = [
       { w: RACING_CAR_W, h: RACING_CAR_H, color: RACING_PALETTE.yellow, accent: '#c9a400' },
-      { w: RACING_CAR_W, h: RACING_CAR_H, color: RACING_PALETTE.blue, accent: '#0288c7' },
-      { w: RACING_CAR_W, h: RACING_CAR_H, color: RACING_PALETTE.red, accent: '#b71c1c' },
-      { w: RACING_CAR_W, h: RACING_CAR_H * 1.35, color: '#455a64', accent: '#eceff1', truck: true }
+      { w: RACING_CAR_W, h: RACING_CAR_H, color: '#ffc400', accent: '#b38600' },
+      { w: RACING_CAR_W, h: RACING_CAR_H, color: '#ffe066', accent: '#c9a400' },
+      { w: RACING_CAR_W, h: RACING_CAR_H * 1.35, color: '#ffb300', accent: '#8a5a00', truck: true }
     ];
     var k = kinds[Math.floor(Math.random() * kinds.length)];
     var lane = RACING_ROAD_L + 40 + Math.random() * (RACING_ROAD_R - RACING_ROAD_L - 80);
@@ -2892,7 +2895,7 @@
     var frontier = Math.max(r.player.distance, r.cpu.distance);
     if(frontier > r.nextTrafficSpawn){
       r.traffic.push(racingSpawnTraffic(frontier));
-      r.nextTrafficSpawn = frontier + 260 + Math.random() * 220;
+      r.nextTrafficSpawn = frontier + (r.trafficGapBase || 260) + Math.random() * 220;
     }
     var back = Math.min(r.player.distance, r.cpu.distance);
     r.traffic = r.traffic.filter(function(t){ t.distance += t.speed * dt; return t.distance > back - 260; });
@@ -2950,12 +2953,20 @@
     return parseInt(localStorage.getItem('luckyChips_racingBest') || '0', 10) || 0;
   }
   function racingShowResult(){
-    var r = racing, playerWon = r.player.distance >= RACING_FINISH_DISTANCE;
+    var r = racing, playerWon = r.player.distance >= r.finishDistance;
     var best = racingBestDistance();
     if(Math.round(r.player.distance) > best){ localStorage.setItem('luckyChips_racingBest', String(Math.round(r.player.distance))); }
     var wrap = document.getElementById('racingResult');
     if(!wrap) return;
-    wrap.innerHTML = '<div class="message-bar ' + (playerWon ? 'win' : 'lose') + '">' + (playerWon ? '¡Ganaste la carrera!' : 'Te ganó la CPU') + '</div>';
+    var msg = playerWon ? '¡Ganaste la carrera! Nivel ' + r.level : 'Te ganó la CPU · Nivel ' + r.level;
+    if(playerWon && r.level < RACING_MAX_LEVEL){
+      state.racingLevel = r.level + 1;
+      saveState();
+      msg += ' superado — siguiente: nivel ' + state.racingLevel;
+    } else if(playerWon){
+      msg += ' — ¡completaste todos los niveles!';
+    }
+    wrap.innerHTML = '<div class="message-bar ' + (playerWon ? 'win' : 'lose') + '">' + msg + '</div>';
   }
   function racingUpdate(dt){
     var r = racing;
@@ -2973,7 +2984,7 @@
     racingUpdateCar(r.cpu, ai.throttle, ai.steer, dt);
     racingCheckHit(r.player, r);
     racingCheckHit(r.cpu, r);
-    if(r.player.distance >= RACING_FINISH_DISTANCE || r.cpu.distance >= RACING_FINISH_DISTANCE){
+    if(r.player.distance >= r.finishDistance || r.cpu.distance >= r.finishDistance){
       r.phase = 'finished';
       racingShowResult();
     }
@@ -3047,7 +3058,7 @@
       ctx.strokeStyle = d[1]; ctx.beginPath(); ctx.moveTo(d[0], 0); ctx.lineTo(d[0], RACING_H); ctx.stroke();
     });
     ctx.setLineDash([]);
-    var finishY = racingWorldToScreenY(RACING_FINISH_DISTANCE, refDistance);
+    var finishY = racingWorldToScreenY((racing && racing.finishDistance) || RACING_FINISH_DISTANCE, refDistance);
     if(finishY > -40 && finishY < RACING_H + 40){
       ctx.save(); ctx.beginPath(); ctx.rect(RACING_ROAD_L, finishY - 10, RACING_ROAD_R - RACING_ROAD_L, 20); ctx.clip();
       for(var cx2 = RACING_ROAD_L; cx2 < RACING_ROAD_R; cx2 += 14){
@@ -3082,7 +3093,7 @@
     ctx.textAlign = 'left';
     ctx.fillStyle = RACING_PALETTE.panel; ctx.beginPath(); ctx.roundRect(16, 16, 118, 50, 5); ctx.fill();
     ctx.fillStyle = RACING_PALETTE.textMuted; ctx.font = '10px "Space Mono", monospace';
-    ctx.fillText('DISTANCIA', 28, 34);
+    ctx.fillText('DISTANCIA · NIVEL ' + r.level, 28, 34);
     ctx.fillStyle = '#fff'; ctx.font = '900 22px "Archivo Black", sans-serif';
     ctx.fillText(Math.round(r.player.distance).toLocaleString('es-CO') + ' m', 28, 56);
 
@@ -3108,7 +3119,7 @@
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     }
     if(r.phase === 'finished'){
-      var won = r.player.distance >= RACING_FINISH_DISTANCE;
+      var won = r.player.distance >= r.finishDistance;
       ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, RACING_W, RACING_H);
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillStyle = won ? RACING_PALETTE.gold : RACING_PALETTE.red;
@@ -3137,8 +3148,12 @@
     var resultEl = document.getElementById('racingResult');
     if(resultEl) resultEl.innerHTML = '';
     racing.phase = 'title'; racing.countdown = 0;
+    racing.level = racingClamp(state.racingLevel || 1, 1, RACING_MAX_LEVEL);
+    racing.finishDistance = racingLevelFinish(racing.level);
+    racing.trafficGapBase = Math.max(120, 260 - (racing.level - 1) * 14);
     racing.player = racingMakeCar((RACING_ROAD_L + RACING_ROAD_R) / 2 - 40, '#ffffff', RACING_PALETTE.red);
     racing.cpu = racingMakeCar((RACING_ROAD_L + RACING_ROAD_R) / 2 + 40, '#e53935', '#b71c1c');
+    racing.cpu.speedBoost = 1 + (racing.level - 1) * 0.03;
     racing.traffic = []; racing.nextTrafficSpawn = 500;
   }
   function racingCanvasClick(e){
@@ -3146,10 +3161,14 @@
     racingHandlePrimaryAction();
   }
   function startRacing(){
+    var level = racingClamp(state.racingLevel || 1, 1, RACING_MAX_LEVEL);
+    var cpu = racingMakeCar((RACING_ROAD_L + RACING_ROAD_R) / 2 + 40, '#e53935', '#b71c1c');
+    cpu.speedBoost = 1 + (level - 1) * 0.03;
     racing = {
-      active: true, phase: 'title', countdown: 0,
+      active: true, phase: 'title', countdown: 0, level: level,
+      finishDistance: racingLevelFinish(level), trafficGapBase: Math.max(120, 260 - (level - 1) * 14),
       player: racingMakeCar((RACING_ROAD_L + RACING_ROAD_R) / 2 - 40, '#ffffff', RACING_PALETTE.red),
-      cpu: racingMakeCar((RACING_ROAD_L + RACING_ROAD_R) / 2 + 40, '#e53935', '#b71c1c'),
+      cpu: cpu,
       traffic: [], nextTrafficSpawn: 500,
       scale: null, offX: 0, offY: 0, rafId: null, lastTs: null, gamepadPrimaryLatch: false
     };
@@ -3174,12 +3193,31 @@
       '<div style="overflow:hidden; aspect-ratio:420/640; max-width:420px; margin:0 auto; background:#17191a; border:3px solid #000;">' +
         '<canvas id="racingCanvas" style="display:block; width:100%; height:100%; cursor:pointer;"></canvas>' +
       '</div>' +
-      '<p class="message-bar" style="margin-top:8px; text-align:center;">Flechas o control PS4 (stick / gatillos R2-L2): moverte y acelerar/frenar · Espacio o X para empezar</p>' +
+      '<p class="message-bar" style="margin-top:8px; text-align:center;">Flechas, control PS4 o los botones de abajo · Espacio/X/toca la pista para empezar</p>' +
+      '<div class="racing-touch-controls" id="racingTouchControls">' +
+        '<div class="racing-pad-group">' +
+          '<button type="button" class="racing-pad-btn" data-key="ArrowLeft">◀</button>' +
+          '<button type="button" class="racing-pad-btn" data-key="ArrowRight">▶</button>' +
+        '</div>' +
+        '<div class="racing-pad-group">' +
+          '<button type="button" class="racing-pad-btn" data-key="ArrowUp">▲</button>' +
+          '<button type="button" class="racing-pad-btn" data-key="ArrowDown">▼</button>' +
+        '</div>' +
+      '</div>' +
       '<div id="racingResult" style="margin-top:8px;"></div>';
     window.addEventListener('keydown', racingKeyDown);
     window.addEventListener('keyup', racingKeyUp);
     window.addEventListener('resize', racingOnResize);
     document.getElementById('racingCanvas').addEventListener('click', racingCanvasClick);
+    document.querySelectorAll('#racingTouchControls .racing-pad-btn').forEach(function(btn){
+      var key = btn.getAttribute('data-key');
+      var press = function(e){ e.preventDefault(); racingKeys[key] = true; };
+      var release = function(e){ e.preventDefault(); racingKeys[key] = false; };
+      btn.addEventListener('pointerdown', press);
+      btn.addEventListener('pointerup', release);
+      btn.addEventListener('pointerleave', release);
+      btn.addEventListener('pointercancel', release);
+    });
     startRacing();
   }
 
@@ -4605,14 +4643,6 @@
   }
 
   /* ================= SOBRES DE LA FORTUNA ================= */
-  var BORDER_DEFS = {
-    none:     { name:'Ninguno' },
-    bronce:   { name:'Borde Bronce', icon:'🥉' },
-    plata:    { name:'Borde Plata', icon:'🥈' },
-    oro:      { name:'Borde Oro', icon:'🥇' },
-    diamante: { name:'Borde Diamante', icon:'💎' }
-  };
-
   var AVATARS = {
     dado:      { name:'Dado',      icon:'🎲', price:0 },
     carta:     { name:'As',        icon:'🂡', price:150 },
@@ -4639,174 +4669,6 @@
 
   function profileAvatarIcon(id){ return (AVATARS[id] || AVATARS.dado).icon; }
   function profileFrameCls(id){ var f = FRAME_DEFS[id]; return (f && f.cls) ? f.cls : ''; }
-
-  var SOBRE_TIERS = {
-    bronce: { name:'Sobre Bronce', price:100, rewards:[
-      { type:'fichas', amount:60,  weight:30, label:'60 fichas' },
-      { type:'fichas', amount:120, weight:22, label:'120 fichas' },
-      { type:'fichas', amount:200, weight:10, label:'200 fichas' },
-      { type:'freespin', amount:1, weight:20, label:'1 giro gratis en Tragamonedas' },
-      { type:'multiplier', amount:2, weight:12, label:'Multiplicador x2 en tu próximo giro' },
-      { type:'border', borderId:'bronce', weight:6, label:'Borde Bronce ✨' }
-    ]},
-    plata: { name:'Sobre Plata', price:300, rewards:[
-      { type:'fichas', amount:150, weight:24, label:'150 fichas' },
-      { type:'fichas', amount:350, weight:20, label:'350 fichas' },
-      { type:'fichas', amount:600, weight:10, label:'600 fichas' },
-      { type:'freespin', amount:2, weight:18, label:'2 giros gratis en Tragamonedas' },
-      { type:'multiplier', amount:2, weight:14, label:'Multiplicador x2 en tu próximo giro' },
-      { type:'multiplier', amount:3, weight:6,  label:'Multiplicador x3 en tu próximo giro' },
-      { type:'border', borderId:'plata', weight:8, label:'Borde Plata ✨' }
-    ]},
-    oro: { name:'Sobre Oro', price:750, rewards:[
-      { type:'fichas', amount:400,  weight:20, label:'400 fichas' },
-      { type:'fichas', amount:900,  weight:18, label:'900 fichas' },
-      { type:'fichas', amount:2000, weight:6,  label:'¡2000 fichas! Jackpot' },
-      { type:'freespin', amount:3, weight:16, label:'3 giros gratis en Tragamonedas' },
-      { type:'multiplier', amount:3, weight:14, label:'Multiplicador x3 en tu próximo giro' },
-      { type:'multiplier', amount:5, weight:6,  label:'Multiplicador x5 en tu próximo giro' },
-      { type:'border', borderId:'oro', weight:12, label:'Borde Oro ✨' },
-      { type:'border', borderId:'diamante', weight:8, label:'Borde Diamante 💎' }
-    ]}
-  };
-
-  function weightedReward(rewards){
-    var total = rewards.reduce(function(a,r){ return a+r.weight; }, 0);
-    var r = Math.random()*total;
-    for(var i=0;i<rewards.length;i++){
-      r -= rewards[i].weight;
-      if(r<=0) return rewards[i];
-    }
-    return rewards[rewards.length-1];
-  }
-
-  function applyBorder(id){
-    var chip = document.getElementById('balanceChip');
-    if(!chip) return;
-    chip.className = 'balance-chip' + (id && id !== 'none' ? ' border-' + id : '');
-  }
-
-  function openSobre(tierId){
-    var tier = SOBRE_TIERS[tierId];
-    if(!tier) return;
-    if(state.balance < tier.price){
-      var reveal = document.getElementById('sobreReveal');
-      document.getElementById('sobreRevealIcon').textContent = '❌';
-      document.getElementById('sobreRevealLabel').textContent = 'Fichas insuficientes para el ' + tier.name;
-      reveal.hidden = false;
-      return;
-    }
-    addBalance(-tier.price);
-    var reward = weightedReward(tier.rewards);
-    var icon = '🧧';
-    var resultLabel = reward.label;
-
-    if(reward.type === 'fichas'){
-      addBalance(reward.amount);
-      icon = '🪙';
-    } else if(reward.type === 'freespin'){
-      state.freeSpins = (state.freeSpins || 0) + reward.amount;
-      icon = '🎰';
-    } else if(reward.type === 'multiplier'){
-      state.pendingSlotMultiplier = Math.max(state.pendingSlotMultiplier || 1, reward.amount);
-      icon = '⚡';
-    } else if(reward.type === 'border'){
-      icon = (BORDER_DEFS[reward.borderId] && BORDER_DEFS[reward.borderId].icon) || '✨';
-      if(state.ownedBorders.indexOf(reward.borderId) !== -1){
-        // Ya tienes ese borde: se convierte en un bono de fichas de consolación.
-        var refund = Math.round(tier.price * 0.6);
-        addBalance(refund);
-        resultLabel = 'Ya tenías el ' + reward.label.replace(' ✨','').replace(' 💎','') + ' — te devolvimos ' + refund + ' fichas';
-        icon = '🪙';
-      } else {
-        state.ownedBorders.push(reward.borderId);
-        resultLabel = '¡Nuevo! ' + reward.label;
-      }
-    }
-
-    if(!state.sobreHistory) state.sobreHistory = [];
-    state.sobreHistory.unshift({ tier:tierId, label:resultLabel, icon:icon, ts:Date.now() });
-    if(state.sobreHistory.length > 15) state.sobreHistory.length = 15;
-
-    saveState();
-
-    var reveal = document.getElementById('sobreReveal');
-    document.getElementById('sobreRevealIcon').textContent = icon;
-    document.getElementById('sobreRevealLabel').textContent = resultLabel;
-    reveal.hidden = false;
-
-    refreshSlotBoostUI();
-    renderSobres();
-  }
-
-  Array.prototype.slice.call(document.querySelectorAll('.sobre-open-btn')).forEach(function(btn){
-    btn.addEventListener('click', function(){ openSobre(btn.getAttribute('data-tier')); });
-  });
-
-  function renderBorderSwatches(){
-    var el = document.getElementById('borderSwatches');
-    if(!el) return;
-    el.innerHTML = '';
-    Object.keys(BORDER_DEFS).forEach(function(id){
-      var def = BORDER_DEFS[id];
-      var owned = id === 'none' || state.ownedBorders.indexOf(id) !== -1;
-      var swatch = document.createElement('button');
-      swatch.type = 'button';
-      swatch.className = 'border-swatch' + (state.activeBorder === id ? ' active' : '') + (owned ? '' : ' locked');
-      swatch.textContent = id === 'none' ? '🚫' : (def.icon || '✨');
-      swatch.title = def.name + (owned ? '' : ' (aún no lo tienes)');
-      if(owned){
-        swatch.addEventListener('click', function(){
-          state.activeBorder = id;
-          saveState();
-          applyBorder(id);
-          renderBorderSwatches();
-        });
-      } else {
-        swatch.disabled = true;
-      }
-      el.appendChild(swatch);
-    });
-  }
-
-  function renderSobreHistory(){
-    var el = document.getElementById('sobreHistoryList');
-    if(!el) return;
-    el.innerHTML = '';
-    var history = state.sobreHistory || [];
-    if(!history.length){
-      el.innerHTML = '<p class="rl-hint" style="text-align:left;">Aún no has abierto ningún sobre.</p>';
-      return;
-    }
-    history.forEach(function(h){
-      var row = document.createElement('div');
-      row.className = 'sobre-history-item';
-      var tierName = (SOBRE_TIERS[h.tier] && SOBRE_TIERS[h.tier].name) || h.tier;
-      row.innerHTML =
-        '<span>' + h.icon + ' ' + h.label + '</span>' +
-        '<span class="sh-tier">' + tierName + '</span>';
-      el.appendChild(row);
-    });
-  }
-
-  function renderSobres(){
-    Object.keys(SOBRE_TIERS).forEach(function(id){
-      var btn = document.querySelector('.sobre-open-btn[data-tier="' + id + '"]');
-      if(btn) btn.disabled = state.balance < SOBRE_TIERS[id].price;
-    });
-
-    var effectsEl = document.getElementById('sobreEffects');
-    if(effectsEl){
-      var badges = [];
-      if(state.freeSpins > 0) badges.push('🎰 ' + state.freeSpins + ' giro' + (state.freeSpins===1?'':'s') + ' gratis');
-      if(state.pendingSlotMultiplier && state.pendingSlotMultiplier > 1) badges.push('⚡ x' + state.pendingSlotMultiplier + ' en tu próximo giro');
-      effectsEl.innerHTML = badges.map(function(b){ return '<span class="sobre-effect-badge">' + b + '</span>'; }).join('');
-      effectsEl.hidden = badges.length === 0;
-    }
-
-    renderBorderSwatches();
-    renderSobreHistory();
-  }
 
   /* ================= STORE ================= */
   Array.prototype.slice.call(document.querySelectorAll('.store-tab-btn')).forEach(function(btn){
@@ -6777,7 +6639,7 @@
     if(chessMode === 'cpu' && chessLocal){
       var meLabel = chessLocal.myColor === 'w' ? 'Blancas' : 'Negras';
       var diffLabel = (chessLocal.difficulty && chessLocal.difficulty.label) || 'CPU';
-      el.innerHTML = '<span><b>Tú</b> (' + meLabel + ') · ELO ' + (state.chessElo || 1200) + '</span><span>Bote: ' + (chessLocal.bet * 2).toLocaleString('es-CO') + '</span><span><b>CPU</b> (' + diffLabel + ') · ELO ' + (chessLocal.oppElo || 1200) + '</span>';
+      el.innerHTML = '<span><b>Tú</b> (' + meLabel + ') · ELO ' + (state.chessElo || 1200) + '</span><span><b>CPU</b> (' + diffLabel + ') · ELO ' + (chessLocal.oppElo || 1200) + '</span>';
       return;
     }
     if(chessMode === 'online' && chessOnlineData){
@@ -6816,17 +6678,16 @@
   function chessFinishCpuMatch(status){
     var m = chessLocal;
     m.status = 'over';
-    var payout = 0, msg = '', myScore = 0.5;
+    var msg = '', myScore = 0.5;
     if(status.result === 'checkmate'){
-      if(status.winner === m.myColor){ payout = m.bet * 2; msg = '¡Jaque mate! Ganaste ' + payout.toLocaleString('es-CO') + ' fichas'; myScore = 1; }
-      else { msg = 'Jaque mate de la CPU. Perdiste tu apuesta'; myScore = 0; }
+      if(status.winner === m.myColor){ msg = '¡Jaque mate! Ganaste'; myScore = 1; }
+      else { msg = 'Jaque mate de la CPU. Perdiste'; myScore = 0; }
     } else if(status.result === 'resign'){
-      if(status.winner === m.myColor){ payout = m.bet * 2; msg = 'La CPU se rindió. Ganaste ' + payout.toLocaleString('es-CO') + ' fichas'; myScore = 1; }
-      else { msg = 'Te rendiste. Perdiste tu apuesta'; myScore = 0; }
+      if(status.winner === m.myColor){ msg = 'La CPU se rindió. Ganaste'; myScore = 1; }
+      else { msg = 'Te rendiste. Perdiste'; myScore = 0; }
     } else {
-      payout = m.bet; msg = 'Tablas. Recuperas tu apuesta'; myScore = 0.5;
+      msg = 'Tablas'; myScore = 0.5;
     }
-    if(payout > 0) addBalance(payout);
     var delta = chessUpdateElo(myScore, m.oppElo);
     msg += ' · ELO ' + (delta >= 0 ? '+' : '') + delta + ' (ahora ' + state.chessElo + ')';
     m.result = msg;
@@ -6834,14 +6695,12 @@
     renderChessPlayersRow();
   }
 
-  function createCpuChessMatch(bet, colorChoice, difficultyId){
-    if(state.balance < bet){ chessMsg('Fichas insuficientes para esa apuesta'); return; }
+  function createCpuChessMatch(colorChoice, difficultyId){
     var myColor = colorChoice === 'r' ? (Math.random() < 0.5 ? 'w' : 'b') : colorChoice;
     var diff = chessDifficultyById(difficultyId);
-    addBalance(-bet);
     chessLocal = {
       pos: { board: chessCloneBoard(CHESS_START), turn: 'w', castling: { wK:true, wQ:true, bK:true, bQ:true }, enPassant: null },
-      myColor: myColor, cpuColor: chessOpp(myColor), bet: bet, status: 'playing', result: null, log: [],
+      myColor: myColor, cpuColor: chessOpp(myColor), status: 'playing', result: null, log: [],
       difficulty: diff, depth: diff.depth, oppElo: diff.elo
     };
     chessMode = 'cpu';
@@ -7095,11 +6954,10 @@
   document.getElementById('leaveChessBtn').addEventListener('click', leaveChessMatch);
   document.getElementById('chessOfflineRetryBtn').addEventListener('click', function(){ initDb(); renderChessEntry(); });
 
-  var chessCpuBet = wireChipSelect('chessCpuBetChips', 300);
   var chessCpuColor = wireChoiceSelect('chessCpuColorChips', 'r');
   var chessCpuDifficulty = wireChoiceSelect('chessCpuDifficultyChips', 'medium');
   document.getElementById('createCpuChessBtn').addEventListener('click', function(){
-    createCpuChessMatch(chessCpuBet.get(), chessCpuColor.get(), chessCpuDifficulty.get());
+    createCpuChessMatch(chessCpuColor.get(), chessCpuDifficulty.get());
   });
 
   var chessBet = wireChipSelect('chessBetChips', 300);
@@ -7435,8 +7293,7 @@
 
   function isDominoCpuSeat(s){ return !!s && typeof s.playerId === 'string' && s.playerId.indexOf('cpu') === 0; }
 
-  function createCpuDominoTable(buyIn, numCpus){
-    if(state.balance < buyIn){ dominoMsg('Fichas insuficientes'); return; }
+  function createCpuDominoTable(numCpus){
     ensurePlayerId();
     var myName = state.playerName || 'Tú';
     var total = Math.min(4, Math.max(2, numCpus + 1));
@@ -7447,10 +7304,9 @@
       seats[i] = dominoMakeSeat('cpu' + i, DOMINO_CPU_NAMES[i - 1] || ('CPU ' + i));
       seats[i].hand = deal.hands[i];
     }
-    addBalance(-buyIn);
     localDominoTable = {
-      isLocal: true, buyIn: buyIn, maxSeats: total, seats: seats, boneyard: deal.boneyard,
-      chain: [], turnSeat: dominoFindStartingSeat(seats), status: 'playing', passStreak: 0, pot: buyIn * total,
+      isLocal: true, buyIn: 0, maxSeats: total, seats: seats, boneyard: deal.boneyard,
+      chain: [], turnSeat: dominoFindStartingSeat(seats), status: 'playing', passStreak: 0, pot: 0,
       result: null, log: ['Mesa contra la CPU creada'], chat: [], updatedAt: Date.now()
     };
     dominoMode = 'cpu';
@@ -7475,10 +7331,28 @@
   function dominoFinishLocal(){
     var t = localDominoTable;
     var mySeat = tableSeatIndex(t, state.playerId);
-    var payout = dominoMyPayout(t, mySeat);
-    if(payout > 0) addBalance(payout);
     renderDominoTable(t);
-    dominoShowResultBanner(t, payout);
+    dominoShowCpuResultBanner(t, mySeat);
+  }
+
+  function dominoShowCpuResultBanner(t, mySeat){
+    var card = document.getElementById('dominoResultCard');
+    var title = document.getElementById('dominoResultTitle');
+    var text = document.getElementById('dominoResultText');
+    var res = t.result;
+    if(!res){ card.hidden = true; return; }
+    card.hidden = false;
+    title.textContent = res.reason === 'domino' ? '¡Dominó!' : (res.reason === 'tie' ? 'Partida trabada — empate' : 'Partida trabada');
+    if(res.reason === 'tie'){
+      text.textContent = res.seatIdxs.indexOf(mySeat) !== -1 ? 'Empate' : 'Perdiste la partida';
+      text.className = 'message-bar';
+    } else if(res.seatIdx === mySeat){
+      text.textContent = '¡Ganaste la partida!';
+      text.className = 'message-bar win';
+    } else {
+      text.textContent = 'Perdiste la partida';
+      text.className = 'message-bar lose';
+    }
   }
 
   function dominoMyPayout(t, mySeat){
@@ -7820,7 +7694,7 @@
       oppEl.appendChild(badge);
     });
 
-    document.getElementById('dominoPotLabel').textContent = 'Bote: ' + (t.pot || 0).toLocaleString('es-CO');
+    document.getElementById('dominoPotLabel').textContent = dominoMode === 'cpu' ? 'Práctica gratis' : 'Bote: ' + (t.pot || 0).toLocaleString('es-CO');
     document.getElementById('dominoBoneyardLabel').textContent = 'Montón: ' + (t.boneyard ? t.boneyard.length : 0);
 
     var chainEl = document.getElementById('dominoChain');
@@ -7955,10 +7829,9 @@
     currentDominoTableRef.set({ chat: chat }, { merge: true }).catch(function(){});
   }
 
-  var dominoCpuBuyIn = wireChipSelect('dominoCpuBuyInChips', 250);
   var dominoCpuCount = wireChipSelect('dominoCpuCountChips', 2);
   document.getElementById('createCpuDominoTableBtn').addEventListener('click', function(){
-    createCpuDominoTable(dominoCpuBuyIn.get(), dominoCpuCount.get());
+    createCpuDominoTable(dominoCpuCount.get());
   });
 
   var dominoBuyIn = wireChipSelect('dominoBuyInChips', 250);
@@ -8054,11 +7927,9 @@
     tttMsgTimer = setTimeout(function(){ el.textContent = ''; }, 3500);
   }
 
-  function createCpuTttMatch(bet, markChoice){
-    if(state.balance < bet){ tttMsg('Fichas insuficientes para esa apuesta'); return; }
+  function createCpuTttMatch(markChoice){
     var myMark = markChoice === 'r' ? (Math.random() < 0.5 ? 'X' : 'O') : markChoice;
-    addBalance(-bet);
-    tttLocal = { board: tttEmptyBoard(), turn: 'X', myMark: myMark, cpuMark: tttOpp(myMark), bet: bet, status: 'playing', result: null, log: [] };
+    tttLocal = { board: tttEmptyBoard(), turn: 'X', myMark: myMark, cpuMark: tttOpp(myMark), status: 'playing', result: null, log: [] };
     tttMode = 'cpu';
     renderTttEntry();
     if(tttLocal.turn === tttLocal.cpuMark) setTimeout(tttCpuPlay, 500);
@@ -8080,11 +7951,10 @@
   function tttFinishCpuMatch(winner){
     var m = tttLocal;
     m.status = 'over';
-    var payout = 0, msg = '';
-    if(winner === m.myMark){ payout = m.bet * 2; msg = '¡Ganaste! +' + payout.toLocaleString('es-CO') + ' fichas'; }
+    var msg = '';
+    if(winner === m.myMark){ msg = '¡Ganaste!'; }
     else if(winner === m.cpuMark){ msg = 'Perdiste. Gana la CPU'; }
-    else { payout = m.bet; msg = 'Empate. Recuperas tu apuesta'; }
-    if(payout > 0) addBalance(payout);
+    else { msg = 'Empate'; }
     m.result = msg;
     renderTttBoardUI();
   }
@@ -8431,10 +8301,9 @@
   document.getElementById('leaveTttBtn').addEventListener('click', leaveTttMatch);
   document.getElementById('tttOfflineRetryBtn').addEventListener('click', function(){ initDb(); renderTttEntry(); });
 
-  var tttCpuBet = wireChipSelect('tttCpuBetChips', 100);
   var tttCpuMark = wireChoiceSelect('tttCpuMarkChips', 'r');
   document.getElementById('createCpuTttBtn').addEventListener('click', function(){
-    createCpuTttMatch(tttCpuBet.get(), tttCpuMark.get());
+    createCpuTttMatch(tttCpuMark.get());
   });
 
   var tttBet = wireChipSelect('tttBetChips', 100);
@@ -9565,9 +9434,392 @@
     btn.addEventListener('click', function(){ bjoSendChat(btn.getAttribute('data-emoji')); });
   });
 
+  /* ================= RELLENAR BOTELLAS (WATER SORT) ================= */
+  var WS_CAPACITY = 4;
+  var WS_COLORS = ['#e53935','#00e5ff','#ffd500','#30e860','#a633ff','#ff8800','#ff2d9e','#1fa8a0','#c9833e','#2f6bff','#c6ff00'];
+  var WATER_SORT_LEVELS = [[[0,0,1,0],[1,1,1,2],[2,0,2,2],[],[]],[[2,2,2,1],[2,1,0,1],[1,0,0,0],[],[]],[[0,0,3,2],[2,3,0,2],[3,1,1,2],[1,3,0,1],[],[]],[[3,0,2,1],[1,0,1,0],[2,2,3,1],[2,3,3,0],[],[]],[[4,0,3,3],[0,2,2,1],[1,4,4,0],[2,1,3,3],[0,4,1,2],[],[]],[[4,2,1,4],[2,0,4,3],[0,3,0,4],[3,2,1,3],[2,0,1,1],[],[]],[[3,1,4,2],[2,3,4,1],[5,2,2,0],[5,3,0,0],[3,4,1,5],[0,5,1,4],[],[]],[[2,2,0,1],[5,3,4,5],[0,5,3,0],[4,2,3,1],[0,1,4,2],[5,1,4,3],[],[]],[[5,4,3,6],[1,0,4,3],[2,0,2,6],[5,1,5,5],[3,4,2,6],[6,0,4,2],[3,1,0,1],[],[]],[[2,2,2,0],[1,0,6,1],[3,1,6,5],[0,6,1,4],[4,2,5,4],[0,4,5,5],[3,3,3,6],[],[]],[[2,5,5,0],[1,0,6,7],[3,6,7,4],[3,1,1,2],[5,4,0,0],[4,1,7,2],[7,5,6,3],[3,6,2,4],[],[]],[[2,3,1,2],[6,4,3,1],[0,6,0,7],[1,3,5,1],[7,4,7,3],[6,5,2,5],[4,7,0,4],[2,5,0,6],[],[]],[[2,7,7,5],[0,5,6,3],[3,4,6,7],[8,0,7,8],[1,2,6,1],[3,5,1,8],[0,1,4,4],[6,5,2,4],[0,3,8,2],[],[]],[[2,1,1,3],[2,7,1,4],[6,7,6,0],[6,2,3,5],[4,5,3,7],[8,0,8,1],[5,5,3,0],[2,7,4,0],[8,8,6,4],[],[]],[[1,1,5,3],[7,2,6,4],[7,0,8,5],[9,8,3,2],[1,0,5,9],[4,9,3,0],[2,1,2,5],[8,7,9,0],[6,4,4,7],[3,8,6,6],[],[]],[[5,0,0,7],[2,3,0,6],[3,6,3,2],[8,6,9,7],[7,3,4,5],[2,8,5,4],[8,9,2,1],[1,9,1,8],[6,7,1,5],[0,4,4,9],[],[]],[[2,0,10,4],[3,3,5,9],[1,4,1,3],[7,8,2,7],[5,7,6,0],[3,10,2,0],[5,0,7,4],[8,10,6,9],[6,9,8,5],[4,6,8,1],[1,9,10,2],[],[]],[[9,4,6,4],[3,5,8,5],[2,1,0,7],[7,10,0,8],[6,9,1,2],[4,7,3,3],[10,2,9,6],[5,4,6,0],[2,10,0,8],[1,8,5,3],[10,1,9,7],[],[]],[[7,7,5,4],[8,10,6,7],[3,10,9,6],[6,2,0,8],[1,2,9,10],[4,4,8,3],[4,5,1,10],[8,7,5,0],[1,1,9,2],[2,3,3,0],[5,6,9,0],[],[]],[[5,8,10,5],[10,5,6,9],[3,7,5,2],[9,0,10,8],[1,8,2,1],[10,8,2,4],[6,1,0,1],[9,0,7,6],[3,3,9,4],[4,4,6,7],[7,0,2,3],[],[]]];
+
+  var wsLevel = 1;
+  var wsBottles = [];
+  var wsSelected = -1;
+  var wsHistory = [];
+  var wsMsgTimer = null;
+
+  function wsMsg(text){
+    var el = document.getElementById('wsMessage');
+    if(!el) return;
+    el.textContent = text;
+    clearTimeout(wsMsgTimer);
+    wsMsgTimer = setTimeout(function(){ el.textContent = ''; }, 2000);
+  }
+
+  function wsCloneBoard(b){ return b.map(function(x){ return x.slice(); }); }
+
+  function wsLoadLevel(levelNum){
+    wsLevel = Math.max(1, Math.min(20, levelNum));
+    wsBottles = wsCloneBoard(WATER_SORT_LEVELS[wsLevel - 1]);
+    wsSelected = -1;
+    wsHistory = [];
+    var card = document.getElementById('wsResultCard');
+    if(card) card.hidden = true;
+    renderWsBoard();
+  }
+
+  function wsTopInfo(b){
+    if(!b.length) return null;
+    var color = b[b.length - 1];
+    var run = 1;
+    for(var i = b.length - 2; i >= 0; i--){ if(b[i] === color) run++; else break; }
+    return { color: color, run: run };
+  }
+
+  function wsCanPour(from, to){
+    if(!from.length) return false;
+    if(to.length >= WS_CAPACITY) return false;
+    if(!to.length) return true;
+    return to[to.length - 1] === from[from.length - 1];
+  }
+
+  function wsDoPour(from, to){
+    var t = wsTopInfo(from);
+    var space = WS_CAPACITY - to.length;
+    var amount = Math.min(t.run, space);
+    for(var i = 0; i < amount; i++) to.push(from.pop());
+  }
+
+  function wsIsSolved(){
+    return wsBottles.every(function(b){ return b.length === 0 || (b.length === WS_CAPACITY && b.every(function(x){ return x === b[0]; })); });
+  }
+
+  function wsBottleClick(idx){
+    var card = document.getElementById('wsResultCard');
+    if(card && !card.hidden) return;
+    var b = wsBottles[idx];
+    if(wsSelected === -1){
+      if(b.length){ wsSelected = idx; renderWsBoard(); }
+      return;
+    }
+    if(wsSelected === idx){ wsSelected = -1; renderWsBoard(); return; }
+    var from = wsBottles[wsSelected], to = wsBottles[idx];
+    if(wsCanPour(from, to)){
+      wsHistory.push(wsCloneBoard(wsBottles));
+      wsDoPour(from, to);
+      wsSelected = -1;
+      renderWsBoard();
+      if(wsIsSolved()) wsHandleWin();
+    } else if(b.length){
+      wsSelected = idx;
+      renderWsBoard();
+    } else {
+      wsMsg('Movimiento inválido');
+    }
+  }
+
+  function wsHandleWin(){
+    if((state.waterSortLevel || 1) <= wsLevel){
+      state.waterSortLevel = Math.min(20, wsLevel + 1);
+      saveState();
+    }
+    var card = document.getElementById('wsResultCard');
+    card.hidden = false;
+    document.getElementById('wsResultText').textContent = '¡Bien hecho!';
+    var nextBtn = document.getElementById('wsNextBtn');
+    if(wsLevel >= 20){
+      document.getElementById('wsResultTitle').textContent = '¡Completaste los 20 niveles!';
+      nextBtn.textContent = 'Jugar de nuevo (Nivel 1)';
+      nextBtn.onclick = function(){ wsLoadLevel(1); };
+    } else {
+      document.getElementById('wsResultTitle').textContent = '¡Nivel completado!';
+      nextBtn.textContent = 'Siguiente nivel';
+      nextBtn.onclick = function(){ wsLoadLevel(wsLevel + 1); };
+    }
+  }
+
+  function renderWsBoard(){
+    document.getElementById('wsLevelLabel').textContent = 'Nivel ' + wsLevel + '/20';
+    var boardEl = document.getElementById('wsBoard');
+    boardEl.innerHTML = '';
+    wsBottles.forEach(function(b, idx){
+      var bottleEl = document.createElement('div');
+      bottleEl.className = 'ws-bottle' + (idx === wsSelected ? ' selected' : '');
+      for(var k = 0; k < WS_CAPACITY; k++){
+        var stackIdx = WS_CAPACITY - 1 - k;
+        var layerEl = document.createElement('div');
+        layerEl.className = 'ws-layer';
+        layerEl.style.background = stackIdx < b.length ? WS_COLORS[b[stackIdx]] : 'transparent';
+        bottleEl.appendChild(layerEl);
+      }
+      bottleEl.addEventListener('click', function(){ wsBottleClick(idx); });
+      boardEl.appendChild(bottleEl);
+    });
+  }
+
+  function renderWsLevelsGrid(){
+    var grid = document.getElementById('wsLevelsGrid');
+    grid.innerHTML = '';
+    var unlocked = state.waterSortLevel || 1;
+    for(var i = 1; i <= 20; i++){
+      (function(levelNum){
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ws-level-btn' + (levelNum === wsLevel ? ' active' : '');
+        btn.textContent = levelNum;
+        btn.disabled = levelNum > unlocked;
+        btn.addEventListener('click', function(){
+          wsLoadLevel(levelNum);
+          document.getElementById('wsLevelsOverlay').hidden = true;
+        });
+        grid.appendChild(btn);
+      })(i);
+    }
+  }
+
+  function renderWaterSortEntry(){
+    wsLoadLevel(state.waterSortLevel || 1);
+  }
+
+  document.getElementById('wsUndoBtn').addEventListener('click', function(){
+    if(!wsHistory.length) return;
+    wsBottles = wsHistory.pop();
+    wsSelected = -1;
+    renderWsBoard();
+  });
+  document.getElementById('wsRestartBtn').addEventListener('click', function(){ wsLoadLevel(wsLevel); });
+  document.getElementById('wsLevelsBtn').addEventListener('click', function(){
+    renderWsLevelsGrid();
+    document.getElementById('wsLevelsOverlay').hidden = false;
+  });
+  document.getElementById('wsLevelsCloseBtn').addEventListener('click', function(){
+    document.getElementById('wsLevelsOverlay').hidden = true;
+  });
+
+  /* ================= SNAKE ================= */
+  var SNAKE_COLS = 18, SNAKE_ROWS = 18, SNAKE_CELL = 20;
+  var SNAKE_W = SNAKE_COLS * SNAKE_CELL, SNAKE_H = SNAKE_ROWS * SNAKE_CELL;
+  var snake = null;
+
+  function snakeHandlePrimaryAction(){
+    if(!snake) return;
+    if(snake.phase === 'title' || snake.phase === 'over'){ snakeReset(); snake.phase = 'playing'; }
+  }
+
+  function snakeQueueDir(d){
+    if(!snake) return;
+    if(snake.phase === 'title' || snake.phase === 'over') snakeHandlePrimaryAction();
+    var cur = snake.dir;
+    if(snake.body.length > 1 && d.x === -cur.x && d.y === -cur.y) return;
+    snake.nextDir = d;
+  }
+
+  function snakeKeyDown(e){
+    if(!snake) return;
+    var dirMap = { ArrowUp:{x:0,y:-1}, ArrowDown:{x:0,y:1}, ArrowLeft:{x:-1,y:0}, ArrowRight:{x:1,y:0} };
+    if(dirMap[e.key] || e.code === 'Space') e.preventDefault();
+    if(dirMap[e.key]) snakeQueueDir(dirMap[e.key]);
+    if(e.code === 'Space') snakeHandlePrimaryAction();
+  }
+
+  function snakeGamepadRead(){
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for(var i = 0; i < pads.length; i++){
+      var gp = pads[i];
+      if(!gp) continue;
+      var axisX = gp.axes && gp.axes[0] ? gp.axes[0] : 0;
+      var axisY = gp.axes && gp.axes[1] ? gp.axes[1] : 0;
+      if(gp.buttons[14] && gp.buttons[14].pressed) snakeQueueDir({ x:-1, y:0 });
+      else if(gp.buttons[15] && gp.buttons[15].pressed) snakeQueueDir({ x:1, y:0 });
+      else if(gp.buttons[12] && gp.buttons[12].pressed) snakeQueueDir({ x:0, y:-1 });
+      else if(gp.buttons[13] && gp.buttons[13].pressed) snakeQueueDir({ x:0, y:1 });
+      else if(Math.abs(axisX) > 0.5 || Math.abs(axisY) > 0.5){
+        if(Math.abs(axisX) > Math.abs(axisY)) snakeQueueDir({ x: axisX > 0 ? 1 : -1, y: 0 });
+        else snakeQueueDir({ x: 0, y: axisY > 0 ? 1 : -1 });
+      }
+      var primaryPressed = !!(gp.buttons[0] && gp.buttons[0].pressed) || !!(gp.buttons[9] && gp.buttons[9].pressed);
+      if(!snake.gamepadPrimaryLatch && primaryPressed) snakeHandlePrimaryAction();
+      snake.gamepadPrimaryLatch = primaryPressed;
+      break;
+    }
+  }
+
+  function snakeRandomFood(){
+    var cell;
+    do {
+      cell = { x: Math.floor(Math.random() * SNAKE_COLS), y: Math.floor(Math.random() * SNAKE_ROWS) };
+    } while(snake.body.some(function(s){ return s.x === cell.x && s.y === cell.y; }));
+    return cell;
+  }
+
+  function snakeReset(){
+    var midX = Math.floor(SNAKE_COLS / 2), midY = Math.floor(SNAKE_ROWS / 2);
+    snake.body = [{ x: midX, y: midY }, { x: midX - 1, y: midY }, { x: midX - 2, y: midY }];
+    snake.dir = { x: 1, y: 0 };
+    snake.nextDir = { x: 1, y: 0 };
+    snake.score = 0;
+    snake.stepMs = 160;
+    snake.acc = 0;
+    snake.phase = 'title';
+    snake.food = snakeRandomFood();
+    var resultEl = document.getElementById('snakeResult');
+    if(resultEl) resultEl.innerHTML = '';
+  }
+
+  function snakeBestScore(){ return parseInt(localStorage.getItem('luckyChips_snakeBest') || '0', 10) || 0; }
+
+  function snakeStep(){
+    snake.dir = snake.nextDir;
+    var head = snake.body[0];
+    var next = { x: head.x + snake.dir.x, y: head.y + snake.dir.y };
+    var hit = next.x < 0 || next.x >= SNAKE_COLS || next.y < 0 || next.y >= SNAKE_ROWS ||
+      snake.body.some(function(s){ return s.x === next.x && s.y === next.y; });
+    if(hit){
+      snake.phase = 'over';
+      var best = snakeBestScore();
+      if(snake.score > best){ localStorage.setItem('luckyChips_snakeBest', String(snake.score)); best = snake.score; }
+      var wrap = document.getElementById('snakeResult');
+      if(wrap) wrap.innerHTML = '<div class="message-bar lose">Puntaje: ' + snake.score + ' · Mejor: ' + best + '</div>';
+      return;
+    }
+    snake.body.unshift(next);
+    if(next.x === snake.food.x && next.y === snake.food.y){
+      snake.score++;
+      snake.stepMs = Math.max(70, 160 - snake.score * 4);
+      snake.food = snakeRandomFood();
+    } else {
+      snake.body.pop();
+    }
+  }
+
+  function snakeUpdate(dt){
+    if(snake.phase !== 'playing'){ return; }
+    snakeGamepadRead();
+    snake.acc += dt * 1000;
+    while(snake.acc >= snake.stepMs){
+      snake.acc -= snake.stepMs;
+      snakeStep();
+      if(snake.phase !== 'playing'){ snake.acc = 0; break; }
+    }
+  }
+
+  function snakeDraw(){
+    var canvas = document.getElementById('snakeCanvas');
+    if(!canvas || !snake) return;
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#101022'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(snake.scale, 0, 0, snake.scale, snake.offX, snake.offY);
+
+    ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1;
+    for(var gx = 0; gx <= SNAKE_COLS; gx++){ ctx.beginPath(); ctx.moveTo(gx * SNAKE_CELL, 0); ctx.lineTo(gx * SNAKE_CELL, SNAKE_H); ctx.stroke(); }
+    for(var gy = 0; gy <= SNAKE_ROWS; gy++){ ctx.beginPath(); ctx.moveTo(0, gy * SNAKE_CELL); ctx.lineTo(SNAKE_W, gy * SNAKE_CELL); ctx.stroke(); }
+
+    ctx.fillStyle = '#ff2d55';
+    ctx.beginPath(); ctx.arc(snake.food.x * SNAKE_CELL + SNAKE_CELL / 2, snake.food.y * SNAKE_CELL + SNAKE_CELL / 2, SNAKE_CELL * 0.36, 0, Math.PI * 2); ctx.fill();
+
+    snake.body.forEach(function(s, i){
+      ctx.fillStyle = i === 0 ? '#30e860' : '#1fae4a';
+      ctx.fillRect(s.x * SNAKE_CELL + 1, s.y * SNAKE_CELL + 1, SNAKE_CELL - 2, SNAKE_CELL - 2);
+    });
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#fff'; ctx.font = '900 16px "Archivo Black", sans-serif';
+    ctx.fillText('Puntaje: ' + snake.score, 6, 18);
+
+    if(snake.phase === 'title'){
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, SNAKE_W, SNAKE_H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff'; ctx.font = '900 26px "Archivo Black", sans-serif';
+      ctx.fillText('SNAKE', SNAKE_W / 2, SNAKE_H / 2 - 20);
+      ctx.font = '13px "Space Mono", monospace';
+      ctx.fillText('Toca o presiona una flecha para empezar', SNAKE_W / 2, SNAKE_H / 2 + 14);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+    if(snake.phase === 'over'){
+      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, SNAKE_W, SNAKE_H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ff5252'; ctx.font = '900 24px "Archivo Black", sans-serif';
+      ctx.fillText('CHOCASTE', SNAKE_W / 2, SNAKE_H / 2 - 10);
+      ctx.font = '13px "Space Mono", monospace'; ctx.fillStyle = '#fff';
+      ctx.fillText('Toca para reintentar', SNAKE_W / 2, SNAKE_H / 2 + 18);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+  }
+
+  function snakeResizeCanvas(){
+    var canvas = document.getElementById('snakeCanvas');
+    if(!canvas || !snake) return;
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    snake.scale = Math.min(canvas.width / SNAKE_W, canvas.height / SNAKE_H);
+    snake.offX = (canvas.width - SNAKE_W * snake.scale) / 2;
+    snake.offY = (canvas.height - SNAKE_H * snake.scale) / 2;
+  }
+  function snakeOnResize(){ snakeResizeCanvas(); }
+
+  function snakeTick(ts){
+    if(!snake || !snake.active) return;
+    if(snake.lastTs == null) snake.lastTs = ts;
+    var dt = Math.min(0.05, (ts - snake.lastTs) / 1000);
+    snake.lastTs = ts;
+    snakeUpdate(dt);
+    snakeDraw();
+    snake.rafId = requestAnimationFrame(snakeTick);
+  }
+
+  function snakeCanvasClick(){ snakeHandlePrimaryAction(); }
+
+  function startSnake(){
+    snake = {
+      active: true, phase: 'title', body: [], dir: { x:1, y:0 }, nextDir: { x:1, y:0 },
+      food: { x:0, y:0 }, score: 0, stepMs: 160, acc: 0,
+      scale: null, offX: 0, offY: 0, rafId: null, lastTs: null, gamepadPrimaryLatch: false
+    };
+    snakeReset();
+    requestAnimationFrame(function(){ snakeResizeCanvas(); if(snake) snake.rafId = requestAnimationFrame(snakeTick); });
+  }
+
+  function teardownSnake(){
+    if(!snake) return;
+    snake.active = false;
+    if(snake.rafId) cancelAnimationFrame(snake.rafId);
+    window.removeEventListener('keydown', snakeKeyDown);
+    window.removeEventListener('resize', snakeOnResize);
+    var canvas = document.getElementById('snakeCanvas');
+    if(canvas) canvas.removeEventListener('click', snakeCanvasClick);
+    snake = null;
+  }
+
+  function renderSnakeEntry(){
+    var root = document.getElementById('snakeRoot');
+    root.innerHTML =
+      '<div style="overflow:hidden; aspect-ratio:1/1; max-width:380px; margin:0 auto; background:#101022; border:3px solid #000;">' +
+        '<canvas id="snakeCanvas" style="display:block; width:100%; height:100%; cursor:pointer;"></canvas>' +
+      '</div>' +
+      '<p class="message-bar" style="margin-top:8px; text-align:center;">Flechas, control PS4 (stick o D-pad) o los botones de abajo</p>' +
+      '<div class="snake-touch-controls">' +
+        '<div class="snake-dpad">' +
+          '<span></span><button type="button" class="snake-dpad-btn" data-dir="up">▲</button><span></span>' +
+          '<button type="button" class="snake-dpad-btn" data-dir="left">◀</button><span></span><button type="button" class="snake-dpad-btn" data-dir="right">▶</button>' +
+          '<span></span><button type="button" class="snake-dpad-btn" data-dir="down">▼</button><span></span>' +
+        '</div>' +
+      '</div>' +
+      '<div id="snakeResult" style="margin-top:8px;"></div>';
+    window.addEventListener('keydown', snakeKeyDown);
+    window.addEventListener('resize', snakeOnResize);
+    document.getElementById('snakeCanvas').addEventListener('click', snakeCanvasClick);
+    var dirVecs = { up:{ x:0, y:-1 }, down:{ x:0, y:1 }, left:{ x:-1, y:0 }, right:{ x:1, y:0 } };
+    document.querySelectorAll('.snake-dpad-btn').forEach(function(btn){
+      btn.addEventListener('pointerdown', function(e){
+        e.preventDefault();
+        snakeQueueDir(dirVecs[btn.getAttribute('data-dir')]);
+      });
+    });
+    startSnake();
+  }
+
   /* ================= INIT ================= */
   applyTheme(state.activeTheme);
-  applyBorder(state.activeBorder);
   renderBalance();
   showView('hub');
   setInterval(ensureSchedule, 5000);
