@@ -204,6 +204,18 @@
   }
   .hub-hero h1{ font-size:1.7rem; font-weight:600; }
   .hub-sub{ color:var(--text-muted); font-size:.92rem; line-height:1.5; max-width:38ch; }
+  .hub-profile-card{
+    display:flex; align-items:center; gap:12px; margin-top:6px; padding:10px 14px;
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-sm); color:var(--text); text-align:left; cursor:pointer; width:100%;
+  }
+  .hub-profile-info{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .hub-profile-name{
+    font-family:var(--pixel-font); font-weight:400; font-size:.88rem; line-height:1.4;
+    color:var(--accent-bright); text-shadow:2px 2px 0 #000;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .hub-profile-league{ font-size:.8rem; color:var(--text-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
   .daily-card, .comp-card{
     display:flex;
@@ -1220,6 +1232,13 @@
         <p class="eyebrow">Casa de fichas</p>
         <h1 class="gold-text">Bienvenido de vuelta</h1>
         <p class="hub-sub">Todo aquí se juega con fichas ficticias. Cero dinero real — solo para divertirte en el celular.</p>
+        <button class="hub-profile-card" id="hubProfileCard" data-goto="league" hidden>
+          <span class="profile-avatar" id="hubProfileAvatar"></span>
+          <span class="hub-profile-info">
+            <span class="hub-profile-name" id="hubProfileName">Tu nombre</span>
+            <span class="hub-profile-league" id="hubProfileLeague">Sin liga</span>
+          </span>
+        </button>
       </div>
 
       <div class="daily-card ornate">
@@ -1943,8 +1962,9 @@
       <div id="leagueJoinPanels" hidden>
         <div class="league-card ornate" style="margin-bottom:12px;">
           <p class="league-card-title">🏆 Crear una liga</p>
-          <p class="league-card-sub">Genera un código nuevo y compártelo con tus amigos.</p>
-          <button class="btn btn-primary btn-block" id="createLeagueBtn">Crear mi liga</button>
+          <p class="league-card-sub">Ponle un nombre y genera un código para compartir con tus amigos.</p>
+          <input class="text-input" id="leagueNewNameInput" type="text" maxlength="24" placeholder="Nombre de la liga (opcional)" style="margin-top:8px;">
+          <button class="btn btn-primary btn-block" id="createLeagueBtn" style="margin-top:10px;">Crear mi liga</button>
         </div>
         <div class="league-card ornate">
           <p class="league-card-title">🔑 Unirme con un código</p>
@@ -1966,8 +1986,15 @@
           <button class="btn btn-ghost btn-sm" data-goto="store" data-store-tab="perfil">Editar</button>
         </div>
         <div class="league-card ornate" style="margin-bottom:12px;">
-          <p class="league-card-title">Tu liga</p>
-          <div class="league-code-display">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <p class="league-card-title" id="leagueNameDisplay">Tu liga</p>
+            <button class="btn btn-ghost btn-sm" id="editLeagueNameBtn">Renombrar</button>
+          </div>
+          <div class="field-row" id="leagueNameEditRow" hidden style="margin-top:8px;">
+            <input class="text-input" id="leagueNameInput" type="text" maxlength="24" placeholder="Nombre de la liga">
+            <button class="btn btn-gold btn-sm" id="saveLeagueNameBtn">Guardar</button>
+          </div>
+          <div class="league-code-display" style="margin-top:10px;">
             <span class="league-code-value" id="leagueCodeValue">------</span>
             <button class="btn btn-ghost btn-sm" id="copyLeagueCodeBtn">Copiar</button>
           </div>
@@ -2701,7 +2728,7 @@
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1,
       ownedAvatars:['dado'], activeAvatar:'dado', ownedFrames:['none'], activeFrame:'none',
-      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, chessElo:1200,
+      playerId:'', playerName:'', leagueCode:'', leagueName:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, chessElo:1200,
       racingLevel:1, waterSortLevel:1 };
   }
   var state = loadState();
@@ -3233,6 +3260,7 @@
 
   function refreshHub(){
     renderBalance();
+    renderHubProfile();
     var dailyBtn = document.getElementById('dailyBtn');
     var dailyDesc = document.getElementById('dailyDesc');
     var elapsed = Date.now() - state.lastDaily;
@@ -4746,6 +4774,21 @@
     if(leagueAvatar){ leagueAvatar.textContent = icon; leagueAvatar.className = 'profile-avatar ' + frameCls; }
     var leagueName = document.getElementById('leagueProfileName');
     if(leagueName) leagueName.textContent = state.playerName || 'Tú';
+    renderHubProfile();
+  }
+
+  function renderHubProfile(){
+    var card = document.getElementById('hubProfileCard');
+    if(!card) return;
+    if(!state.playerName){ card.hidden = true; return; }
+    card.hidden = false;
+    var icon = profileAvatarIcon(state.activeAvatar);
+    var frameCls = profileFrameCls(state.activeFrame);
+    var avatarEl = document.getElementById('hubProfileAvatar');
+    avatarEl.textContent = icon;
+    avatarEl.className = 'profile-avatar ' + frameCls;
+    document.getElementById('hubProfileName').textContent = state.playerName;
+    document.getElementById('hubProfileLeague').textContent = state.leagueCode ? (state.leagueName || 'Liga sin nombre') : 'Sin liga — toca para unirte';
   }
 
   function renderAvatarGrid(){
@@ -4919,13 +4962,15 @@
     return true;
   }
 
-  function createLeague(){
+  function createLeague(nameInput){
     if(!db){ leagueMsg('Conectando, intenta de nuevo en un momento'); return; }
     ensurePlayerId();
     var code = genLeagueCode();
-    db.doc('leagues/' + code).set({ code: code, createdAt: Date.now(), createdBy: state.playerId })
+    var name = (nameInput || '').trim().slice(0, 24) || ('Liga de ' + (state.playerName || 'amigos'));
+    db.doc('leagues/' + code).set({ code: code, name: name, createdAt: Date.now(), createdBy: state.playerId })
       .then(function(){
         state.leagueCode = code;
+        state.leagueName = name;
         saveState();
         syncLeagueMember();
         renderLeague();
@@ -4941,10 +4986,21 @@
     db.doc('leagues/' + code).get().then(function(snap){
       if(!snap.exists){ leagueMsg('No existe una liga con ese código'); return; }
       state.leagueCode = code;
+      state.leagueName = (snap.data() && snap.data().name) || '';
       saveState();
       syncLeagueMember();
       renderLeague();
     }).catch(function(){ leagueMsg('No se pudo unir a la liga'); });
+  }
+
+  function renameLeague(newName){
+    newName = (newName || '').trim().slice(0, 24);
+    if(!newName || !db || !state.leagueCode) return;
+    db.doc('leagues/' + state.leagueCode).set({ name: newName }, { merge: true }).then(function(){
+      state.leagueName = newName;
+      saveState();
+      renderLeague();
+    }).catch(function(){ leagueMsg('No se pudo renombrar la liga'); });
   }
 
   function leaveLeague(){
@@ -4952,6 +5008,7 @@
     var code = state.leagueCode;
     if(db && state.playerId){ db.doc('leagues/' + code + '/members/' + state.playerId).delete().catch(function(){}); }
     state.leagueCode = '';
+    state.leagueName = '';
     saveState();
     teardownLeagueListener();
     renderLeague();
@@ -5049,6 +5106,8 @@
     }
     joinPanels.hidden = true; inPanel.hidden = false;
     document.getElementById('leagueCodeValue').textContent = state.leagueCode;
+    document.getElementById('leagueNameDisplay').textContent = state.leagueName || 'Tu liga';
+    document.getElementById('leagueNameEditRow').hidden = true;
     syncLeagueMember();
     subscribeLeagueMembers();
   }
@@ -5064,11 +5123,20 @@
     document.getElementById('leagueInPanel').hidden = true;
     document.getElementById('leagueJoinPanels').hidden = true;
   });
-  document.getElementById('createLeagueBtn').addEventListener('click', createLeague);
+  document.getElementById('createLeagueBtn').addEventListener('click', function(){
+    createLeague(document.getElementById('leagueNewNameInput').value);
+  });
   document.getElementById('joinLeagueBtn').addEventListener('click', function(){
     joinLeagueByCode(document.getElementById('leagueCodeInput').value);
   });
   document.getElementById('leaveLeagueBtn').addEventListener('click', leaveLeague);
+  document.getElementById('editLeagueNameBtn').addEventListener('click', function(){
+    document.getElementById('leagueNameInput').value = state.leagueName || '';
+    document.getElementById('leagueNameEditRow').hidden = false;
+  });
+  document.getElementById('saveLeagueNameBtn').addEventListener('click', function(){
+    renameLeague(document.getElementById('leagueNameInput').value);
+  });
   document.getElementById('copyLeagueCodeBtn').addEventListener('click', function(){
     var code = state.leagueCode;
     if(!code) return;
