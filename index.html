@@ -1154,6 +1154,27 @@
   }
   .impostor-vote-btn:disabled{ opacity:.5; cursor:not-allowed; }
   .impostor-vote-btn.voted{ border-color:var(--neon-cyan-bright); box-shadow:0 0 0 1px var(--neon-cyan-bright) inset; }
+
+  /* ---------- blackjack en línea ---------- */
+  .bjo-dealer{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 0 14px; }
+  .bjo-seats-row{ display:flex; gap:10px; overflow-x:auto; padding:4px 2px 12px; }
+  .bjo-seat{
+    flex:0 0 auto; min-width:118px; display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:var(--radius-md);
+    padding:10px 8px; opacity:.6; transition:opacity .15s ease, border-color .15s ease;
+  }
+  .bjo-seat.resolved{ opacity:1; }
+  .bjo-seat.turn{ opacity:1; border-color:var(--neon-green-bright); box-shadow:0 0 0 1px var(--neon-green-bright) inset; }
+  .bjo-seat.me{ border-color:var(--neon-cyan-bright); }
+  .bjo-seat-head{ display:flex; align-items:center; gap:6px; }
+  .bjo-seat-name{ font-weight:700; font-size:.74rem; max-width:84px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bjo-seat-cards{ display:flex; gap:4px; flex-wrap:wrap; justify-content:center; min-height:58px; align-items:center; }
+  .bjo-seat-cards .playing-card{ width:36px; height:50px; font-size:.75rem; }
+  .bjo-seat-score{ font-family:'Space Mono', monospace; font-size:.76rem; color:var(--text-faint); }
+  .bjo-seat-status{ font-size:.66rem; font-weight:700; color:var(--text-faint); text-align:center; }
+  .bjo-seat-status.win{ color:var(--neon-green-bright); }
+  .bjo-seat-status.lose{ color:var(--ruby-bright); }
+  .bjo-seat-status.push{ color:var(--accent-bright); }
   .league-rank-tabs{ display:flex; gap:8px; margin-bottom:10px; }
   .league-rank-tab-btn.active{
     background:var(--neon-cyan);
@@ -1239,7 +1260,7 @@
         <button class="game-tile ornate" data-goto="blackjack">
           <span class="icon-badge icon-cyan">🂡</span>
           <span class="game-name">Blackjack</span>
-          <span class="game-meta">Desde 25 fichas</span>
+          <span class="game-meta">Solo o en línea con tu liga</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile wide ornate" data-goto="roulette">
@@ -1439,6 +1460,85 @@
       </div>
 
       <button class="btn btn-primary btn-block" id="bjDealBtn">Repartir</button>
+
+      <p class="paytable-title" style="margin-top:22px;">🌐 Jugar en línea con tu liga</p>
+      <p class="league-msg" id="bjoMsgBar"></p>
+
+      <div class="league-card ornate" id="bjoOfflinePanel" hidden>
+        <p class="league-card-title">No se pudo conectar</p>
+        <p class="league-card-sub">No logramos conectar con el servidor. Revisa tu conexión e intenta de nuevo.</p>
+        <button class="btn btn-primary btn-block" id="bjoOfflineRetryBtn">Reintentar</button>
+      </div>
+
+      <div id="bjoNoLeague" hidden>
+        <p class="poker-empty-hint">Únete a una liga de amigos primero: el Blackjack en línea se juega entre los miembros de tu liga.</p>
+        <button class="btn btn-primary btn-block" data-goto="league">Ir a Liga de Amigos</button>
+      </div>
+
+      <div id="bjoLobby" hidden>
+        <div class="league-card ornate" style="margin-bottom:12px;">
+          <p class="league-card-title">Crear una mesa</p>
+          <p class="league-card-sub">Elige la apuesta por mano y cuántos puestos (2 a 5), todos comparten la misma casa.</p>
+          <div class="chip-select" id="bjoBetChips">
+            <button class="chip-btn" data-amount="25">25</button>
+            <button class="chip-btn active" data-amount="50">50</button>
+            <button class="chip-btn" data-amount="100">100</button>
+          </div>
+          <p class="bet-label" style="margin-top:8px;">Puestos</p>
+          <div class="chip-select" id="bjoSeatsChips">
+            <button class="chip-btn" data-amount="2">2</button>
+            <button class="chip-btn active" data-amount="3">3</button>
+            <button class="chip-btn" data-amount="4">4</button>
+            <button class="chip-btn" data-amount="5">5</button>
+          </div>
+          <button class="btn btn-primary btn-block" id="createBjoTableBtn" style="margin-top:10px;">Crear mesa</button>
+        </div>
+        <p class="paytable-title">Mesas de tu liga</p>
+        <div class="poker-lobby-list" id="bjoLobbyList"></div>
+      </div>
+
+      <div id="bjoTableView" hidden>
+        <div class="league-card ornate" id="bjoWaitingPanel" hidden style="margin-bottom:12px;">
+          <p class="league-card-title">Esperando jugadores (mínimo 2)</p>
+          <div class="poker-lobby-list" id="bjoWaitingSeats" style="margin-top:8px;"></div>
+          <button class="btn btn-gold btn-block" id="bjoDealBtn" style="margin-top:10px;" hidden>Repartir</button>
+        </div>
+
+        <div id="bjoBoardEl" hidden>
+          <div class="bjo-dealer">
+            <p class="hand-label">Casa <span id="bjoDealerScore" class="tabular"></span></p>
+            <div class="cards" id="bjoDealerCards"></div>
+          </div>
+          <div class="bjo-seats-row" id="bjoSeatsRow"></div>
+          <div class="action-row" id="bjoActions" hidden>
+            <button class="btn btn-ghost" id="bjoHitBtn">Pedir</button>
+            <button class="btn btn-ghost" id="bjoDoubleBtn">Doblar</button>
+            <button class="btn btn-ruby" id="bjoStandBtn">Plantarse</button>
+          </div>
+          <button class="btn btn-gold btn-block" id="bjoNextHandBtn" style="margin-top:10px;" hidden>Repartir otra mano</button>
+        </div>
+
+        <p class="paytable-title" style="margin-top:14px;">Historial</p>
+        <div class="poker-log" id="bjoLog"></div>
+
+        <div class="chess-chat" id="bjoChatPanel" hidden>
+          <p class="bet-label">Chat de la mesa</p>
+          <div class="chess-chat-log" id="bjoChatLog"></div>
+          <div class="chess-quick-emojis">
+            <button type="button" class="chess-quick-emoji" data-emoji="👍">👍</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="🤞">🤞</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😂">😂</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😮">😮</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="🃏">🃏</button>
+          </div>
+          <div class="chess-chat-row">
+            <input class="text-input" id="bjoChatInput" type="text" maxlength="120" placeholder="Escribe algo…">
+            <button class="btn btn-gold btn-sm" id="bjoChatSendBtn">Enviar</button>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost btn-block" id="leaveBjoTableBtn" style="margin-top:12px;">Salir de la mesa</button>
+      </div>
     </section>
 
     <!-- ROULETTE -->
@@ -2604,7 +2704,7 @@
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1, ownedBorders:['none'], activeBorder:'none', sobreHistory:[],
       ownedAvatars:['dado'], activeAvatar:'dado', ownedFrames:['none'], activeFrame:'none',
-      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, chessElo:1200 };
+      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, chessElo:1200 };
   }
   var state = loadState();
 
@@ -2667,6 +2767,7 @@
     teardownDominoListeners();
     teardownTttListeners();
     teardownImpostorListeners();
+    teardownBjoListeners();
     if(name !== 'racing') teardownRacing();
     if(name !== 'trivia') teardownTrivia();
 
@@ -2682,6 +2783,7 @@
     if(name === 'domino'){ renderDominoEntry(); }
     if(name === 'tictactoe'){ renderTttEntry(); }
     if(name === 'impostor'){ renderImpostorEntry(); impostorTimerId = setInterval(impostorTick, 1000); }
+    if(name === 'blackjack'){ renderBjoEntry(); }
   }
 
   function selectStoreTab(tab){
@@ -8948,6 +9050,519 @@
   });
   document.querySelectorAll('#impostorChatPanel .chess-quick-emoji').forEach(function(btn){
     btn.addEventListener('click', function(){ impostorSendChat(btn.getAttribute('data-emoji')); });
+  });
+
+  /* ================= BLACKJACK EN LÍNEA ================= */
+  function bjoMakeSeat(playerId, name, avatar, frame){
+    return { playerId: playerId, name: name, avatar: avatar || 'dado', frame: frame || 'none', hand: [], status: 'waiting', payout: null };
+  }
+
+  function createBlackjackTable(bet, maxSeats){
+    if(!db || !state.leagueCode){ bjoMsg('La liga no está disponible ahora'); return; }
+    if(!state.playerName){ bjoMsg('Primero elige tu nombre en la liga'); return; }
+    ensurePlayerId();
+    var seats = new Array(maxSeats).fill(null);
+    seats[0] = bjoMakeSeat(state.playerId, state.playerName, state.activeAvatar, state.activeFrame);
+    var ref = db.collection('leagues/' + state.leagueCode + '/blackjackTables').doc();
+    ref.set({
+      createdAt: Date.now(), createdBy: state.playerId, hostId: state.playerId,
+      bet: bet, maxSeats: maxSeats, status: 'waiting', seats: seats,
+      deck: [], dealerHand: [], turnSeat: -1, round: 0, resultClaimed: {}, betClaimed: {},
+      log: ['Mesa creada por ' + state.playerName], chat: [], updatedAt: Date.now()
+    }).then(function(){
+      state.currentBjTable = { code: state.leagueCode, id: ref.id };
+      saveState();
+      renderBjoEntry();
+    }).catch(function(){ bjoMsg('No se pudo crear la mesa'); });
+  }
+
+  function joinBlackjackTable(tableId){
+    if(!db || !state.leagueCode) return;
+    ensurePlayerId();
+    var ref = db.doc('leagues/' + state.leagueCode + '/blackjackTables/' + tableId);
+    ref.get().then(function(snap){
+      if(!snap.exists){ bjoMsg('La mesa ya no existe'); return; }
+      var t = snap.data();
+      var idx = tableSeatIndex(t, state.playerId);
+      if(idx !== -1){
+        state.currentBjTable = { code: state.leagueCode, id: tableId }; saveState(); renderBjoEntry();
+        return;
+      }
+      if(t.status === 'playing'){ bjoMsg('Espera a que termine la mano actual'); return; }
+      var seats = t.seats.slice();
+      var freeIdx = -1;
+      for(var i = 0; i < t.maxSeats; i++){ if(!seats[i]){ freeIdx = i; break; } }
+      if(freeIdx === -1){ bjoMsg('La mesa está llena'); return; }
+      seats[freeIdx] = bjoMakeSeat(state.playerId, state.playerName, state.activeAvatar, state.activeFrame);
+      ref.set({
+        seats: seats,
+        log: (t.log || []).concat([state.playerName + ' se sentó en la mesa'])
+      }, { merge: true }).then(function(){
+        state.currentBjTable = { code: state.leagueCode, id: tableId };
+        saveState();
+        renderBjoEntry();
+      }).catch(function(){ bjoMsg('No se pudo unir a la mesa'); });
+    }).catch(function(){ bjoMsg('No se pudo unir a la mesa'); });
+  }
+
+  function bjoDrawCard(t){
+    if(t.deck.length < 4) t.deck = newDeck();
+    return t.deck.pop();
+  }
+  function bjoNextPlayableSeat(seats, fromIdx){
+    for(var i = fromIdx + 1; i < seats.length; i++){
+      if(seats[i] && seats[i].status === 'playing') return i;
+    }
+    return -1;
+  }
+  function bjoPlayDealerToCompletion(deck, dealerHand){
+    while(handValue(dealerHand) < 17){
+      if(deck.length < 4){ deck.length = 0; Array.prototype.push.apply(deck, newDeck()); }
+      dealerHand.push(deck.pop());
+    }
+  }
+  function bjoSettleAllSeats(seats, dealerHand, dealerHadNatural){
+    var dVal = handValue(dealerHand);
+    var dBust = dVal > 21;
+    seats.forEach(function(s){
+      if(!s || s.payout !== null) return;
+      if(s.status === 'bust'){ s.payout = 0; return; }
+      if(s.status === 'blackjack'){
+        if(dealerHadNatural){ s.status = 'push'; s.payout = s.bet; }
+        else { s.payout = Math.round(s.bet * 2.5); }
+        return;
+      }
+      if(dealerHadNatural){ s.status = 'lose'; s.payout = 0; return; }
+      var pVal = handValue(s.hand);
+      if(dBust || pVal > dVal){ s.status = 'win'; s.payout = s.bet * 2; }
+      else if(pVal === dVal){ s.status = 'push'; s.payout = s.bet; }
+      else { s.status = 'lose'; s.payout = 0; }
+    });
+  }
+
+  function dealBlackjackHand(){
+    var t = currentBjTableData, ref = currentBjTableRef;
+    if(!t || !ref || t.hostId !== state.playerId) return;
+    if(t.status === 'playing') return;
+    var seatedIdxs = [];
+    t.seats.forEach(function(s, i){ if(s) seatedIdxs.push(i); });
+    if(seatedIdxs.length < 2){ bjoMsg('Necesitas al menos 2 jugadores'); return; }
+
+    var deck = (t.deck && t.deck.length > 20) ? t.deck.slice() : newDeck();
+    var bet = t.bet;
+    var seats = t.seats.map(function(s){
+      if(!s) return null;
+      return { playerId: s.playerId, name: s.name, avatar: s.avatar, frame: s.frame, bet: bet, hand: [deck.pop(), deck.pop()], status: 'playing', payout: null };
+    });
+    var dealerHand = [deck.pop(), deck.pop()];
+    var round = (t.round || 0) + 1;
+    var log = (t.log || []).concat(['— Mano ' + round + ' —']);
+
+    seats.forEach(function(s){ if(s && handValue(s.hand) === 21) s.status = 'blackjack'; });
+    var dealerBJ = handValue(dealerHand) === 21;
+
+    var patch;
+    if(dealerBJ){
+      bjoSettleAllSeats(seats, dealerHand, true);
+      log.push('La casa tiene Blackjack.');
+      patch = { seats: seats, dealerHand: dealerHand, deck: deck, status: 'finished', turnSeat: -1, round: round, resultClaimed: {}, log: log, updatedAt: Date.now() };
+    } else {
+      var firstTurn = bjoNextPlayableSeat(seats, -1);
+      if(firstTurn === -1){
+        bjoPlayDealerToCompletion(deck, dealerHand);
+        bjoSettleAllSeats(seats, dealerHand, false);
+        log.push('La casa revela: ' + handValue(dealerHand));
+        patch = { seats: seats, dealerHand: dealerHand, deck: deck, status: 'finished', turnSeat: -1, round: round, resultClaimed: {}, log: log, updatedAt: Date.now() };
+      } else {
+        patch = { seats: seats, dealerHand: dealerHand, deck: deck, status: 'playing', turnSeat: firstTurn, round: round, resultClaimed: {}, log: log, updatedAt: Date.now() };
+      }
+    }
+    ref.set(patch, { merge: true }).catch(function(){ bjoMsg('No se pudo repartir'); });
+  }
+
+  function bjoAdvanceIfSeatDone(t, idx){
+    if(t.seats[idx].status === 'playing') return;
+    var next = bjoNextPlayableSeat(t.seats, idx);
+    if(next === -1){
+      bjoPlayDealerToCompletion(t.deck, t.dealerHand);
+      bjoSettleAllSeats(t.seats, t.dealerHand, false);
+      t.log.push('La casa revela: ' + handValue(t.dealerHand));
+      t.status = 'finished';
+      t.turnSeat = -1;
+    } else {
+      t.turnSeat = next;
+    }
+  }
+
+  function postBjoHit(){
+    var ref = currentBjTableRef;
+    if(!ref) return;
+    withTableLock(ref, function(t){
+      if(!t || t.status !== 'playing') return null;
+      var idx = tableSeatIndex(t, state.playerId);
+      if(idx === -1 || t.turnSeat !== idx || t.seats[idx].status !== 'playing') return null;
+      var seat = t.seats[idx];
+      seat.hand.push(bjoDrawCard(t));
+      if(handValue(seat.hand) > 21) seat.status = 'bust';
+      t.log.push(seat.name + ' pide carta');
+      bjoAdvanceIfSeatDone(t, idx);
+      t.updatedAt = Date.now();
+      return t;
+    }).catch(function(){ bjoMsg('No se pudo pedir carta'); });
+  }
+
+  function postBjoStand(){
+    var ref = currentBjTableRef;
+    if(!ref) return;
+    withTableLock(ref, function(t){
+      if(!t || t.status !== 'playing') return null;
+      var idx = tableSeatIndex(t, state.playerId);
+      if(idx === -1 || t.turnSeat !== idx || t.seats[idx].status !== 'playing') return null;
+      t.seats[idx].status = 'stand';
+      t.log.push(t.seats[idx].name + ' se planta');
+      bjoAdvanceIfSeatDone(t, idx);
+      t.updatedAt = Date.now();
+      return t;
+    }).catch(function(){ bjoMsg('No se pudo plantar'); });
+  }
+
+  function postBjoDouble(){
+    var ref = currentBjTableRef;
+    if(!ref) return;
+    var doubleAmt = 0;
+    withTableLock(ref, function(t){
+      if(!t || t.status !== 'playing') return null;
+      var idx = tableSeatIndex(t, state.playerId);
+      if(idx === -1 || t.turnSeat !== idx) return null;
+      var seat = t.seats[idx];
+      if(seat.status !== 'playing' || seat.hand.length !== 2) return null;
+      if(state.balance < seat.bet) return null;
+      doubleAmt = seat.bet;
+      seat.bet *= 2;
+      seat.hand.push(bjoDrawCard(t));
+      seat.status = handValue(seat.hand) > 21 ? 'bust' : 'stand';
+      t.log.push(seat.name + ' dobla');
+      bjoAdvanceIfSeatDone(t, idx);
+      t.updatedAt = Date.now();
+      return t;
+    }).then(function(result){
+      if(result && doubleAmt > 0) addBalance(-doubleAmt);
+      else if(!result) bjoMsg('No se pudo doblar');
+    }).catch(function(){ bjoMsg('No se pudo doblar'); });
+  }
+
+  function bjoMyPayout(t){
+    if(!t || t.status !== 'finished') return 0;
+    var idx = tableSeatIndex(t, state.playerId);
+    if(idx === -1 || !t.seats[idx]) return 0;
+    return t.seats[idx].payout || 0;
+  }
+
+  function maybeHandleBjoCharge(tableId){
+    var t = currentBjTableData;
+    if(!t || !t.round) return;
+    var idx = tableSeatIndex(t, state.playerId);
+    if(idx === -1 || !t.seats[idx]) return;
+    if(!t.seats[idx].hand || !t.seats[idx].hand.length) return;
+    if(t.betClaimed && t.betClaimed[state.playerId] === t.round) return;
+    var ref = currentBjTableRef;
+    if(ref){ var patch = {}; patch['betClaimed.' + state.playerId] = t.round; ref.update(patch).catch(function(){}); }
+    addBalance(-t.bet);
+  }
+
+  function maybeHandleBjoPayout(tableId){
+    var t = currentBjTableData;
+    if(!t || t.status !== 'finished') return;
+    var idx = tableSeatIndex(t, state.playerId);
+    if(idx === -1) return;
+    if(!bjoPayoutHandled[tableId]) bjoPayoutHandled[tableId] = {};
+    if(bjoPayoutHandled[tableId][t.round]) return;
+    if(t.resultClaimed && t.resultClaimed[state.playerId] === t.round) return;
+    bjoPayoutHandled[tableId][t.round] = true;
+    var ref = currentBjTableRef;
+    if(ref){ var patch = {}; patch['resultClaimed.' + state.playerId] = t.round; ref.update(patch).catch(function(){}); }
+    var payout = bjoMyPayout(t);
+    if(payout > 0) addBalance(payout);
+  }
+
+  function leaveBlackjackTable(){
+    if(currentBjTableRef && currentBjTableData && currentBjTableData.status === 'playing'){
+      var idx = tableSeatIndex(currentBjTableData, state.playerId);
+      if(idx !== -1 && currentBjTableData.turnSeat === idx && currentBjTableData.seats[idx].status === 'playing'){
+        postBjoStand();
+      }
+    }
+    teardownBjoListeners();
+    state.currentBjTable = null; saveState();
+    renderBjoEntry();
+  }
+
+  var currentBjTableRef = null;
+  var currentBjTableData = null;
+  var bjoTableUnsub = null;
+  var bjoLobbyUnsub = null;
+  var bjoPayoutHandled = {};
+  var bjoMsgTimer = null;
+
+  function bjoMsg(text){
+    var el = document.getElementById('bjoMsgBar');
+    if(!el) return;
+    el.textContent = text;
+    clearTimeout(bjoMsgTimer);
+    bjoMsgTimer = setTimeout(function(){ el.textContent = ''; }, 3500);
+  }
+
+  function teardownBjoListeners(){
+    if(bjoTableUnsub){ bjoTableUnsub(); bjoTableUnsub = null; }
+    if(bjoLobbyUnsub){ bjoLobbyUnsub(); bjoLobbyUnsub = null; }
+    currentBjTableRef = null; currentBjTableData = null;
+  }
+
+  function openBjoTable(tableId){
+    teardownBjoListeners();
+    if(!db){ bjoMsg('El Blackjack en línea no está disponible ahora'); return; }
+    var ref = db.doc('leagues/' + state.leagueCode + '/blackjackTables/' + tableId);
+    currentBjTableRef = ref;
+    bjoTableUnsub = ref.onSnapshot(function(snap){
+      if(!snap.exists){
+        bjoMsg('La mesa terminó');
+        state.currentBjTable = null; saveState();
+        teardownBjoListeners();
+        renderBjoLobby();
+        return;
+      }
+      currentBjTableData = snap.data();
+      renderBjoTable(currentBjTableData);
+      maybeHandleBjoCharge(tableId);
+      maybeHandleBjoPayout(tableId);
+    }, function(){ bjoMsg('Conexión perdida con la mesa'); });
+  }
+
+  function renderBjoLobby(){
+    document.getElementById('bjoTableView').hidden = true;
+    document.getElementById('bjoLobby').hidden = false;
+    subscribeBjoLobby();
+  }
+
+  function subscribeBjoLobby(){
+    if(bjoLobbyUnsub){ bjoLobbyUnsub(); bjoLobbyUnsub = null; }
+    if(!db || !state.leagueCode) return;
+    bjoLobbyUnsub = db.collection('leagues/' + state.leagueCode + '/blackjackTables')
+      .limit(20)
+      .onSnapshot(function(snap){ renderBjoLobbyList(snap); }, function(){ bjoMsg('No se pudieron cargar las mesas'); });
+  }
+
+  function renderBjoLobbyList(snap){
+    var el = document.getElementById('bjoLobbyList');
+    if(!el) return;
+    if(!snap || snap.empty){ el.innerHTML = '<p class="league-empty">Aún no hay mesas abiertas. ¡Crea la primera!</p>'; return; }
+    el.innerHTML = '';
+    snap.docs.forEach(function(doc){
+      var t = doc.data();
+      var seated = t.seats.filter(Boolean).length;
+      var iAmIn = tableSeatIndex(t, state.playerId) !== -1;
+      var full = seated >= t.maxSeats;
+      var row = document.createElement('div');
+      row.className = 'poker-table-row';
+      row.innerHTML =
+        '<div class="poker-table-info">' +
+          '<span class="poker-table-stakes">Apuesta ' + t.bet.toLocaleString('es-CO') + ' por mano · ' + t.maxSeats + ' puestos</span>' +
+          '<span class="poker-table-meta">' + seated + '/' + t.maxSeats + ' sentados · ' + (t.status === 'playing' ? 'En juego' : (t.status === 'waiting' ? 'Esperando' : 'Entre manos')) + '</span>' +
+        '</div>';
+      var btn = document.createElement('button');
+      btn.className = 'btn btn-sm ' + (iAmIn ? 'btn-gold' : 'btn-ghost');
+      btn.textContent = iAmIn ? 'Volver a la mesa' : (full ? 'Llena' : (t.status === 'playing' ? 'En juego' : 'Sentarme'));
+      btn.disabled = !iAmIn && (full || t.status === 'playing');
+      btn.addEventListener('click', function(){
+        if(iAmIn){ state.currentBjTable = { code: state.leagueCode, id: doc.id }; saveState(); renderBjoEntry(); }
+        else { joinBlackjackTable(doc.id); }
+      });
+      row.appendChild(btn);
+      el.appendChild(row);
+    });
+  }
+
+  function renderBjoEntry(){
+    var msgBar = document.getElementById('bjoMsgBar');
+    if(msgBar) msgBar.textContent = '';
+    var noLeague = document.getElementById('bjoNoLeague');
+    var lobby = document.getElementById('bjoLobby');
+    var tableView = document.getElementById('bjoTableView');
+    var offlinePanel = document.getElementById('bjoOfflinePanel');
+    if(!noLeague) return;
+
+    if(!db){
+      noLeague.hidden = true; lobby.hidden = true; tableView.hidden = true;
+      if(dbReady){ offlinePanel.hidden = false; } else { offlinePanel.hidden = true; }
+      return;
+    }
+    offlinePanel.hidden = true;
+    if(!state.leagueCode || !state.playerName){
+      noLeague.hidden = false; lobby.hidden = true; tableView.hidden = true;
+      teardownBjoListeners();
+      return;
+    }
+    noLeague.hidden = true;
+    if(state.currentBjTable && state.currentBjTable.code === state.leagueCode){
+      lobby.hidden = true; tableView.hidden = false;
+      openBjoTable(state.currentBjTable.id);
+    } else {
+      teardownBjoListeners();
+      tableView.hidden = true; lobby.hidden = false;
+      subscribeBjoLobby();
+    }
+  }
+
+  function renderBjoWaitingRoom(t){
+    var el = document.getElementById('bjoWaitingSeats');
+    el.innerHTML = '';
+    t.seats.forEach(function(s){
+      if(!s) return;
+      var row = document.createElement('div');
+      row.className = 'poker-table-row';
+      row.innerHTML = '<div class="poker-table-info"><span class="poker-table-stakes">' +
+        '<span class="profile-avatar sm ' + profileFrameCls(s.frame) + '" style="margin-right:6px; vertical-align:middle;">' + profileAvatarIcon(s.avatar) + '</span>' +
+        escapeHtml(s.name) + (s.playerId === t.hostId ? ' (anfitrión)' : '') + '</span></div>';
+      el.appendChild(row);
+    });
+    var dealBtn = document.getElementById('bjoDealBtn');
+    var seated = t.seats.filter(Boolean).length;
+    if(t.hostId === state.playerId && seated >= 2){
+      dealBtn.hidden = false;
+      dealBtn.onclick = dealBlackjackHand;
+    } else {
+      dealBtn.hidden = true;
+    }
+  }
+
+  function renderBjoChat(t){
+    var panel = document.getElementById('bjoChatPanel');
+    if(!panel) return;
+    panel.hidden = false;
+    var log = document.getElementById('bjoChatLog');
+    var chat = t.chat || [];
+    log.innerHTML = chat.slice(-40).map(function(m){
+      return '<p class="chess-chat-msg' + (m.id === state.playerId ? ' me' : '') + '"><b>' + escapeHtml(m.name || 'Jugador') + ':</b> ' + escapeHtml(m.text) + '</p>';
+    }).join('');
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function bjoSendChat(text){
+    text = (text || '').trim().slice(0, 120);
+    if(!text || !currentBjTableRef || !currentBjTableData) return;
+    var chat = (currentBjTableData.chat || []).concat([{ id: state.playerId, name: state.playerName || 'Jugador', text: text, ts: Date.now() }]);
+    if(chat.length > 40) chat = chat.slice(-40);
+    currentBjTableRef.set({ chat: chat }, { merge: true }).catch(function(){});
+  }
+
+  function renderBjoTable(t){
+    document.getElementById('bjoLobby').hidden = true;
+    document.getElementById('bjoTableView').hidden = false;
+
+    var waitingPanel = document.getElementById('bjoWaitingPanel');
+    var boardEl = document.getElementById('bjoBoardEl');
+
+    if(t.status === 'waiting'){
+      waitingPanel.hidden = false;
+      boardEl.hidden = true;
+      renderBjoWaitingRoom(t);
+      renderBjoChat(t);
+      return;
+    }
+    waitingPanel.hidden = true;
+    boardEl.hidden = false;
+
+    var mySeatIdx = tableSeatIndex(t, state.playerId);
+
+    var hideHole = t.status === 'playing';
+    var dEl = document.getElementById('bjoDealerCards');
+    dEl.innerHTML = '';
+    (t.dealerHand || []).forEach(function(c, i){ dEl.appendChild(cardEl(c, hideHole && i === 1)); });
+    document.getElementById('bjoDealerScore').textContent = hideHole ? '' : '(' + handValue(t.dealerHand || []) + ')';
+
+    var rowEl = document.getElementById('bjoSeatsRow');
+    rowEl.innerHTML = '';
+    t.seats.forEach(function(s, idx){
+      if(!s) return;
+      var cls = 'bjo-seat';
+      if(s.playerId === state.playerId) cls += ' me';
+      if(t.status === 'playing' && t.turnSeat === idx) cls += ' turn';
+      if(t.status === 'finished') cls += ' resolved';
+      var div = document.createElement('div');
+      div.className = cls;
+      var cardsWrap = document.createElement('div');
+      cardsWrap.className = 'bjo-seat-cards';
+      (s.hand || []).forEach(function(c){ cardsWrap.appendChild(cardEl(c, false)); });
+      var statusText = '', statusCls = '';
+      if(t.status === 'finished'){
+        if(s.status === 'win'){ statusText = '¡Ganó! +' + (s.payout || 0).toLocaleString('es-CO'); statusCls = 'win'; }
+        else if(s.status === 'blackjack'){ statusText = '¡Blackjack! +' + (s.payout || 0).toLocaleString('es-CO'); statusCls = 'win'; }
+        else if(s.status === 'push'){ statusText = 'Empate'; statusCls = 'push'; }
+        else if(s.status === 'bust'){ statusText = 'Se pasó'; statusCls = 'lose'; }
+        else { statusText = 'Perdió'; statusCls = 'lose'; }
+      } else {
+        if(s.status === 'bust'){ statusText = 'Se pasó'; statusCls = 'lose'; }
+        else if(s.status === 'blackjack') statusText = '¡Blackjack!';
+        else if(s.status === 'stand') statusText = 'Plantado';
+        else if(idx === t.turnSeat) statusText = 'Jugando…';
+      }
+      div.innerHTML = '<div class="bjo-seat-head"><span class="profile-avatar sm ' + profileFrameCls(s.frame) + '">' + profileAvatarIcon(s.avatar) + '</span><span class="bjo-seat-name">' + escapeHtml(s.name) + '</span></div>';
+      div.appendChild(cardsWrap);
+      var scoreEl = document.createElement('div');
+      scoreEl.className = 'bjo-seat-score';
+      scoreEl.textContent = (s.hand && s.hand.length) ? '(' + handValue(s.hand) + ')' : '';
+      div.appendChild(scoreEl);
+      var statusEl = document.createElement('div');
+      statusEl.className = 'bjo-seat-status' + (statusCls ? ' ' + statusCls : '');
+      statusEl.textContent = statusText;
+      div.appendChild(statusEl);
+      rowEl.appendChild(div);
+    });
+
+    var actionsEl = document.getElementById('bjoActions');
+    var myTurn = t.status === 'playing' && mySeatIdx !== -1 && t.turnSeat === mySeatIdx && t.seats[mySeatIdx].status === 'playing';
+    actionsEl.hidden = !myTurn;
+    if(myTurn){
+      document.getElementById('bjoDoubleBtn').disabled = t.seats[mySeatIdx].hand.length !== 2;
+    }
+
+    var nextBtn = document.getElementById('bjoNextHandBtn');
+    if(t.status === 'finished' && t.hostId === state.playerId){
+      nextBtn.hidden = false;
+      nextBtn.onclick = dealBlackjackHand;
+    } else {
+      nextBtn.hidden = true;
+    }
+
+    var logEl = document.getElementById('bjoLog');
+    logEl.innerHTML = (t.log || []).slice(-16).reverse().map(function(line){ return '<p>' + escapeHtml(line) + '</p>'; }).join('');
+
+    renderBjoChat(t);
+  }
+
+  document.getElementById('leaveBjoTableBtn').addEventListener('click', leaveBlackjackTable);
+  document.getElementById('bjoOfflineRetryBtn').addEventListener('click', function(){ initDb(); renderBjoEntry(); });
+
+  var bjoBetSel = wireChipSelect('bjoBetChips', 50);
+  var bjoSeatsSel = wireChipSelect('bjoSeatsChips', 3);
+  document.getElementById('createBjoTableBtn').addEventListener('click', function(){
+    createBlackjackTable(bjoBetSel.get(), bjoSeatsSel.get());
+  });
+
+  document.getElementById('bjoHitBtn').addEventListener('click', postBjoHit);
+  document.getElementById('bjoStandBtn').addEventListener('click', postBjoStand);
+  document.getElementById('bjoDoubleBtn').addEventListener('click', postBjoDouble);
+
+  document.getElementById('bjoChatSendBtn').addEventListener('click', function(){
+    var input = document.getElementById('bjoChatInput');
+    bjoSendChat(input.value);
+    input.value = '';
+  });
+  document.getElementById('bjoChatInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); bjoSendChat(this.value); this.value = ''; }
+  });
+  document.querySelectorAll('#bjoChatPanel .chess-quick-emoji').forEach(function(btn){
+    btn.addEventListener('click', function(){ bjoSendChat(btn.getAttribute('data-emoji')); });
   });
 
   /* ================= INIT ================= */
