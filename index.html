@@ -204,18 +204,20 @@
   }
   .hub-hero h1{ font-size:1.7rem; font-weight:600; }
   .hub-sub{ color:var(--text-muted); font-size:.92rem; line-height:1.5; max-width:38ch; }
-  .hub-profile-card{
-    display:flex; align-items:center; gap:12px; margin-top:6px; padding:10px 14px;
-    background:var(--bg-elevated); border:1px solid var(--line); border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-sm); color:var(--text); text-align:left; cursor:pointer; width:100%;
+  .hub-title-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .hub-title-row h1{ flex:1; min-width:0; }
+  .hub-profile-chip{
+    display:flex; align-items:center; gap:7px; padding:5px 10px 5px 5px; flex-shrink:0;
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:var(--radius-md);
+    box-shadow:var(--shadow-sm); color:var(--text); text-align:left; cursor:pointer;
   }
-  .hub-profile-info{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .hub-profile-info{ display:flex; flex-direction:column; gap:0; min-width:0; max-width:110px; }
   .hub-profile-name{
-    font-family:var(--pixel-font); font-weight:400; font-size:.88rem; line-height:1.4;
-    color:var(--accent-bright); text-shadow:2px 2px 0 #000;
+    font-family:var(--pixel-font); font-weight:400; font-size:.62rem; line-height:1.5;
+    color:var(--accent-bright); text-shadow:1px 1px 0 #000;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
-  .hub-profile-league{ font-size:.8rem; color:var(--text-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hub-profile-league{ font-size:.66rem; color:var(--text-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
   .daily-card, .comp-card{
     display:flex;
@@ -1230,15 +1232,17 @@
     <section class="view" data-view="hub">
       <div class="hub-hero">
         <p class="eyebrow">Casa de fichas</p>
-        <h1 class="gold-text">Bienvenido de vuelta</h1>
+        <div class="hub-title-row">
+          <h1 class="gold-text">Bienvenido de vuelta</h1>
+          <button class="hub-profile-chip" id="hubProfileCard" data-goto="league" hidden>
+            <span class="profile-avatar sm" id="hubProfileAvatar"></span>
+            <span class="hub-profile-info">
+              <span class="hub-profile-name" id="hubProfileName">Tu nombre</span>
+              <span class="hub-profile-league" id="hubProfileLeague">Sin liga</span>
+            </span>
+          </button>
+        </div>
         <p class="hub-sub">Todo aquí se juega con fichas ficticias. Cero dinero real — solo para divertirte en el celular.</p>
-        <button class="hub-profile-card" id="hubProfileCard" data-goto="league" hidden>
-          <span class="profile-avatar" id="hubProfileAvatar"></span>
-          <span class="hub-profile-info">
-            <span class="hub-profile-name" id="hubProfileName">Tu nombre</span>
-            <span class="hub-profile-league" id="hubProfileLeague">Sin liga</span>
-          </span>
-        </button>
       </div>
 
       <div class="daily-card ornate">
