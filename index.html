@@ -1111,6 +1111,49 @@
   .ttt-cell:disabled{ cursor:default; }
   .ttt-cell.filled.x{ color:var(--neon-cyan-bright); }
   .ttt-cell.filled.o{ color:var(--ruby-bright); }
+
+  /* ---------- impostor ---------- */
+  .impostor-table{
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius-lg);
+    padding:14px; display:flex; flex-direction:column; gap:12px; box-shadow:var(--shadow);
+  }
+  .impostor-seats{ display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+  .impostor-seat{
+    display:flex; align-items:center; gap:8px;
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:var(--radius-md);
+    padding:8px 10px; opacity:.5; transition:opacity .15s ease, border-color .15s ease;
+  }
+  .impostor-seat.alive{ opacity:1; }
+  .impostor-seat.turn{ border-color:var(--neon-green-bright); box-shadow:0 0 0 1px var(--neon-green-bright) inset; }
+  .impostor-seat.me{ border-color:var(--neon-cyan-bright); }
+  .impostor-seat.eliminated{ opacity:.3; }
+  .impostor-seat-info{ flex:1; min-width:0; }
+  .impostor-seat-name{ font-weight:700; font-size:.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .impostor-seat-clue{ font-size:.7rem; color:var(--accent-bright); min-height:1em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .impostor-center{
+    background:var(--bg-elevated); border:1px dashed var(--accent-dim); border-radius:var(--radius-md);
+    padding:14px; min-height:54px; display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center; text-align:center;
+  }
+  .impostor-center-title{ font-size:.68rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-faint); font-weight:700; }
+  .impostor-center-clue{ font-size:.86rem; color:var(--text); }
+  .impostor-center-clue b{ color:var(--accent-bright); }
+
+  .impostor-vote-overlay{
+    position:fixed; inset:0; background:rgba(5,5,15,.82); z-index:50;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .impostor-vote-card{
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius-lg);
+    box-shadow:var(--shadow); padding:20px; width:100%; max-width:380px; max-height:85vh; overflow-y:auto;
+  }
+  .impostor-vote-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .impostor-vote-btn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    padding:10px 12px; background:var(--bg-elevated); border:1px solid var(--line); border-radius:var(--radius-md);
+    color:var(--text); cursor:pointer; font-weight:700; font-size:.88rem;
+  }
+  .impostor-vote-btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .impostor-vote-btn.voted{ border-color:var(--neon-cyan-bright); box-shadow:0 0 0 1px var(--neon-cyan-bright) inset; }
   .league-rank-tabs{ display:flex; gap:8px; margin-bottom:10px; }
   .league-rank-tab-btn.active{
     background:var(--neon-cyan);
@@ -1291,6 +1334,16 @@
             <span>
               <span class="game-name" style="display:block;">Tres en Raya</span>
               <span class="game-meta">Contra la CPU o tu liga</span>
+            </span>
+          </span>
+          <span class="tile-arrow">→</span>
+        </button>
+        <button class="game-tile wide ornate" data-goto="impostor">
+          <span style="display:flex; align-items:center; gap:12px;">
+            <span class="icon-badge icon-purple">🕵️</span>
+            <span>
+              <span class="game-name" style="display:block;">Impostor</span>
+              <span class="game-meta">Con tu liga · mínimo 3 jugadores</span>
             </span>
           </span>
           <span class="tile-arrow">→</span>
@@ -2330,6 +2383,125 @@
       </div>
     </section>
 
+    <!-- IMPOSTOR (league only, 3-6 players) -->
+    <section class="view" data-view="impostor" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Impostor</h2>
+        <button class="btn-info" data-toggle="impostorRulesPanel">i</button>
+      </div>
+
+      <p class="league-msg" id="impostorMsgBar"></p>
+
+      <div class="paytable" id="impostorRulesPanel" hidden>
+        <p class="paytable-title">Cómo se juega</p>
+        <p class="rules-text">De 3 a 6 jugadores de tu liga. Todos reciben la misma palabra secreta, excepto el <b>Impostor</b>, que no la conoce.</p>
+        <ul class="rules-list">
+          <li>Al empezar, tienes <b>15 segundos</b> para pensar una pista relacionada con tu palabra (el impostor debe inventar una sin saber cuál es).</li>
+          <li>Por turnos, cada jugador escribe una palabra parecida a la suya. Todas aparecen en el centro de la mesa.</li>
+          <li>Cuando todos han dado su pista, se vota: cada quien elige a quien cree que es el Impostor.</li>
+          <li>Si el más votado es el Impostor, <b>gana el resto</b>. Si no, esa persona queda eliminada y se juega otra ronda de pistas y votación.</li>
+          <li>Si el Impostor sobrevive hasta que solo quedan 2 jugadores, <b>gana el Impostor</b>.</li>
+        </ul>
+        <p class="rules-text">Todos apuestan la misma cantidad al sentarse. Si gana el resto, el bote se reparte entre todos los que no eran el Impostor; si gana el Impostor, se lo lleva completo.</p>
+      </div>
+
+      <div id="impostorNoLeague" hidden>
+        <p class="poker-empty-hint">Únete a una liga de amigos primero: el Impostor se juega entre los miembros de tu liga (mínimo 3 jugadores).</p>
+        <button class="btn btn-primary btn-block" data-goto="league">Ir a Liga de Amigos</button>
+      </div>
+
+      <div class="league-card ornate" id="impostorOfflinePanel" hidden>
+        <p class="league-card-title">No se pudo conectar</p>
+        <p class="league-card-sub">No logramos conectar con el servidor. Revisa tu conexión e intenta de nuevo.</p>
+        <button class="btn btn-primary btn-block" id="impostorOfflineRetryBtn">Reintentar</button>
+      </div>
+
+      <div id="impostorLobby" hidden>
+        <div class="league-card ornate" style="margin-bottom:12px;">
+          <p class="league-card-title">Crear una mesa</p>
+          <p class="league-card-sub">Elige la apuesta y cuántos puestos (3 a 6).</p>
+          <div class="chip-select" id="impostorBetChips">
+            <button class="chip-btn" data-amount="50">50</button>
+            <button class="chip-btn active" data-amount="100">100</button>
+            <button class="chip-btn" data-amount="250">250</button>
+          </div>
+          <p class="bet-label" style="margin-top:8px;">Puestos</p>
+          <div class="chip-select" id="impostorSeatsChips">
+            <button class="chip-btn" data-amount="3">3</button>
+            <button class="chip-btn active" data-amount="4">4</button>
+            <button class="chip-btn" data-amount="5">5</button>
+            <button class="chip-btn" data-amount="6">6</button>
+          </div>
+          <button class="btn btn-primary btn-block" id="createImpostorTableBtn" style="margin-top:10px;">Crear mesa</button>
+        </div>
+
+        <p class="paytable-title">Mesas de tu liga</p>
+        <div class="poker-lobby-list" id="impostorLobbyList"></div>
+      </div>
+
+      <div id="impostorTableView" hidden>
+        <div class="league-card ornate" id="impostorWaitingPanel" hidden style="margin-bottom:12px;">
+          <p class="league-card-title">Esperando jugadores (mínimo 3)</p>
+          <div class="poker-lobby-list" id="impostorWaitingSeats" style="margin-top:8px;"></div>
+          <button class="btn btn-gold btn-block" id="impostorStartBtn" style="margin-top:10px;" hidden>Iniciar partida</button>
+        </div>
+
+        <div class="impostor-table ornate" id="impostorBoardEl" hidden>
+          <div class="impostor-seats" id="impostorSeats"></div>
+          <div class="impostor-center" id="impostorCenter"></div>
+        </div>
+
+        <div class="league-card ornate" id="impostorRoleCard" hidden style="margin-top:12px; text-align:center;">
+          <p class="paytable-title" id="impostorRoleTitle">Tu palabra</p>
+          <p class="gold-text" id="impostorRoleWord" style="font-size:1.1rem;"></p>
+          <p class="league-card-sub" id="impostorRoleTimer"></p>
+        </div>
+
+        <div id="impostorClueRow" hidden style="margin-top:12px;">
+          <p class="bet-label" id="impostorTurnLabel"></p>
+          <div class="field-row" id="impostorClueInputRow" style="margin-top:6px;">
+            <input class="text-input" id="impostorClueInput" type="text" maxlength="24" placeholder="Escribe tu pista…">
+            <button class="btn btn-gold btn-sm" id="impostorClueSendBtn">Enviar</button>
+          </div>
+        </div>
+
+        <div class="league-card ornate" id="impostorResultCard" hidden style="margin-top:12px; text-align:center;">
+          <p class="paytable-title" id="impostorResultTitle">Resultado</p>
+          <p class="message-bar" id="impostorResultText"></p>
+        </div>
+
+        <p class="paytable-title" style="margin-top:14px;">Historial</p>
+        <div class="poker-log" id="impostorLog"></div>
+
+        <div class="chess-chat" id="impostorChatPanel" hidden>
+          <p class="bet-label">Chat de la mesa</p>
+          <div class="chess-chat-log" id="impostorChatLog"></div>
+          <div class="chess-quick-emojis">
+            <button type="button" class="chess-quick-emoji" data-emoji="👍">👍</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="🤔">🤔</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😂">😂</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="😮">😮</button>
+            <button type="button" class="chess-quick-emoji" data-emoji="🕵️">🕵️</button>
+          </div>
+          <div class="chess-chat-row">
+            <input class="text-input" id="impostorChatInput" type="text" maxlength="120" placeholder="Escribe algo…">
+            <button class="btn btn-gold btn-sm" id="impostorChatSendBtn">Enviar</button>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost btn-block" id="leaveImpostorBtn" style="margin-top:12px;">Salir de la mesa</button>
+      </div>
+
+      <div class="impostor-vote-overlay" id="impostorVoteOverlay" hidden>
+        <div class="impostor-vote-card ornate">
+          <p class="league-card-title">🗳️ Tarjetón — ¿Quién es el Impostor?</p>
+          <p class="league-card-sub" id="impostorVoteSub">Elige a un jugador</p>
+          <div class="impostor-vote-list" id="impostorVoteList"></div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <nav class="bottomnav">
@@ -2432,7 +2604,7 @@
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1, ownedBorders:['none'], activeBorder:'none', sobreHistory:[],
       ownedAvatars:['dado'], activeAvatar:'dado', ownedFrames:['none'], activeFrame:'none',
-      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, chessElo:1200 };
+      playerId:'', playerName:'', leagueCode:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, chessElo:1200 };
   }
   var state = loadState();
 
@@ -2478,7 +2650,7 @@
   /* ================= NAV / ROUTER ================= */
   var views = Array.prototype.slice.call(document.querySelectorAll('.view'));
   var navBtns = Array.prototype.slice.call(document.querySelectorAll('.navbtn'));
-  var dailyTimerId = null, compTimerId = null, matchTimerId = null, leagueTimerId = null, pokerTimerId = null;
+  var dailyTimerId = null, compTimerId = null, matchTimerId = null, leagueTimerId = null, pokerTimerId = null, impostorTimerId = null;
 
   function showView(name){
     views.forEach(function(v){ v.hidden = v.getAttribute('data-view') !== name; });
@@ -2488,11 +2660,13 @@
     if(matchTimerId){ clearInterval(matchTimerId); matchTimerId = null; }
     if(leagueTimerId){ clearInterval(leagueTimerId); leagueTimerId = null; }
     if(pokerTimerId){ clearInterval(pokerTimerId); pokerTimerId = null; }
+    if(impostorTimerId){ clearInterval(impostorTimerId); impostorTimerId = null; }
     teardownLeagueListener();
     teardownPokerListeners();
     teardownChessListeners();
     teardownDominoListeners();
     teardownTttListeners();
+    teardownImpostorListeners();
     if(name !== 'racing') teardownRacing();
     if(name !== 'trivia') teardownTrivia();
 
@@ -2507,6 +2681,7 @@
     if(name === 'trivia'){ renderTriviaEntry(); }
     if(name === 'domino'){ renderDominoEntry(); }
     if(name === 'tictactoe'){ renderTttEntry(); }
+    if(name === 'impostor'){ renderImpostorEntry(); impostorTimerId = setInterval(impostorTick, 1000); }
   }
 
   function selectStoreTab(tab){
@@ -8176,6 +8351,603 @@
   });
   document.querySelectorAll('#tttChatPanel .chess-quick-emoji').forEach(function(btn){
     btn.addEventListener('click', function(){ tttSendChat(btn.getAttribute('data-emoji')); });
+  });
+
+  /* ================= IMPOSTOR ================= */
+  var IMPOSTOR_WORDS = ['Playa','Perro','Pizza','Fútbol','Luna','Café','Hospital','Escuela','Elefante','Guitarra',
+    'Invierno','Volcán','Castillo','Robot','Pirata','Bicicleta','Desierto','Selva','Aeropuerto','Circo',
+    'Granja','Supermercado','Montaña','Río','Nieve','Dinosaurio','Cohete','Vampiro','Bosque','Cocina',
+    'Jungla','Teléfono','Televisor','Zapato','Sombrero','Pastel','Dragón','Submarino','Payaso','Biblioteca'];
+  var IMPOSTOR_THINKING_MS = 15000;
+
+  function impostorMakeSeat(playerId, name, avatar, frame){
+    return { playerId: playerId, name: name, avatar: avatar || 'dado', frame: frame || 'none', alive: true };
+  }
+
+  function createImpostorTable(bet, maxSeats){
+    if(!db || !state.leagueCode){ impostorMsg('La liga no está disponible ahora'); return; }
+    if(!state.playerName){ impostorMsg('Primero elige tu nombre en la liga'); return; }
+    if(state.balance < bet){ impostorMsg('Fichas insuficientes para esa apuesta'); return; }
+    ensurePlayerId();
+    var seats = new Array(maxSeats).fill(null);
+    seats[0] = impostorMakeSeat(state.playerId, state.playerName, state.activeAvatar, state.activeFrame);
+    var ref = db.collection('leagues/' + state.leagueCode + '/impostorTables').doc();
+    addBalance(-bet);
+    ref.set({
+      createdAt: Date.now(), createdBy: state.playerId, hostId: state.playerId,
+      bet: bet, maxSeats: maxSeats, status: 'waiting', seats: seats,
+      secretWord: null, impostorId: null, thinkingDeadline: 0,
+      round: 0, turnOrder: [], turnIdx: 0, clues: [], votes: {},
+      eliminatedLog: [], pot: bet, winner: null, resultClaimed: {},
+      log: ['Mesa creada por ' + state.playerName], chat: [], updatedAt: Date.now()
+    }).then(function(){
+      state.currentImpostorTable = { code: state.leagueCode, id: ref.id };
+      saveState();
+      renderImpostorEntry();
+    }).catch(function(){ addBalance(bet); impostorMsg('No se pudo crear la mesa'); });
+  }
+
+  function joinImpostorTable(tableId, bet){
+    if(!db || !state.leagueCode) return;
+    if(state.balance < bet){ impostorMsg('Fichas insuficientes para esa apuesta'); return; }
+    ensurePlayerId();
+    var ref = db.doc('leagues/' + state.leagueCode + '/impostorTables/' + tableId);
+    addBalance(-bet);
+    ref.get().then(function(snap){
+      if(!snap.exists){ addBalance(bet); impostorMsg('La mesa ya no existe'); return; }
+      var t = snap.data();
+      var idx = tableSeatIndex(t, state.playerId);
+      if(idx !== -1){
+        addBalance(bet);
+        state.currentImpostorTable = { code: state.leagueCode, id: tableId }; saveState(); renderImpostorEntry();
+        return;
+      }
+      if(t.status !== 'waiting'){ addBalance(bet); impostorMsg('Esa mesa ya empezó'); return; }
+      var seats = t.seats.slice();
+      var freeIdx = -1;
+      for(var i = 0; i < t.maxSeats; i++){ if(!seats[i]){ freeIdx = i; break; } }
+      if(freeIdx === -1){ addBalance(bet); impostorMsg('La mesa está llena'); return; }
+      seats[freeIdx] = impostorMakeSeat(state.playerId, state.playerName, state.activeAvatar, state.activeFrame);
+      ref.set({
+        seats: seats, pot: (t.pot || 0) + bet,
+        log: (t.log || []).concat([state.playerName + ' se sentó en la mesa'])
+      }, { merge: true }).then(function(){
+        state.currentImpostorTable = { code: state.leagueCode, id: tableId };
+        saveState();
+        renderImpostorEntry();
+      }).catch(function(){ addBalance(bet); impostorMsg('No se pudo unir a la mesa'); });
+    }).catch(function(){ addBalance(bet); impostorMsg('No se pudo unir a la mesa'); });
+  }
+
+  function startImpostorGame(){
+    var t = currentImpostorTableData, ref = currentImpostorTableRef;
+    if(!t || !ref || t.hostId !== state.playerId) return;
+    var seatedIdxs = [];
+    t.seats.forEach(function(s, i){ if(s) seatedIdxs.push(i); });
+    if(seatedIdxs.length < 3){ impostorMsg('Necesitas al menos 3 jugadores'); return; }
+    var word = IMPOSTOR_WORDS[Math.floor(Math.random() * IMPOSTOR_WORDS.length)];
+    var impostorSeatIdx = seatedIdxs[Math.floor(Math.random() * seatedIdxs.length)];
+    var impostorId = t.seats[impostorSeatIdx].playerId;
+    var turnOrder = seatedIdxs.map(function(i){ return t.seats[i].playerId; });
+    ref.set({
+      status: 'thinking', secretWord: word, impostorId: impostorId,
+      thinkingDeadline: Date.now() + IMPOSTOR_THINKING_MS,
+      round: 1, turnOrder: turnOrder, turnIdx: 0, clues: [], votes: {},
+      eliminatedLog: [], winner: null,
+      log: (t.log || []).concat(['¡Empezó la partida! Repartiendo palabras…']),
+      updatedAt: Date.now()
+    }, { merge: true }).catch(function(){ impostorMsg('No se pudo iniciar la partida'); });
+  }
+
+  function postImpostorClue(word){
+    word = (word || '').trim().slice(0, 24);
+    if(!word) return;
+    var ref = currentImpostorTableRef;
+    if(!ref) return;
+    withTableLock(ref, function(t){
+      if(!t || t.status !== 'clue') return null;
+      if(t.turnOrder[t.turnIdx] !== state.playerId) return null;
+      var seatIdx = tableSeatIndex(t, state.playerId);
+      if(seatIdx === -1 || !t.seats[seatIdx].alive) return null;
+      t.clues.push({ round: t.round, playerId: state.playerId, name: state.playerName, word: word });
+      t.log.push(state.playerName + ' dice: "' + word + '"');
+      t.turnIdx++;
+      if(t.turnIdx >= t.turnOrder.length){
+        t.status = 'voting';
+        t.votes = {};
+        t.log.push('Todos dieron su pista. ¡A votar!');
+      }
+      t.updatedAt = Date.now();
+      return t;
+    }).catch(function(){ impostorMsg('No se pudo enviar tu pista'); });
+  }
+
+  function impostorResolveVoting(t, aliveIds){
+    var tally = {};
+    aliveIds.forEach(function(pid){
+      var target = t.votes[pid];
+      if(target) tally[target] = (tally[target] || 0) + 1;
+    });
+    var maxVotes = -1, candidates = [];
+    Object.keys(tally).forEach(function(pid){
+      if(tally[pid] > maxVotes){ maxVotes = tally[pid]; candidates = [pid]; }
+      else if(tally[pid] === maxVotes){ candidates.push(pid); }
+    });
+    if(!candidates.length){
+      t.status = 'clue';
+      t.round++;
+      t.turnOrder = t.seats.filter(function(s){ return s && s.alive; }).map(function(s){ return s.playerId; });
+      t.turnIdx = 0;
+      t.votes = {};
+      t.log.push('Nadie recibió votos, se repite la ronda de pistas.');
+      return;
+    }
+    var eliminatedId = candidates[Math.floor(Math.random() * candidates.length)];
+    var eliminatedSeatIdx = tableSeatIndex(t, eliminatedId);
+    var eliminatedName = t.seats[eliminatedSeatIdx].name;
+    var wasImpostor = eliminatedId === t.impostorId;
+    t.seats[eliminatedSeatIdx].alive = false;
+    t.eliminatedLog.push({ playerId: eliminatedId, name: eliminatedName, wasImpostor: wasImpostor });
+    t.log.push(eliminatedName + ' fue eliminado(a) — ' + (wasImpostor ? '¡era el Impostor! 🕵️' : 'no era el Impostor.'));
+    t.votes = {};
+    if(wasImpostor){
+      t.status = 'finished';
+      t.winner = 'crew';
+      t.log.push('¡El resto gana la partida!');
+      return;
+    }
+    var aliveCount = t.seats.filter(function(s){ return s && s.alive; }).length;
+    if(aliveCount <= 2){
+      t.status = 'finished';
+      t.winner = 'impostor';
+      t.log.push('¡El Impostor sobrevivió y gana la partida!');
+      return;
+    }
+    t.status = 'clue';
+    t.round++;
+    t.turnOrder = t.seats.filter(function(s){ return s && s.alive; }).map(function(s){ return s.playerId; });
+    t.turnIdx = 0;
+  }
+
+  function postImpostorVote(targetPlayerId){
+    var ref = currentImpostorTableRef;
+    if(!ref) return;
+    withTableLock(ref, function(t){
+      if(!t || t.status !== 'voting') return null;
+      var mySeatIdx = tableSeatIndex(t, state.playerId);
+      if(mySeatIdx === -1 || !t.seats[mySeatIdx].alive) return null;
+      if(t.votes[state.playerId]) return null;
+      t.votes[state.playerId] = targetPlayerId;
+      var aliveIds = t.seats.filter(function(s){ return s && s.alive; }).map(function(s){ return s.playerId; });
+      var votedCount = Object.keys(t.votes).filter(function(pid){ return aliveIds.indexOf(pid) !== -1; }).length;
+      if(votedCount >= aliveIds.length) impostorResolveVoting(t, aliveIds);
+      t.updatedAt = Date.now();
+      return t;
+    }).catch(function(){ impostorMsg('No se pudo registrar tu voto'); });
+  }
+
+  function impostorMyPayout(t){
+    if(!t || t.status !== 'finished' || !t.winner) return 0;
+    var isImpostor = state.playerId === t.impostorId;
+    if(t.winner === 'impostor') return isImpostor ? (t.pot || 0) : 0;
+    if(isImpostor) return 0;
+    var crewCount = t.seats.filter(function(s){ return s && s.playerId !== t.impostorId; }).length;
+    return crewCount > 0 ? Math.floor((t.pot || 0) / crewCount) : 0;
+  }
+
+  function maybeHandleImpostorPayout(tableId){
+    var t = currentImpostorTableData;
+    if(!t || t.status !== 'finished' || !t.winner) return;
+    if(impostorPayoutHandled[tableId]) return;
+    if(tableSeatIndex(t, state.playerId) === -1) return;
+    if(t.resultClaimed && t.resultClaimed[state.playerId]) return;
+    impostorPayoutHandled[tableId] = true;
+    var ref = currentImpostorTableRef;
+    if(ref){
+      var patch = {}; patch['resultClaimed.' + state.playerId] = true;
+      ref.update(patch).catch(function(){});
+    }
+    var payout = impostorMyPayout(t);
+    if(payout > 0) addBalance(payout);
+  }
+
+  function leaveImpostorTable(){
+    if(!currentImpostorTableRef) return;
+    var ref = currentImpostorTableRef;
+    var refundAmt = 0;
+    withTableLock(ref, function(t){
+      if(!t) return null;
+      var idx = tableSeatIndex(t, state.playerId);
+      if(idx === -1) return null;
+      if(t.status === 'waiting'){
+        refundAmt = t.bet;
+        t.seats[idx] = null;
+        t.pot = Math.max(0, (t.pot || 0) - t.bet);
+        t.log.push(state.playerName + ' se levantó de la mesa');
+        if(t.seats.filter(Boolean).length === 0) t.status = 'finished';
+        t.updatedAt = Date.now();
+        return t;
+      }
+      if(t.status === 'finished') return null;
+      if(!t.seats[idx].alive) return null;
+      t.seats[idx].alive = false;
+      t.log.push(t.seats[idx].name + ' abandonó la mesa');
+      var wasImpostor = t.seats[idx].playerId === t.impostorId;
+      if(wasImpostor){
+        t.status = 'finished'; t.winner = 'crew';
+        t.log.push('El Impostor abandonó. ¡Gana el resto!');
+        return t;
+      }
+      var aliveCount = t.seats.filter(function(s){ return s && s.alive; }).length;
+      if(aliveCount <= 2){
+        t.status = 'finished'; t.winner = 'impostor';
+        t.log.push('¡El Impostor sobrevivió y gana la partida!');
+        return t;
+      }
+      if(t.status === 'thinking' || t.status === 'clue' || t.status === 'voting'){
+        t.turnOrder = t.seats.filter(function(s){ return s && s.alive; }).map(function(s){ return s.playerId; });
+        if(t.turnIdx >= t.turnOrder.length) t.turnIdx = 0;
+        if(t.status === 'voting'){
+          delete t.votes[state.playerId];
+          var aliveIds = t.turnOrder;
+          if(aliveIds.length > 0){
+            var votedCount = Object.keys(t.votes).filter(function(pid){ return aliveIds.indexOf(pid) !== -1; }).length;
+            if(votedCount >= aliveIds.length) impostorResolveVoting(t, aliveIds);
+          }
+        }
+      }
+      t.updatedAt = Date.now();
+      return t;
+    }).then(function(){
+      if(refundAmt > 0) addBalance(refundAmt);
+    }).catch(function(){}).then(function(){
+      state.currentImpostorTable = null;
+      saveState();
+      teardownImpostorListeners();
+      renderImpostorEntry();
+    });
+  }
+
+  var currentImpostorTableRef = null;
+  var currentImpostorTableData = null;
+  var impostorTableUnsub = null;
+  var impostorLobbyUnsub = null;
+  var impostorPayoutHandled = {};
+  var impostorMsgTimer = null;
+
+  function impostorMsg(text){
+    var el = document.getElementById('impostorMsgBar');
+    if(!el) return;
+    el.textContent = text;
+    clearTimeout(impostorMsgTimer);
+    impostorMsgTimer = setTimeout(function(){ el.textContent = ''; }, 3500);
+  }
+
+  function teardownImpostorListeners(){
+    if(impostorTableUnsub){ impostorTableUnsub(); impostorTableUnsub = null; }
+    if(impostorLobbyUnsub){ impostorLobbyUnsub(); impostorLobbyUnsub = null; }
+    currentImpostorTableRef = null; currentImpostorTableData = null;
+  }
+
+  function openImpostorTable(tableId){
+    teardownImpostorListeners();
+    if(!db){ impostorMsg('El Impostor no está disponible ahora'); return; }
+    var ref = db.doc('leagues/' + state.leagueCode + '/impostorTables/' + tableId);
+    currentImpostorTableRef = ref;
+    impostorTableUnsub = ref.onSnapshot(function(snap){
+      if(!snap.exists){
+        impostorMsg('La mesa terminó');
+        state.currentImpostorTable = null; saveState();
+        teardownImpostorListeners();
+        renderImpostorLobby();
+        return;
+      }
+      currentImpostorTableData = snap.data();
+      renderImpostorTable(currentImpostorTableData);
+      maybeHandleImpostorPayout(tableId);
+    }, function(){ impostorMsg('Conexión perdida con la mesa'); });
+  }
+
+  function renderImpostorLobby(){
+    document.getElementById('impostorTableView').hidden = true;
+    document.getElementById('impostorLobby').hidden = false;
+    subscribeImpostorLobby();
+  }
+
+  function subscribeImpostorLobby(){
+    if(impostorLobbyUnsub){ impostorLobbyUnsub(); impostorLobbyUnsub = null; }
+    if(!db || !state.leagueCode) return;
+    impostorLobbyUnsub = db.collection('leagues/' + state.leagueCode + '/impostorTables')
+      .where('status', '!=', 'finished').limit(20)
+      .onSnapshot(function(snap){ renderImpostorLobbyList(snap); }, function(){ impostorMsg('No se pudieron cargar las mesas'); });
+  }
+
+  function renderImpostorLobbyList(snap){
+    var el = document.getElementById('impostorLobbyList');
+    if(!el) return;
+    if(!snap || snap.empty){ el.innerHTML = '<p class="league-empty">Aún no hay mesas abiertas. ¡Crea la primera!</p>'; return; }
+    el.innerHTML = '';
+    snap.docs.forEach(function(doc){
+      var t = doc.data();
+      var seated = t.seats.filter(Boolean).length;
+      var iAmIn = tableSeatIndex(t, state.playerId) !== -1;
+      var full = seated >= t.maxSeats;
+      var row = document.createElement('div');
+      row.className = 'poker-table-row';
+      row.innerHTML =
+        '<div class="poker-table-info">' +
+          '<span class="poker-table-stakes">Apuesta ' + t.bet.toLocaleString('es-CO') + ' · ' + t.maxSeats + ' puestos</span>' +
+          '<span class="poker-table-meta">' + seated + '/' + t.maxSeats + ' sentados · ' + (t.status === 'waiting' ? 'Esperando' : 'En juego') + '</span>' +
+        '</div>';
+      var btn = document.createElement('button');
+      btn.className = 'btn btn-sm ' + (iAmIn ? 'btn-gold' : 'btn-ghost');
+      btn.textContent = iAmIn ? 'Volver a la mesa' : (full ? 'Llena' : (t.status !== 'waiting' ? 'En juego' : 'Sentarme'));
+      btn.disabled = !iAmIn && (full || t.status !== 'waiting');
+      btn.addEventListener('click', function(){
+        if(iAmIn){ state.currentImpostorTable = { code: state.leagueCode, id: doc.id }; saveState(); renderImpostorEntry(); }
+        else { joinImpostorTable(doc.id, t.bet); }
+      });
+      row.appendChild(btn);
+      el.appendChild(row);
+    });
+  }
+
+  function renderImpostorEntry(){
+    var msgBar = document.getElementById('impostorMsgBar');
+    if(msgBar) msgBar.textContent = '';
+    var noLeague = document.getElementById('impostorNoLeague');
+    var lobby = document.getElementById('impostorLobby');
+    var tableView = document.getElementById('impostorTableView');
+    var offlinePanel = document.getElementById('impostorOfflinePanel');
+    if(!noLeague) return;
+
+    if(!db){
+      noLeague.hidden = true; lobby.hidden = true; tableView.hidden = true;
+      if(dbReady){ offlinePanel.hidden = false; } else { offlinePanel.hidden = true; }
+      return;
+    }
+    offlinePanel.hidden = true;
+    if(!state.leagueCode || !state.playerName){
+      noLeague.hidden = false; lobby.hidden = true; tableView.hidden = true;
+      teardownImpostorListeners();
+      return;
+    }
+    noLeague.hidden = true;
+    if(state.currentImpostorTable && state.currentImpostorTable.code === state.leagueCode){
+      lobby.hidden = true; tableView.hidden = false;
+      openImpostorTable(state.currentImpostorTable.id);
+    } else {
+      teardownImpostorListeners();
+      tableView.hidden = true; lobby.hidden = false;
+      subscribeImpostorLobby();
+    }
+  }
+
+  function renderImpostorWaitingRoom(t){
+    var el = document.getElementById('impostorWaitingSeats');
+    el.innerHTML = '';
+    t.seats.forEach(function(s){
+      if(!s) return;
+      var row = document.createElement('div');
+      row.className = 'poker-table-row';
+      row.innerHTML = '<div class="poker-table-info"><span class="poker-table-stakes">' +
+        '<span class="profile-avatar sm ' + profileFrameCls(s.frame) + '" style="margin-right:6px; vertical-align:middle;">' + profileAvatarIcon(s.avatar) + '</span>' +
+        escapeHtml(s.name) + (s.playerId === t.hostId ? ' (anfitrión)' : '') + '</span></div>';
+      el.appendChild(row);
+    });
+    var startBtn = document.getElementById('impostorStartBtn');
+    var seated = t.seats.filter(Boolean).length;
+    if(t.hostId === state.playerId && seated >= 3){
+      startBtn.hidden = false;
+      startBtn.onclick = startImpostorGame;
+    } else {
+      startBtn.hidden = true;
+    }
+  }
+
+  function renderImpostorChat(t){
+    var panel = document.getElementById('impostorChatPanel');
+    if(!panel) return;
+    panel.hidden = false;
+    var log = document.getElementById('impostorChatLog');
+    var chat = t.chat || [];
+    log.innerHTML = chat.slice(-40).map(function(m){
+      return '<p class="chess-chat-msg' + (m.id === state.playerId ? ' me' : '') + '"><b>' + escapeHtml(m.name || 'Jugador') + ':</b> ' + escapeHtml(m.text) + '</p>';
+    }).join('');
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function impostorSendChat(text){
+    text = (text || '').trim().slice(0, 120);
+    if(!text || !currentImpostorTableRef || !currentImpostorTableData) return;
+    var chat = (currentImpostorTableData.chat || []).concat([{ id: state.playerId, name: state.playerName || 'Jugador', text: text, ts: Date.now() }]);
+    if(chat.length > 40) chat = chat.slice(-40);
+    currentImpostorTableRef.set({ chat: chat }, { merge: true }).catch(function(){});
+  }
+
+  function renderImpostorTable(t){
+    document.getElementById('impostorLobby').hidden = true;
+    document.getElementById('impostorTableView').hidden = false;
+
+    var waitingPanel = document.getElementById('impostorWaitingPanel');
+    var boardEl = document.getElementById('impostorBoardEl');
+    var roleCard = document.getElementById('impostorRoleCard');
+    var clueRow = document.getElementById('impostorClueRow');
+    var resultCard = document.getElementById('impostorResultCard');
+    var voteOverlay = document.getElementById('impostorVoteOverlay');
+
+    if(t.status === 'waiting'){
+      waitingPanel.hidden = false;
+      boardEl.hidden = true;
+      roleCard.hidden = true; clueRow.hidden = true; resultCard.hidden = true; voteOverlay.hidden = true;
+      renderImpostorWaitingRoom(t);
+      renderImpostorChat(t);
+      return;
+    }
+    waitingPanel.hidden = true;
+    boardEl.hidden = false;
+
+    var mySeatIdx = tableSeatIndex(t, state.playerId);
+    var mySeat = mySeatIdx !== -1 ? t.seats[mySeatIdx] : null;
+    var amAlive = mySeat ? mySeat.alive : false;
+    var isImpostor = state.playerId === t.impostorId;
+
+    var seatsEl = document.getElementById('impostorSeats');
+    seatsEl.innerHTML = '';
+    t.seats.forEach(function(s){
+      if(!s) return;
+      var cls = 'impostor-seat' + (s.alive ? ' alive' : ' eliminated');
+      if(s.playerId === state.playerId) cls += ' me';
+      if(t.status === 'clue' && t.turnOrder[t.turnIdx] === s.playerId) cls += ' turn';
+      var seatDiv = document.createElement('div');
+      seatDiv.className = cls;
+      var lastClue = '';
+      for(var i = t.clues.length - 1; i >= 0; i--){
+        if(t.clues[i].round === t.round && t.clues[i].playerId === s.playerId){ lastClue = t.clues[i].word; break; }
+      }
+      seatDiv.innerHTML =
+        '<span class="profile-avatar sm ' + profileFrameCls(s.frame) + '">' + profileAvatarIcon(s.avatar) + '</span>' +
+        '<span class="impostor-seat-info"><span class="impostor-seat-name">' + escapeHtml(s.name) + (s.playerId === t.hostId ? ' 👑' : '') + '</span>' +
+        '<span class="impostor-seat-clue">' + (s.alive ? escapeHtml(lastClue) : 'Eliminado') + '</span></span>';
+      seatsEl.appendChild(seatDiv);
+    });
+
+    var centerEl = document.getElementById('impostorCenter');
+    var roundClues = t.clues.filter(function(c){ return c.round === t.round; });
+    if(t.status === 'thinking'){
+      centerEl.innerHTML = '<span class="impostor-center-title">Pensando pistas…</span>';
+    } else if(!roundClues.length){
+      centerEl.innerHTML = '<span class="impostor-center-title">Ronda ' + t.round + '</span><span class="impostor-center-clue">Esperando la primera pista…</span>';
+    } else {
+      centerEl.innerHTML = '<span class="impostor-center-title">Ronda ' + t.round + '</span>' +
+        roundClues.slice(-4).map(function(c){ return '<span class="impostor-center-clue"><b>' + escapeHtml(c.name) + ':</b> ' + escapeHtml(c.word) + '</span>'; }).join('');
+    }
+
+    if(mySeatIdx !== -1 && amAlive && (t.status === 'thinking' || t.status === 'clue' || t.status === 'voting')){
+      roleCard.hidden = false;
+      document.getElementById('impostorRoleTitle').textContent = isImpostor ? '🕵️ Eres el Impostor' : 'Tu palabra secreta';
+      document.getElementById('impostorRoleWord').textContent = isImpostor ? '¡No la conoces! Improvisa.' : t.secretWord;
+      if(t.status === 'thinking'){
+        var secsLeft = Math.max(0, Math.ceil(((t.thinkingDeadline || 0) - Date.now()) / 1000));
+        document.getElementById('impostorRoleTimer').textContent = 'Piensa tu pista… ' + secsLeft + 's';
+      } else {
+        document.getElementById('impostorRoleTimer').textContent = '';
+      }
+    } else {
+      roleCard.hidden = true;
+    }
+
+    if(t.status === 'clue'){
+      var curPid = t.turnOrder[t.turnIdx];
+      var curIdx = tableSeatIndex(t, curPid);
+      var curName = curIdx !== -1 ? t.seats[curIdx].name : '¿?';
+      var myTurn = amAlive && curPid === state.playerId;
+      clueRow.hidden = false;
+      document.getElementById('impostorTurnLabel').textContent = myTurn ? 'Tu turno — escribe una pista' : ('Turno de ' + curName + '…');
+      document.getElementById('impostorClueInputRow').hidden = !myTurn;
+    } else {
+      clueRow.hidden = true;
+    }
+
+    if(t.status === 'voting' && amAlive){
+      voteOverlay.hidden = false;
+      var alreadyVoted = !!t.votes[state.playerId];
+      document.getElementById('impostorVoteSub').textContent = alreadyVoted ? 'Esperando los votos de los demás…' : 'Elige a quien creas que es el Impostor';
+      var listEl = document.getElementById('impostorVoteList');
+      listEl.innerHTML = '';
+      t.seats.forEach(function(s){
+        if(!s || !s.alive) return;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'impostor-vote-btn' + (t.votes[state.playerId] === s.playerId ? ' voted' : '');
+        btn.disabled = alreadyVoted || s.playerId === state.playerId;
+        btn.innerHTML = '<span class="profile-avatar sm ' + profileFrameCls(s.frame) + '">' + profileAvatarIcon(s.avatar) + '</span><span>' + escapeHtml(s.name) + '</span>';
+        btn.addEventListener('click', function(){ postImpostorVote(s.playerId); });
+        listEl.appendChild(btn);
+      });
+    } else {
+      voteOverlay.hidden = true;
+    }
+
+    if(t.status === 'finished' && t.winner){
+      resultCard.hidden = false;
+      var impIdx = tableSeatIndex(t, t.impostorId);
+      var impName = impIdx !== -1 ? t.seats[impIdx].name : '¿?';
+      var title = document.getElementById('impostorResultTitle');
+      var text = document.getElementById('impostorResultText');
+      title.textContent = t.winner === 'impostor' ? '🕵️ Gana el Impostor' : '🎉 Gana el resto';
+      var payout = impostorMyPayout(t);
+      var base = 'El Impostor era ' + impName + ' · Palabra: ' + t.secretWord + '. ';
+      if(mySeatIdx !== -1){
+        text.textContent = base + (payout > 0 ? 'Ganaste ' + payout.toLocaleString('es-CO') + ' fichas' : 'Perdiste tu apuesta');
+        text.className = 'message-bar ' + (payout > 0 ? 'win' : 'lose');
+      } else {
+        text.textContent = base;
+        text.className = 'message-bar';
+      }
+    } else {
+      resultCard.hidden = true;
+    }
+
+    var logEl = document.getElementById('impostorLog');
+    logEl.innerHTML = (t.log || []).slice(-16).reverse().map(function(line){ return '<p>' + escapeHtml(line) + '</p>'; }).join('');
+
+    renderImpostorChat(t);
+  }
+
+  function impostorMaybeBecomeHost(ref, t){
+    if(!t || t.status === 'waiting' || t.status === 'finished' || t.hostId === state.playerId) return;
+    var stale = (Date.now() - (t.updatedAt || 0)) > 20000;
+    if(!stale || tableSeatIndex(t, state.playerId) === -1) return;
+    ref.acquire({ holder: state.playerId, ttlMs: 15000, data: { hostId: state.playerId, updatedAt: Date.now() } }).catch(function(){});
+  }
+
+  function impostorTick(){
+    var ref = currentImpostorTableRef, t = currentImpostorTableData;
+    if(!ref || !t) return;
+    if(t.status === 'thinking') renderImpostorTable(t);
+    impostorMaybeBecomeHost(ref, t);
+    if(t.hostId !== state.playerId) return;
+    if(t.status === 'thinking' && Date.now() >= (t.thinkingDeadline || 0)){
+      withTableLock(ref, function(fresh){
+        if(!fresh || fresh.status !== 'thinking') return null;
+        if(Date.now() < (fresh.thinkingDeadline || 0)) return null;
+        fresh.status = 'clue';
+        fresh.log.push('¡Empieza la ronda de pistas!');
+        fresh.updatedAt = Date.now();
+        return fresh;
+      }).catch(function(){});
+    }
+  }
+
+  document.getElementById('leaveImpostorBtn').addEventListener('click', leaveImpostorTable);
+  document.getElementById('impostorOfflineRetryBtn').addEventListener('click', function(){ initDb(); renderImpostorEntry(); });
+
+  var impostorBetSel = wireChipSelect('impostorBetChips', 100);
+  var impostorSeatsSel = wireChipSelect('impostorSeatsChips', 4);
+  document.getElementById('createImpostorTableBtn').addEventListener('click', function(){
+    createImpostorTable(impostorBetSel.get(), impostorSeatsSel.get());
+  });
+
+  document.getElementById('impostorClueSendBtn').addEventListener('click', function(){
+    var input = document.getElementById('impostorClueInput');
+    postImpostorClue(input.value);
+    input.value = '';
+  });
+  document.getElementById('impostorClueInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); postImpostorClue(this.value); this.value = ''; }
+  });
+
+  document.getElementById('impostorChatSendBtn').addEventListener('click', function(){
+    var input = document.getElementById('impostorChatInput');
+    impostorSendChat(input.value);
+    input.value = '';
+  });
+  document.getElementById('impostorChatInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); impostorSendChat(this.value); this.value = ''; }
+  });
+  document.querySelectorAll('#impostorChatPanel .chess-quick-emoji').forEach(function(btn){
+    btn.addEventListener('click', function(){ impostorSendChat(btn.getAttribute('data-emoji')); });
   });
 
   /* ================= INIT ================= */
