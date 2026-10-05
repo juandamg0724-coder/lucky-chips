@@ -817,11 +817,11 @@
   .char-sprite.sm{ width:34px; height:50px; }
   .char-sprite.lg{ width:88px; height:132px; margin:0 auto; }
   .char-sprite .char-head{
-    position:absolute; top:0; left:50%; transform:translateX(-50%);
-    width:44%; height:44%; border-radius:50%; background:#ffd9a8; border:2px solid #000;
-    display:flex; align-items:center; justify-content:center; font-size:1em; z-index:3; overflow:hidden;
+    position:absolute; top:-6%; left:50%; transform:translateX(-50%);
+    width:40%; height:56%; z-index:3;
   }
-  .char-sprite .char-head span{ font-size:1.5em; line-height:1; }
+  .char-sprite .char-head svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .char-sprite .char-head .peanut-shape{ fill:#d9a05f; stroke:#000; stroke-width:3; stroke-linejoin:round; }
   .char-sprite .char-cap{
     position:absolute; top:-10%; left:50%; transform:translateX(-50%);
     width:52%; height:20%; background:var(--cap); border:2px solid #000; border-radius:50% 50% 10% 10%; z-index:4;
@@ -4908,17 +4908,18 @@
   /* ================= PERSONAJE (camiseta / pantalón / gorra) ================= */
   var CHAR_COLORS = ['#ff2d55','#2f6bff','#30e860','#ffd500','#a633ff','#ff8800','#00e5ff','#ffffff','#1c1c3c','#ff2d9e'];
 
+  var CHAR_PEANUT_SVG = '<svg viewBox="0 0 40 56"><path class="peanut-shape" d="M20,2 C27,2 32,7 32,14 C32,19 29,23 25,25.5 C29,28 33,32 33,39 C33,48 27,54 20,54 C13,54 7,48 7,39 C7,32 11,28 15,25.5 C11,23 8,19 8,14 C8,7 13,2 20,2 Z"/></svg>';
+
   function charSpriteHtml(opts, sizeCls){
     opts = opts || {};
     var jersey = opts.jersey || '#2f6bff';
     var pants = opts.pants || '#1c1c3c';
     var cap = opts.cap || '#ff2d55';
     var capOn = opts.capOn !== false;
-    var face = profileAvatarIcon(opts.avatar || 'dado');
     return '<div class="char-sprite' + (sizeCls ? ' ' + sizeCls : '') + (capOn ? '' : ' no-cap') +
       '" style="--jersey:' + jersey + ';--pants:' + pants + ';--cap:' + cap + ';">' +
       '<div class="char-cap"></div>' +
-      '<div class="char-head"><span>' + face + '</span></div>' +
+      '<div class="char-head">' + CHAR_PEANUT_SVG + '</div>' +
       '<div class="char-torso"></div>' +
       '<div class="char-legs"><span></span><span></span></div>' +
       '</div>';
