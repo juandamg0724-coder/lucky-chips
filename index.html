@@ -1288,6 +1288,19 @@
   .pen-result-flash{ font-family:var(--pixel-font); font-size:1.15rem; }
   .pen-result-flash.goal{ color:var(--neon-green-bright); }
   .pen-result-flash.miss{ color:var(--ruby-bright); }
+
+  /* ---------- billar ---------- */
+  .pool-mode-tabs{ display:flex; gap:8px; margin:4px 0 14px; }
+  .pool-wrap{ overflow:hidden; max-width:100%; width:100%; aspect-ratio:720/380; margin:0 auto; background:#1c1008; border:4px solid #000; border-radius:14px; box-shadow:0 0 0 3px var(--accent-dim); touch-action:none; }
+  .pool-hud{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+  .pool-hud-side{ display:flex; align-items:center; gap:8px; }
+  .pool-group-dot{ width:14px; height:14px; border-radius:50%; border:2px solid #000; background:var(--bg-panel-2); }
+  .pool-group-dot.solid{ background:#d32f2f; }
+  .pool-group-dot.stripe{ background:#fff; background-image:repeating-linear-gradient(0deg, #1e63c8 0 3px, #fff 3px 6px); }
+  .pool-turn-banner{ text-align:center; font-weight:700; font-size:.86rem; margin:8px 0; }
+  .pool-turn-banner.mine{ color:var(--neon-green-bright); }
+  .pool-controls-row{ display:flex; gap:10px; margin-top:10px; }
+  .pool-controls-row .btn{ flex:1; }
 </style>
 </head>
 <body>
@@ -1426,6 +1439,32 @@
           </span>
           <span class="tile-arrow">→</span>
         </button>
+        <button class="game-tile ornate" data-goto="flappy">
+          <span class="icon-badge icon-cyan">🐦</span>
+          <span class="game-name">Flappy Bird</span>
+          <span class="game-meta">Toca para volar</span>
+          <span class="tile-arrow">→</span>
+        </button>
+        <button class="game-tile wide ornate" data-goto="airwings">
+          <span style="display:flex; align-items:center; gap:12px;">
+            <span class="icon-badge icon-blue">✈️</span>
+            <span>
+              <span class="game-name" style="display:block;">Air Wings</span>
+              <span class="game-meta">Arcade de avión · control PS4 o teclado</span>
+            </span>
+          </span>
+          <span class="tile-arrow">→</span>
+        </button>
+        <button class="game-tile wide ornate" data-goto="pool">
+          <span style="display:flex; align-items:center; gap:12px;">
+            <span class="icon-badge icon-purple">🎱</span>
+            <span>
+              <span class="game-name" style="display:block;">Billar</span>
+              <span class="game-meta">Modo práctica o en línea con tu liga</span>
+            </span>
+          </span>
+          <span class="tile-arrow">→</span>
+        </button>
         <button class="game-tile wide ornate" data-goto="match">
           <span style="display:flex; align-items:center; gap:12px;">
             <span class="icon-badge icon-green">⚽</span>
@@ -1505,7 +1544,7 @@
             <span class="icon-badge icon-green">🥅</span>
             <span>
               <span class="game-name" style="display:block;">Tanda de Penales</span>
-              <span class="game-meta">1 contra 1 con tu liga · con tu personaje</span>
+              <span class="game-meta">Contra la CPU o 1 contra 1 con tu liga</span>
             </span>
           </span>
           <span class="tile-arrow">→</span>
@@ -2715,6 +2754,12 @@
 
       <p class="league-msg" id="penMsgBar"></p>
 
+      <div class="league-card ornate" id="penCpuPanel" style="margin-bottom:12px;">
+        <p class="league-card-title">🤖 Jugar contra la CPU</p>
+        <p class="league-card-sub">Practica solo, sin liga ni internet necesarios.</p>
+        <button class="btn btn-gold btn-block" id="createCpuPenBtn" style="margin-top:10px;">Jugar contra la CPU</button>
+      </div>
+
       <div class="league-card ornate" id="penOfflinePanel" hidden>
         <p class="league-card-title">No se pudo conectar</p>
         <p class="league-card-sub">No logramos conectar con el servidor. Revisa tu conexión e intenta de nuevo.</p>
@@ -2823,6 +2868,71 @@
       <div id="snakeRoot"></div>
     </section>
 
+    <!-- FLAPPY BIRD -->
+    <section class="view" data-view="flappy" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Flappy Bird</h2>
+        <span style="width:36px;"></span>
+      </div>
+
+      <div id="flappyRoot"></div>
+    </section>
+
+    <!-- AIR WINGS -->
+    <section class="view" data-view="airwings" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Air Wings</h2>
+        <span style="width:36px;"></span>
+      </div>
+
+      <div id="airwingsRoot"></div>
+    </section>
+
+    <!-- BILLAR (práctica y en línea) -->
+    <section class="view" data-view="pool" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Billar</h2>
+        <span style="width:32px;"></span>
+      </div>
+
+      <div class="pool-mode-tabs">
+        <button type="button" class="btn btn-ghost btn-sm store-tab-btn active" id="poolTabPractice">🎯 Práctica</button>
+        <button type="button" class="btn btn-ghost btn-sm store-tab-btn" id="poolTabOnline">🌐 En línea</button>
+      </div>
+
+      <div id="poolPracticeView"></div>
+
+      <div id="poolOnlineView" hidden>
+        <p class="league-msg" id="poolMsgBar"></p>
+
+        <div class="league-card ornate" id="poolOfflinePanel" hidden>
+          <p class="league-card-title">No se pudo conectar</p>
+          <p class="league-card-sub">No logramos conectar con el servidor. Revisa tu conexión e intenta de nuevo.</p>
+          <button class="btn btn-primary btn-block" id="poolOfflineRetryBtn">Reintentar</button>
+        </div>
+
+        <div id="poolNoLeague" hidden>
+          <p class="poker-empty-hint">Únete a una liga de amigos primero: el billar en línea se juega entre los miembros de tu liga.</p>
+          <button class="btn btn-primary btn-block" data-goto="league">Ir a Liga de Amigos</button>
+        </div>
+
+        <div id="poolLobby" hidden>
+          <div class="league-card ornate" style="margin-bottom:12px;">
+            <p class="league-card-title">Retar a alguien</p>
+            <p class="league-card-sub">Crea una mesa 1 contra 1 — el primero de tu liga que se una será tu rival.</p>
+            <button class="btn btn-primary btn-block" id="createPoolTableBtn">Crear mesa de billar</button>
+          </div>
+          <p class="paytable-title">Mesas de tu liga</p>
+          <div class="poker-lobby-list" id="poolLobbyList"></div>
+        </div>
+
+        <div id="poolTableView" hidden></div>
+      </div>
+    </section>
+
   </main>
 
   <nav class="bottomnav">
@@ -2926,7 +3036,7 @@
       freeSpins:0, pendingSlotMultiplier:1,
       ownedAvatars:['dado'], activeAvatar:'dado', ownedFrames:['none'], activeFrame:'none',
       charJersey:'#2f6bff', charPants:'#1c1c3c', charCap:'#ff2d55', charCapOn:true,
-      playerId:'', playerName:'', leagueCode:'', leagueName:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, currentPenaltyTable:null, chessElo:1200,
+      playerId:'', playerName:'', leagueCode:'', leagueName:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, currentPenaltyTable:null, currentPoolTable:null, chessElo:1200,
       racingLevel:1, waterSortLevel:1 };
   }
   var state = loadState();
@@ -2993,9 +3103,13 @@
     teardownImpostorListeners();
     teardownBjoListeners();
     teardownPenaltyListeners();
+    teardownPoolListeners();
     if(name !== 'racing') teardownRacing();
     if(name !== 'trivia') teardownTrivia();
     if(name !== 'snake') teardownSnake();
+    if(name !== 'flappy') teardownFlappy();
+    if(name !== 'airwings') teardownAirWings();
+    if(name !== 'pool') teardownPoolPractice();
 
     if(name === 'hub'){ refreshHub(); dailyTimerId = setInterval(refreshHub, 1000); }
     if(name === 'store'){ renderStore(); renderAvatarGrid(); renderFrameGrid(); renderProfilePreview(); }
@@ -3013,6 +3127,9 @@
     if(name === 'penalties'){ renderPenEntry(); penaltyTimerId = setInterval(penaltyTick, 1000); }
     if(name === 'watersort'){ renderWaterSortEntry(); }
     if(name === 'snake'){ renderSnakeEntry(); }
+    if(name === 'flappy'){ renderFlappyEntry(); }
+    if(name === 'airwings'){ renderAirWingsEntry(); }
+    if(name === 'pool'){ renderPoolEntry(); }
   }
 
   function selectStoreTab(tab){
@@ -10071,7 +10188,83 @@
     return idx === t.kickerSeat ? 'kicker' : 'keeper';
   }
 
+  /* ---------- Tanda de Penales contra la CPU (sin liga, sin Firestore) ---------- */
+  var penMode = null; // null | 'cpu' | 'online'
+  var penLocalState = null;
+  var penCpuMoveTimer = null;
+
+  function penCpuMaybeSchedule(t){
+    if(penMode !== 'cpu' || !t || t.status !== 'playing' || penCpuMoveTimer) return;
+    var actingSeat = t.phase === 'kicking' ? t.kickerSeat : (t.phase === 'saving' ? (1 - t.kickerSeat) : -1);
+    if(actingSeat !== 1) return;
+    var delay = 1100 + Math.random() * 3200;
+    penCpuMoveTimer = setTimeout(function(){
+      penCpuMoveTimer = null;
+      postPenaltyChoiceLocal(Math.floor(Math.random() * 4), true);
+    }, delay);
+  }
+
+  function postPenaltyChoiceLocal(zone, asCpu){
+    var t = penLocalState;
+    if(!t || t.status !== 'playing') return;
+    if(Date.now() > t.phaseDeadline) return;
+    var idx = asCpu ? 1 : tableSeatIndex(t, state.playerId);
+    if(idx === -1) return;
+    if(t.phase === 'kicking'){
+      if(idx !== t.kickerSeat || t.shotZone != null) return;
+      t.shotZone = zone;
+      t.phase = 'saving';
+      t.phaseDeadline = Date.now() + PEN_CHOOSE_MS;
+      penCpuMaybeSchedule(t);
+    } else if(t.phase === 'saving'){
+      if(idx === t.kickerSeat || t.saveZone != null) return;
+      t.saveZone = zone;
+      penResolveKick(t);
+    } else {
+      return;
+    }
+    t.updatedAt = Date.now();
+    renderPenTable(t);
+  }
+
+  function penCpuTick(){
+    var t = penLocalState;
+    if(!t) return;
+    if(t.status === 'playing') renderPenTable(t);
+    if(t.status !== 'playing' || Date.now() < (t.phaseDeadline || 0)) return;
+    if(t.phase === 'kicking'){ t.shotZone = null; penResolveKick(t); }
+    else if(t.phase === 'saving'){ penResolveKick(t); }
+    else if(t.phase === 'reveal'){ penAdvanceRound(t); if(t.status === 'playing') penCpuMaybeSchedule(t); }
+    else return;
+    t.updatedAt = Date.now();
+    renderPenTable(t);
+  }
+
+  function createCpuPenaltyMatch(){
+    ensurePlayerId();
+    if(penCpuMoveTimer){ clearTimeout(penCpuMoveTimer); penCpuMoveTimer = null; }
+    var meSeat = penMakeSeat(state.playerId, state.playerName || 'Tú', state.activeAvatar, state.activeFrame);
+    var cpuSeat = { playerId: 'cpu', name: 'CPU', avatar: 'robot', frame: 'none', jersey: '#ff2d55', pants: '#1c1c3c', cap: '#00e5ff', capOn: true };
+    penLocalState = {
+      status: 'waiting', seats: [meSeat, cpuSeat], round: 0, kickerSeat: 0,
+      kicksTaken: [0, 0], goals: [0, 0], history: [], shotZone: null, saveZone: null,
+      phase: 'kicking', phaseDeadline: 0, lastResult: null, sudden: false, winnerSeat: null, log: []
+    };
+    penLocalState = penStartMatch(penLocalState);
+    penMode = 'cpu';
+    penAnimatedRound = -1;
+    renderPenEntry();
+    penCpuMaybeSchedule(penLocalState);
+  }
+
+  function leaveCpuPenaltyMatch(){
+    penMode = null; penLocalState = null;
+    if(penCpuMoveTimer){ clearTimeout(penCpuMoveTimer); penCpuMoveTimer = null; }
+    renderPenEntry();
+  }
+
   function postPenaltyChoice(zone){
+    if(penMode === 'cpu'){ postPenaltyChoiceLocal(zone, false); return; }
     var ref = currentPenTableRef;
     if(!ref) return;
     withTableLock(ref, function(t){
@@ -10140,6 +10333,7 @@
   }
 
   function penaltyTick(){
+    if(penMode === 'cpu'){ penCpuTick(); return; }
     var ref = currentPenTableRef, t = currentPenTableData;
     if(!ref || !t) return;
     if(t.status === 'playing') renderPenTable(t);
@@ -10244,11 +10438,22 @@
   function renderPenEntry(){
     var msgBar = document.getElementById('penMsgBar');
     if(msgBar) msgBar.textContent = '';
+    var cpuPanel = document.getElementById('penCpuPanel');
     var noLeague = document.getElementById('penNoLeague');
     var lobby = document.getElementById('penLobby');
     var tableView = document.getElementById('penTableView');
     var offlinePanel = document.getElementById('penOfflinePanel');
     if(!noLeague) return;
+
+    if(penMode === 'cpu' && penLocalState){
+      if(cpuPanel) cpuPanel.hidden = true;
+      noLeague.hidden = true; lobby.hidden = true; offlinePanel.hidden = true;
+      tableView.hidden = false;
+      teardownPenaltyListeners();
+      renderPenTable(penLocalState);
+      return;
+    }
+    if(cpuPanel) cpuPanel.hidden = false;
 
     if(!db){
       noLeague.hidden = true; lobby.hidden = true; tableView.hidden = true;
@@ -10364,7 +10569,7 @@
       var won = t.winnerSeat === meIdx;
       document.getElementById('penResultTitle').textContent = won ? '¡Ganaste la tanda!' :
         (t.winnerSeat != null ? 'Perdiste la tanda' : 'Tanda terminada');
-      document.getElementById('penRematchBtn').onclick = penRematch;
+      document.getElementById('penRematchBtn').onclick = (penMode === 'cpu') ? createCpuPenaltyMatch : penRematch;
       penSetPos(ballEl, PEN_BALL_START, false); ballEl.hidden = true;
       penSetPos(keeperEl, PEN_KEEPER_IDLE, true);
       return;
@@ -10412,6 +10617,7 @@
   }
 
   function leavePenaltyTable(){
+    if(penMode === 'cpu'){ leaveCpuPenaltyMatch(); return; }
     teardownPenaltyListeners();
     state.currentPenaltyTable = null; saveState();
     renderPenEntry();
@@ -10421,6 +10627,7 @@
   document.getElementById('penLeaveBtn2').addEventListener('click', leavePenaltyTable);
   document.getElementById('penOfflineRetryBtn').addEventListener('click', function(){ initDb(); renderPenEntry(); });
   document.getElementById('createPenTableBtn').addEventListener('click', createPenaltyTable);
+  document.getElementById('createCpuPenBtn').addEventListener('click', createCpuPenaltyMatch);
   document.querySelectorAll('.pen-zone-btn').forEach(function(btn){
     btn.addEventListener('click', function(){ postPenaltyChoice(Number(btn.getAttribute('data-pick'))); });
   });
@@ -10704,6 +10911,1282 @@
     });
     startSnake();
   }
+
+  /* ================= FLAPPY BIRD ================= */
+  var FB_W = 300, FB_H = 460, FB_GRAVITY = 1400, FB_FLAP_V = -380, FB_PIPE_GAP = 122,
+      FB_PIPE_W = 56, FB_PIPE_SPACING = 190, FB_PIPE_SPEED = 150, FB_BIRD_X = FB_W * 0.28,
+      FB_BIRD_R = 14, FB_GROUND_H = 36;
+  var flappy = null;
+
+  function flappyBestScore(){ return parseInt(localStorage.getItem('luckyChips_flappyBest') || '0', 10) || 0; }
+
+  function flappyReset(){
+    flappy.phase = 'title';
+    flappy.birdY = FB_H / 2;
+    flappy.birdV = 0;
+    flappy.pipes = [];
+    flappy.score = 0;
+    var resultEl = document.getElementById('flappyResult');
+    if(resultEl) resultEl.innerHTML = '';
+  }
+
+  function flappyGameOver(){
+    flappy.phase = 'over';
+    var best = flappyBestScore();
+    if(flappy.score > best){ localStorage.setItem('luckyChips_flappyBest', String(flappy.score)); best = flappy.score; }
+    var wrap = document.getElementById('flappyResult');
+    if(wrap) wrap.innerHTML = '<div class="message-bar lose">Puntaje: ' + flappy.score + ' · Mejor: ' + best + '</div>';
+  }
+
+  function flappyHandlePrimaryAction(){
+    if(!flappy) return;
+    if(flappy.phase === 'title' || flappy.phase === 'over'){ flappyReset(); flappy.phase = 'playing'; }
+    if(flappy.phase === 'playing'){ flappy.birdV = FB_FLAP_V; }
+  }
+
+  function flappyKeyDown(e){
+    if(!flappy) return;
+    if(e.code === 'Space' || e.key === 'ArrowUp'){ e.preventDefault(); flappyHandlePrimaryAction(); }
+  }
+
+  function flappyGamepadRead(){
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for(var i = 0; i < pads.length; i++){
+      var gp = pads[i];
+      if(!gp) continue;
+      var pressed = !!(gp.buttons[0] && gp.buttons[0].pressed) || !!(gp.buttons[9] && gp.buttons[9].pressed);
+      if(!flappy.gamepadPrimaryLatch && pressed) flappyHandlePrimaryAction();
+      flappy.gamepadPrimaryLatch = pressed;
+      break;
+    }
+  }
+
+  function flappyUpdate(dt){
+    flappyGamepadRead();
+    flappy.animT = (flappy.animT || 0) + dt;
+    if(flappy.phase !== 'playing') return;
+    flappy.birdV += FB_GRAVITY * dt;
+    flappy.birdY += flappy.birdV * dt;
+    flappy.pipes.forEach(function(p){ p.x -= FB_PIPE_SPEED * dt; });
+    var last = flappy.pipes[flappy.pipes.length - 1];
+    if(!last || last.x < FB_W - FB_PIPE_SPACING){
+      var margin = 60;
+      flappy.pipes.push({ x: FB_W + FB_PIPE_W, gapY: margin + Math.random() * (FB_H - FB_GROUND_H - margin * 2), passed: false });
+    }
+    flappy.pipes = flappy.pipes.filter(function(p){ return p.x > -FB_PIPE_W; });
+    flappy.pipes.forEach(function(p){
+      if(!p.passed && p.x + FB_PIPE_W < FB_BIRD_X){ p.passed = true; flappy.score++; }
+    });
+    if(flappy.birdY + FB_BIRD_R > FB_H - FB_GROUND_H || flappy.birdY - FB_BIRD_R < 0){ flappyGameOver(); return; }
+    for(var i = 0; i < flappy.pipes.length; i++){
+      var p = flappy.pipes[i];
+      if(FB_BIRD_X + FB_BIRD_R > p.x && FB_BIRD_X - FB_BIRD_R < p.x + FB_PIPE_W){
+        if(flappy.birdY - FB_BIRD_R < p.gapY - FB_PIPE_GAP / 2 || flappy.birdY + FB_BIRD_R > p.gapY + FB_PIPE_GAP / 2){
+          flappyGameOver(); return;
+        }
+      }
+    }
+  }
+
+  function flappyDraw(){
+    var canvas = document.getElementById('flappyCanvas');
+    if(!canvas || !flappy) return;
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    var sky = ctx.createLinearGradient(0, 0, 0, FB_H);
+    sky.addColorStop(0, '#1a2a6c'); sky.addColorStop(1, '#4a6fd4');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(flappy.scale, 0, 0, flappy.scale, flappy.offX, flappy.offY);
+
+    var t = flappy.animT || 0;
+    ctx.fillStyle = 'rgba(255,255,255,.5)';
+    for(var s = 0; s < 5; s++){
+      var sx = (FB_W * s / 5 - (t * 20) % FB_W + FB_W) % FB_W;
+      ctx.beginPath(); ctx.arc(sx, 50 + (s % 3) * 40, 16, 0, Math.PI * 2); ctx.fill();
+    }
+
+    ctx.fillStyle = '#2ecc40';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+    flappy.pipes.forEach(function(p){
+      var topH = p.gapY - FB_PIPE_GAP / 2;
+      ctx.fillRect(p.x, 0, FB_PIPE_W, topH);
+      ctx.strokeRect(p.x, 0, FB_PIPE_W, topH);
+      ctx.fillRect(p.x - 4, topH - 18, FB_PIPE_W + 8, 18);
+      ctx.strokeRect(p.x - 4, topH - 18, FB_PIPE_W + 8, 18);
+      var botY = p.gapY + FB_PIPE_GAP / 2;
+      var botH = (FB_H - FB_GROUND_H) - botY;
+      ctx.fillRect(p.x, botY, FB_PIPE_W, botH);
+      ctx.strokeRect(p.x, botY, FB_PIPE_W, botH);
+      ctx.fillRect(p.x - 4, botY, FB_PIPE_W + 8, 18);
+      ctx.strokeRect(p.x - 4, botY, FB_PIPE_W + 8, 18);
+    });
+
+    var groundOff = (t * FB_PIPE_SPEED) % 24;
+    ctx.fillStyle = '#d9a05f';
+    ctx.fillRect(0, FB_H - FB_GROUND_H, FB_W, FB_GROUND_H);
+    ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 4;
+    for(var gx = -24; gx < FB_W + 24; gx += 24){
+      ctx.beginPath(); ctx.moveTo(gx - groundOff, FB_H - FB_GROUND_H); ctx.lineTo(gx - groundOff - 12, FB_H); ctx.stroke();
+    }
+    ctx.fillStyle = '#30c84a'; ctx.fillRect(0, FB_H - FB_GROUND_H, FB_W, 6);
+
+    ctx.save();
+    ctx.translate(FB_BIRD_X, flappy.birdY);
+    var angle = Math.max(-0.5, Math.min(1.1, flappy.birdV / 500));
+    ctx.rotate(angle);
+    ctx.fillStyle = '#ffd500'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(0, 0, FB_BIRD_R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    var wingFlap = Math.sin(t * 16) * 5;
+    ctx.fillStyle = '#ffb300';
+    ctx.beginPath(); ctx.ellipse(-3, 2 + wingFlap * 0.3, 8, 5, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(5, -4, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(6.5, -4, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ff8800';
+    ctx.beginPath(); ctx.moveTo(12, -1); ctx.lineTo(22, 2); ctx.lineTo(12, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#000'; ctx.font = '900 20px "Archivo Black", sans-serif';
+    ctx.fillText(String(flappy.score), 11, 31);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(String(flappy.score), 10, 30);
+
+    if(flappy.phase === 'title'){
+      ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, 0, FB_W, FB_H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff'; ctx.font = '900 24px "Archivo Black", sans-serif';
+      ctx.fillText('FLAPPY BIRD', FB_W / 2, FB_H / 2 - 20);
+      ctx.font = '13px "Space Mono", monospace';
+      ctx.fillText('Toca, Espacio o X para volar', FB_W / 2, FB_H / 2 + 14);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+    if(flappy.phase === 'over'){
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, FB_W, FB_H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ff5252'; ctx.font = '900 22px "Archivo Black", sans-serif';
+      ctx.fillText('CHOCASTE', FB_W / 2, FB_H / 2 - 10);
+      ctx.font = '13px "Space Mono", monospace'; ctx.fillStyle = '#fff';
+      ctx.fillText('Toca para reintentar', FB_W / 2, FB_H / 2 + 18);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+  }
+
+  function flappyResizeCanvas(){
+    var canvas = document.getElementById('flappyCanvas');
+    if(!canvas || !flappy) return;
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    flappy.scale = Math.min(canvas.width / FB_W, canvas.height / FB_H);
+    flappy.offX = (canvas.width - FB_W * flappy.scale) / 2;
+    flappy.offY = (canvas.height - FB_H * flappy.scale) / 2;
+  }
+  function flappyOnResize(){ flappyResizeCanvas(); }
+
+  function flappyTick(ts){
+    if(!flappy || !flappy.active) return;
+    if(flappy.lastTs == null) flappy.lastTs = ts;
+    var dt = Math.min(0.05, (ts - flappy.lastTs) / 1000);
+    flappy.lastTs = ts;
+    flappyUpdate(dt);
+    flappyDraw();
+    flappy.rafId = requestAnimationFrame(flappyTick);
+  }
+
+  function flappyCanvasClick(){ flappyHandlePrimaryAction(); }
+
+  function startFlappy(){
+    flappy = {
+      active: true, phase: 'title', birdY: FB_H / 2, birdV: 0, pipes: [], score: 0, animT: 0,
+      scale: null, offX: 0, offY: 0, rafId: null, lastTs: null, gamepadPrimaryLatch: false
+    };
+    requestAnimationFrame(function(){ flappyResizeCanvas(); if(flappy) flappy.rafId = requestAnimationFrame(flappyTick); });
+  }
+
+  function teardownFlappy(){
+    if(!flappy) return;
+    flappy.active = false;
+    if(flappy.rafId) cancelAnimationFrame(flappy.rafId);
+    window.removeEventListener('keydown', flappyKeyDown);
+    window.removeEventListener('resize', flappyOnResize);
+    var canvas = document.getElementById('flappyCanvas');
+    if(canvas) canvas.removeEventListener('click', flappyCanvasClick);
+    flappy = null;
+  }
+
+  function renderFlappyEntry(){
+    var root = document.getElementById('flappyRoot');
+    root.innerHTML =
+      '<div style="overflow:hidden; aspect-ratio:300/460; max-width:300px; margin:0 auto; background:#1a2a6c; border:4px solid #000; border-radius:14px; box-shadow:0 0 0 3px var(--neon-cyan-bright), 0 0 24px -4px var(--neon-cyan-bright);">' +
+        '<canvas id="flappyCanvas" style="display:block; width:100%; height:100%; cursor:pointer;"></canvas>' +
+      '</div>' +
+      '<p class="message-bar" style="margin-top:8px; text-align:center;">Toca la pantalla, Espacio o el botón X del control</p>' +
+      '<div id="flappyResult" style="margin-top:8px;"></div>';
+    window.addEventListener('keydown', flappyKeyDown);
+    window.addEventListener('resize', flappyOnResize);
+    document.getElementById('flappyCanvas').addEventListener('click', flappyCanvasClick);
+    startFlappy();
+  }
+
+  /* ================= AIR WINGS ================= */
+  var AW_W = 340, AW_H = 520, AW_PLAYER_SPEED = 230, AW_BULLET_SPEED = 420, AW_FIRE_MS = 260,
+      AW_ENEMY_SPEED_BASE = 70, AW_PLAYER_R = 14, AW_BULLET_R = 4, AW_ENEMY_R = 15;
+  var aw = null;
+
+  function awBestScore(){ return parseInt(localStorage.getItem('luckyChips_airWingsBest') || '0', 10) || 0; }
+
+  function awMakeStars(){
+    var stars = [];
+    for(var i = 0; i < 40; i++){
+      stars.push({ x: Math.random() * AW_W, y: Math.random() * AW_H, speed: 40 + Math.random() * 90, r: 1 + Math.random() * 1.6 });
+    }
+    return stars;
+  }
+
+  function awReset(){
+    aw.phase = 'title';
+    aw.player = { x: AW_W / 2, y: AW_H - 70, cooldown: 0 };
+    aw.bullets = [];
+    aw.enemies = [];
+    aw.particles = [];
+    aw.lives = 3;
+    aw.score = 0;
+    aw.spawnTimer = 0;
+    aw.elapsed = 0;
+    aw.keys = {};
+    var resultEl = document.getElementById('awResult');
+    if(resultEl) resultEl.innerHTML = '';
+  }
+
+  function awGameOver(){
+    aw.phase = 'over';
+    var best = awBestScore();
+    if(aw.score > best){ localStorage.setItem('luckyChips_airWingsBest', String(aw.score)); best = aw.score; }
+    var wrap = document.getElementById('awResult');
+    if(wrap) wrap.innerHTML = '<div class="message-bar lose">Puntaje: ' + aw.score + ' · Mejor: ' + best + '</div>';
+  }
+
+  function awHandlePrimaryAction(){
+    if(!aw) return;
+    if(aw.phase === 'title' || aw.phase === 'over'){ awReset(); aw.phase = 'playing'; }
+  }
+
+  function awKeyDown(e){
+    if(!aw) return;
+    var map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', KeyW: 'up', KeyS: 'down', KeyA: 'left', KeyD: 'right' };
+    if(map[e.code]){ e.preventDefault(); aw.keys[map[e.code]] = true; }
+    if(e.code === 'Space'){ e.preventDefault(); awHandlePrimaryAction(); }
+  }
+  function awKeyUp(e){
+    if(!aw) return;
+    var map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', KeyW: 'up', KeyS: 'down', KeyA: 'left', KeyD: 'right' };
+    if(map[e.code]) aw.keys[map[e.code]] = false;
+  }
+
+  function awGamepadRead(){
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for(var i = 0; i < pads.length; i++){
+      var gp = pads[i];
+      if(!gp) continue;
+      var axisX = gp.axes && gp.axes[0] ? gp.axes[0] : 0;
+      var axisY = gp.axes && gp.axes[1] ? gp.axes[1] : 0;
+      aw.keys.left = aw.keys.left || axisX < -0.4 || !!(gp.buttons[14] && gp.buttons[14].pressed);
+      aw.keys.right = aw.keys.right || axisX > 0.4 || !!(gp.buttons[15] && gp.buttons[15].pressed);
+      aw.keys.up = aw.keys.up || axisY < -0.4 || !!(gp.buttons[12] && gp.buttons[12].pressed);
+      aw.keys.down = aw.keys.down || axisY > 0.4 || !!(gp.buttons[13] && gp.buttons[13].pressed);
+      var primaryPressed = !!(gp.buttons[0] && gp.buttons[0].pressed) || !!(gp.buttons[9] && gp.buttons[9].pressed);
+      if(!aw.gamepadPrimaryLatch && primaryPressed) awHandlePrimaryAction();
+      aw.gamepadPrimaryLatch = primaryPressed;
+      break;
+    }
+  }
+
+  function awSpawnEnemy(){
+    var kind = Math.random() < 0.25 ? 'zig' : 'straight';
+    aw.enemies.push({
+      x: 24 + Math.random() * (AW_W - 48), y: -20,
+      speed: AW_ENEMY_SPEED_BASE + aw.elapsed * 2.2 + Math.random() * 30,
+      kind: kind, phase: Math.random() * Math.PI * 2, baseX: 0, hp: 1
+    });
+  }
+
+  function awUpdate(dt){
+    aw.animT = (aw.animT || 0) + dt;
+    aw.stars.forEach(function(s){ s.y += s.speed * dt; if(s.y > AW_H){ s.y = 0; s.x = Math.random() * AW_W; } });
+    awGamepadRead();
+    var keys = aw.keys;
+    if(aw.phase !== 'playing'){ aw.keys = {}; return; }
+    aw.elapsed += dt;
+    var p = aw.player;
+    var vx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+    var vy = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
+    p.x = Math.max(AW_PLAYER_R + 4, Math.min(AW_W - AW_PLAYER_R - 4, p.x + vx * AW_PLAYER_SPEED * dt));
+    p.y = Math.max(AW_H * 0.35, Math.min(AW_H - AW_PLAYER_R - 6, p.y + vy * AW_PLAYER_SPEED * dt));
+
+    p.cooldown -= dt * 1000;
+    if(p.cooldown <= 0){
+      aw.bullets.push({ x: p.x, y: p.y - 18 });
+      p.cooldown = AW_FIRE_MS;
+    }
+    aw.bullets.forEach(function(b){ b.y -= AW_BULLET_SPEED * dt; });
+    aw.bullets = aw.bullets.filter(function(b){ return b.y > -10; });
+
+    aw.spawnTimer -= dt * 1000;
+    if(aw.spawnTimer <= 0){
+      awSpawnEnemy();
+      aw.spawnTimer = Math.max(420, 1100 - aw.elapsed * 12);
+    }
+    aw.enemies.forEach(function(e){
+      e.y += e.speed * dt;
+      if(e.kind === 'zig'){ e.phase += dt * 3; e.x += Math.sin(e.phase) * 60 * dt; e.x = Math.max(20, Math.min(AW_W - 20, e.x)); }
+    });
+    aw.enemies = aw.enemies.filter(function(e){ return e.y < AW_H + 30; });
+
+    for(var i = aw.enemies.length - 1; i >= 0; i--){
+      var e = aw.enemies[i];
+      for(var j = aw.bullets.length - 1; j >= 0; j--){
+        var b = aw.bullets[j];
+        var dx = e.x - b.x, dy = e.y - b.y;
+        if(dx * dx + dy * dy < (AW_ENEMY_R + AW_BULLET_R) * (AW_ENEMY_R + AW_BULLET_R)){
+          aw.bullets.splice(j, 1);
+          e.hp--;
+          break;
+        }
+      }
+      if(e.hp <= 0){
+        aw.particles.push({ x: e.x, y: e.y, t: 0 });
+        aw.enemies.splice(i, 1);
+        aw.score += 10;
+        continue;
+      }
+      var pdx = e.x - p.x, pdy = e.y - p.y;
+      if(pdx * pdx + pdy * pdy < (AW_ENEMY_R + AW_PLAYER_R) * (AW_ENEMY_R + AW_PLAYER_R)){
+        aw.enemies.splice(i, 1);
+        aw.particles.push({ x: p.x, y: p.y, t: 0 });
+        aw.lives--;
+        if(aw.lives <= 0){ awGameOver(); return; }
+      }
+    }
+    aw.particles.forEach(function(pt){ pt.t += dt; });
+    aw.particles = aw.particles.filter(function(pt){ return pt.t < 0.4; });
+  }
+
+  function awDrawPlane(ctx, x, y, color, accent, scale){
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = color; ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -16); ctx.lineTo(10, 10); ctx.lineTo(4, 8); ctx.lineTo(4, 16);
+    ctx.lineTo(-4, 16); ctx.lineTo(-4, 8); ctx.lineTo(-10, 10); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(5, 2); ctx.lineTo(-5, 2); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function awDraw(){
+    var canvas = document.getElementById('awCanvas');
+    if(!canvas || !aw) return;
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#060818'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(aw.scale, 0, 0, aw.scale, aw.offX, aw.offY);
+
+    ctx.fillStyle = '#fff';
+    aw.stars.forEach(function(s){ ctx.globalAlpha = 0.35 + s.r / 3; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); });
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = '#ffd500';
+    aw.bullets.forEach(function(b){ ctx.fillRect(b.x - 2, b.y - 7, 4, 12); });
+
+    aw.enemies.forEach(function(e){ awDrawPlane(ctx, e.x, e.y, '#ff2d55', '#ffb3c0', 1); ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(Math.PI); ctx.restore(); });
+
+    aw.particles.forEach(function(pt){
+      ctx.globalAlpha = Math.max(0, 1 - pt.t / 0.4);
+      ctx.fillStyle = '#ffb300';
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 18 * (pt.t / 0.4), 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    if(aw.phase === 'playing' || aw.phase === 'over') awDrawPlane(ctx, aw.player.x, aw.player.y, '#00e5ff', '#bdf7ff', 1.1);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#000'; ctx.font = '900 16px "Archivo Black", sans-serif';
+    ctx.fillText('Puntaje: ' + aw.score, 11, 23);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Puntaje: ' + aw.score, 10, 22);
+    var livesStr = '';
+    for(var i = 0; i < Math.max(0, aw.lives); i++) livesStr += '✈';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#000'; ctx.font = '16px sans-serif';
+    ctx.fillText(livesStr, AW_W - 9, 23);
+    ctx.fillStyle = '#00e5ff';
+    ctx.fillText(livesStr, AW_W - 10, 22);
+    ctx.textAlign = 'left';
+
+    if(aw.phase === 'title'){
+      ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, 0, AW_W, AW_H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff'; ctx.font = '900 26px "Archivo Black", sans-serif';
+      ctx.fillText('AIR WINGS', AW_W / 2, AW_H / 2 - 20);
+      ctx.font = '13px "Space Mono", monospace';
+      ctx.fillText('Flechas o stick para moverte · dispara automático', AW_W / 2, AW_H / 2 + 14);
+      ctx.fillText('Toca, Espacio o X para empezar', AW_W / 2, AW_H / 2 + 34);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+    if(aw.phase === 'over'){
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, AW_W, AW_H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ff5252'; ctx.font = '900 22px "Archivo Black", sans-serif';
+      ctx.fillText('DERRIBADO', AW_W / 2, AW_H / 2 - 10);
+      ctx.font = '13px "Space Mono", monospace'; ctx.fillStyle = '#fff';
+      ctx.fillText('Toca para reintentar', AW_W / 2, AW_H / 2 + 18);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+  }
+
+  function awResizeCanvas(){
+    var canvas = document.getElementById('awCanvas');
+    if(!canvas || !aw) return;
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    aw.scale = Math.min(canvas.width / AW_W, canvas.height / AW_H);
+    aw.offX = (canvas.width - AW_W * aw.scale) / 2;
+    aw.offY = (canvas.height - AW_H * aw.scale) / 2;
+  }
+  function awOnResize(){ awResizeCanvas(); }
+
+  function awTick(ts){
+    if(!aw || !aw.active) return;
+    if(aw.lastTs == null) aw.lastTs = ts;
+    var dt = Math.min(0.05, (ts - aw.lastTs) / 1000);
+    aw.lastTs = ts;
+    awUpdate(dt);
+    awDraw();
+    aw.rafId = requestAnimationFrame(awTick);
+  }
+
+  function awCanvasClick(){ awHandlePrimaryAction(); }
+
+  function startAirWings(){
+    aw = {
+      active: true, phase: 'title', player: { x: AW_W / 2, y: AW_H - 70, cooldown: 0 },
+      bullets: [], enemies: [], particles: [], lives: 3, score: 0, spawnTimer: 0, elapsed: 0,
+      keys: {}, stars: awMakeStars(), animT: 0,
+      scale: null, offX: 0, offY: 0, rafId: null, lastTs: null, gamepadPrimaryLatch: false
+    };
+    requestAnimationFrame(function(){ awResizeCanvas(); if(aw) aw.rafId = requestAnimationFrame(awTick); });
+  }
+
+  function teardownAirWings(){
+    if(!aw) return;
+    aw.active = false;
+    if(aw.rafId) cancelAnimationFrame(aw.rafId);
+    window.removeEventListener('keydown', awKeyDown);
+    window.removeEventListener('keyup', awKeyUp);
+    window.removeEventListener('resize', awOnResize);
+    var canvas = document.getElementById('awCanvas');
+    if(canvas) canvas.removeEventListener('click', awCanvasClick);
+    aw = null;
+  }
+
+  function renderAirWingsEntry(){
+    var root = document.getElementById('airwingsRoot');
+    root.innerHTML =
+      '<div style="overflow:hidden; aspect-ratio:340/520; max-width:340px; margin:0 auto; background:#060818; border:4px solid #000; border-radius:14px; box-shadow:0 0 0 3px var(--neon-purple-bright), 0 0 24px -4px var(--neon-purple-bright);">' +
+        '<canvas id="awCanvas" style="display:block; width:100%; height:100%; cursor:pointer;"></canvas>' +
+      '</div>' +
+      '<p class="message-bar" style="margin-top:8px; text-align:center;">Flechas/WASD o control PS4 para moverte, disparo automático</p>' +
+      '<div class="snake-touch-controls">' +
+        '<div class="snake-dpad">' +
+          '<span></span><button type="button" class="snake-dpad-btn" data-dir="up">▲</button><span></span>' +
+          '<button type="button" class="snake-dpad-btn" data-dir="left">◀</button><span></span><button type="button" class="snake-dpad-btn" data-dir="right">▶</button>' +
+          '<span></span><button type="button" class="snake-dpad-btn" data-dir="down">▼</button><span></span>' +
+        '</div>' +
+      '</div>' +
+      '<div id="awResult" style="margin-top:8px;"></div>';
+    window.addEventListener('keydown', awKeyDown);
+    window.addEventListener('keyup', awKeyUp);
+    window.addEventListener('resize', awOnResize);
+    document.getElementById('awCanvas').addEventListener('click', awCanvasClick);
+    var dirKeys = { up: 'up', down: 'down', left: 'left', right: 'right' };
+    document.querySelectorAll('#airwingsRoot .snake-dpad-btn').forEach(function(btn){
+      var dir = dirKeys[btn.getAttribute('data-dir')];
+      btn.addEventListener('pointerdown', function(e){ e.preventDefault(); if(aw) aw.keys[dir] = true; });
+      btn.addEventListener('pointerup', function(){ if(aw) aw.keys[dir] = false; });
+      btn.addEventListener('pointerleave', function(){ if(aw) aw.keys[dir] = false; });
+      btn.addEventListener('pointercancel', function(){ if(aw) aw.keys[dir] = false; });
+    });
+    startAirWings();
+  }
+
+  /* ================= BILLAR: mesa, física y dibujo (compartido) ================= */
+  var POOL_W = 720, POOL_H = 380, POOL_PAD = 26, POOL_BALL_R = 10.5, POOL_POCKET_R = 19;
+  var POOL_LEFT = POOL_PAD, POOL_RIGHT = POOL_W - POOL_PAD, POOL_TOP = POOL_PAD, POOL_BOTTOM = POOL_H - POOL_PAD;
+  var POOL_POCKETS = [
+    { x: POOL_LEFT, y: POOL_TOP }, { x: POOL_W / 2, y: POOL_TOP }, { x: POOL_RIGHT, y: POOL_TOP },
+    { x: POOL_LEFT, y: POOL_BOTTOM }, { x: POOL_W / 2, y: POOL_BOTTOM }, { x: POOL_RIGHT, y: POOL_BOTTOM }
+  ];
+  var POOL_FRICTION_K = 2.2, POOL_MIN_SPEED = 6, POOL_CUSHION_REST = 0.82, POOL_MAX_SPEED = 880;
+  var POOL_BALL_COLORS = { 1: '#f4c430', 2: '#1e63c8', 3: '#d32f2f', 4: '#7b2fbe', 5: '#ff7f11', 6: '#1f8a3b', 7: '#8b3a2b',
+    8: '#161616', 9: '#f4c430', 10: '#1e63c8', 11: '#d32f2f', 12: '#7b2fbe', 13: '#ff7f11', 14: '#1f8a3b', 15: '#8b3a2b' };
+  function poolBallType(n){ return n === 8 ? 'eight' : (n < 8 ? 'solid' : 'stripe'); }
+
+  function poolShuffle(arr){
+    for(var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function poolRackBalls(){
+    var centerY = (POOL_TOP + POOL_BOTTOM) / 2;
+    var apexX = POOL_W * 0.68;
+    var positions = [];
+    for(var row = 0; row < 5; row++){
+      for(var col = 0; col <= row; col++){
+        positions.push({ x: apexX + row * (POOL_BALL_R * 1.76), y: centerY + (col - row / 2) * (POOL_BALL_R * 2.04) });
+      }
+    }
+    var rest = poolShuffle([1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15]);
+    var numbers = new Array(15);
+    numbers[4] = 8;
+    var ri = 0;
+    for(var i = 0; i < 15; i++){ if(i !== 4) numbers[i] = rest[ri++]; }
+    var balls = [{ num: 0, x: POOL_W * 0.22, y: centerY, vx: 0, vy: 0, color: '#fff', type: 'cue', pocketed: false }];
+    for(var k = 0; k < 15; k++){
+      var n = numbers[k];
+      balls.push({ num: n, x: positions[k].x, y: positions[k].y, vx: 0, vy: 0, color: POOL_BALL_COLORS[n], type: poolBallType(n), pocketed: false });
+    }
+    return balls;
+  }
+
+  function poolAllStopped(balls){
+    return balls.every(function(b){ return b.pocketed || (b.vx === 0 && b.vy === 0); });
+  }
+
+  function poolStepPhysics(balls, dt){
+    var subSteps = 5, sdt = dt / subSteps;
+    for(var s = 0; s < subSteps; s++){
+      balls.forEach(function(b){
+        if(b.pocketed) return;
+        b.x += b.vx * sdt; b.y += b.vy * sdt;
+        var sp = Math.hypot(b.vx, b.vy);
+        if(sp > 0){
+          var decay = Math.exp(-POOL_FRICTION_K * sdt);
+          b.vx *= decay; b.vy *= decay;
+          if(Math.hypot(b.vx, b.vy) < POOL_MIN_SPEED){ b.vx = 0; b.vy = 0; }
+        }
+        for(var p = 0; p < POOL_POCKETS.length; p++){
+          var pk = POOL_POCKETS[p];
+          var dx = b.x - pk.x, dy = b.y - pk.y;
+          if(dx * dx + dy * dy < POOL_POCKET_R * POOL_POCKET_R){ b.pocketed = true; b.vx = 0; b.vy = 0; break; }
+        }
+        if(b.pocketed) return;
+        if(b.x - POOL_BALL_R < POOL_LEFT){ b.x = POOL_LEFT + POOL_BALL_R; b.vx = Math.abs(b.vx) * POOL_CUSHION_REST; }
+        if(b.x + POOL_BALL_R > POOL_RIGHT){ b.x = POOL_RIGHT - POOL_BALL_R; b.vx = -Math.abs(b.vx) * POOL_CUSHION_REST; }
+        if(b.y - POOL_BALL_R < POOL_TOP){ b.y = POOL_TOP + POOL_BALL_R; b.vy = Math.abs(b.vy) * POOL_CUSHION_REST; }
+        if(b.y + POOL_BALL_R > POOL_BOTTOM){ b.y = POOL_BOTTOM - POOL_BALL_R; b.vy = -Math.abs(b.vy) * POOL_CUSHION_REST; }
+      });
+      for(var i = 0; i < balls.length; i++){
+        var b1 = balls[i]; if(b1.pocketed) continue;
+        for(var j = i + 1; j < balls.length; j++){
+          var b2 = balls[j]; if(b2.pocketed) continue;
+          var ddx = b2.x - b1.x, ddy = b2.y - b1.y;
+          var dist = Math.sqrt(ddx * ddx + ddy * ddy);
+          if(dist > 0 && dist < POOL_BALL_R * 2){
+            var overlap = (POOL_BALL_R * 2 - dist) / 2;
+            var nx = ddx / dist, ny = ddy / dist;
+            b1.x -= nx * overlap; b1.y -= ny * overlap;
+            b2.x += nx * overlap; b2.y += ny * overlap;
+            var rvx = b2.vx - b1.vx, rvy = b2.vy - b1.vy;
+            var velN = rvx * nx + rvy * ny;
+            if(velN < 0){
+              b1.vx += velN * nx; b1.vy += velN * ny;
+              b2.vx -= velN * nx; b2.vy -= velN * ny;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function poolResizeCanvas(canvas, view){
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    view.scale = Math.min(canvas.width / POOL_W, canvas.height / POOL_H);
+    view.offX = (canvas.width - POOL_W * view.scale) / 2;
+    view.offY = (canvas.height - POOL_H * view.scale) / 2;
+  }
+
+  function poolPointFromClient(canvas, view, clientX, clientY){
+    var rect = canvas.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    var px = (clientX - rect.left) * dpr, py = (clientY - rect.top) * dpr;
+    return { x: (px - view.offX) / view.scale, y: (py - view.offY) / view.scale };
+  }
+
+  function poolDrawBall(ctx, b){
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.beginPath(); ctx.arc(0, 0, POOL_BALL_R, 0, Math.PI * 2);
+    ctx.fillStyle = b.type === 'cue' ? '#fdfdfd' : b.color;
+    ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.stroke();
+    if(b.type === 'stripe'){
+      ctx.save(); ctx.beginPath(); ctx.arc(0, 0, POOL_BALL_R, 0, Math.PI * 2); ctx.clip();
+      ctx.fillStyle = '#fff'; ctx.fillRect(-POOL_BALL_R, -POOL_BALL_R * 0.42, POOL_BALL_R * 2, POOL_BALL_R * 0.84);
+      ctx.restore();
+    }
+    if(b.type !== 'cue'){
+      ctx.beginPath(); ctx.arc(0, 0, POOL_BALL_R * 0.46, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.fillStyle = '#000'; ctx.font = 'bold ' + (POOL_BALL_R * 0.62) + 'px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(b.num), 0, 0.5);
+    }
+    ctx.beginPath(); ctx.arc(-POOL_BALL_R * 0.32, -POOL_BALL_R * 0.32, POOL_BALL_R * 0.28, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fill();
+    ctx.restore();
+  }
+
+  function poolDrawScene(ctx, view, balls, aim){
+    var canvas = ctx.canvas;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#1c1008'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(view.scale, 0, 0, view.scale, view.offX, view.offY);
+
+    ctx.fillStyle = '#7a4a22'; ctx.fillRect(0, 0, POOL_W, POOL_H);
+    ctx.fillStyle = '#0e7a44'; ctx.fillRect(POOL_LEFT - 10, POOL_TOP - 10, (POOL_RIGHT - POOL_LEFT) + 20, (POOL_BOTTOM - POOL_TOP) + 20);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.strokeRect(POOL_LEFT - 10, POOL_TOP - 10, (POOL_RIGHT - POOL_LEFT) + 20, (POOL_BOTTOM - POOL_TOP) + 20);
+
+    ctx.fillStyle = '#060606';
+    POOL_POCKETS.forEach(function(p){ ctx.beginPath(); ctx.arc(p.x, p.y, POOL_POCKET_R, 0, Math.PI * 2); ctx.fill(); });
+
+    balls.forEach(function(b){ if(!b.pocketed) poolDrawBall(ctx, b); });
+
+    if(aim){
+      var cue = balls[0];
+      if(cue && !cue.pocketed){
+        var dx = aim.start.x - aim.cur.x, dy = aim.start.y - aim.cur.y;
+        var dist = Math.hypot(dx, dy);
+        if(dist > 4){
+          var ux = dx / dist, uy = dy / dist;
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2; ctx.setLineDash([7, 7]);
+          ctx.beginPath(); ctx.moveTo(cue.x, cue.y);
+          ctx.lineTo(cue.x + ux * Math.min(dist * 3, 240), cue.y + uy * Math.min(dist * 3, 240));
+          ctx.stroke(); ctx.setLineDash([]);
+          ctx.restore();
+          var pwr = Math.min(1, dist / 150);
+          ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(cue.x - 30, cue.y + 22, 60, 7);
+          ctx.fillStyle = pwr > 0.75 ? '#ff4444' : (pwr > 0.4 ? '#ffd500' : '#30e860');
+          ctx.fillRect(cue.x - 30, cue.y + 22, 60 * pwr, 7);
+        }
+      }
+    }
+  }
+
+  /* ================= BILLAR: modo práctica ================= */
+  var poolPractice = null;
+
+  function poolPracticeRedraw(){
+    if(!poolPractice) return;
+    poolDrawScene(poolPractice.ctx, poolPractice.view, poolPractice.balls, poolPractice.aim);
+  }
+
+  function poolPracticePointerDown(e){
+    if(!poolPractice) return;
+    var cue = poolPractice.balls[0];
+    if(cue.pocketed){
+      var pt0 = poolPointFromClient(poolPractice.canvas, poolPractice.view, e.clientX, e.clientY);
+      cue.x = Math.max(POOL_LEFT + POOL_BALL_R, Math.min(POOL_RIGHT - POOL_BALL_R, pt0.x));
+      cue.y = Math.max(POOL_TOP + POOL_BALL_R, Math.min(POOL_BOTTOM - POOL_BALL_R, pt0.y));
+      cue.pocketed = false; cue.vx = 0; cue.vy = 0;
+      poolPracticeRedraw();
+      return;
+    }
+    if(!poolAllStopped(poolPractice.balls)) return;
+    var pt = poolPointFromClient(poolPractice.canvas, poolPractice.view, e.clientX, e.clientY);
+    poolPractice.aim = { start: pt, cur: pt };
+  }
+  function poolPracticePointerMove(e){
+    if(!poolPractice || !poolPractice.aim) return;
+    poolPractice.aim.cur = poolPointFromClient(poolPractice.canvas, poolPractice.view, e.clientX, e.clientY);
+    poolPracticeRedraw();
+  }
+  function poolPracticePointerUp(){
+    if(!poolPractice || !poolPractice.aim) return;
+    var aim = poolPractice.aim; poolPractice.aim = null;
+    var cue = poolPractice.balls[0];
+    var dx = aim.start.x - aim.cur.x, dy = aim.start.y - aim.cur.y;
+    var dist = Math.hypot(dx, dy);
+    if(dist < 6){ poolPracticeRedraw(); return; }
+    var power = Math.min(POOL_MAX_SPEED, dist * 6.5);
+    cue.vx = (dx / dist) * power; cue.vy = (dy / dist) * power;
+  }
+
+  function poolPracticeTick(ts){
+    if(!poolPractice || !poolPractice.active) return;
+    if(poolPractice.lastTs == null) poolPractice.lastTs = ts;
+    var dt = Math.min(0.032, (ts - poolPractice.lastTs) / 1000);
+    poolPractice.lastTs = ts;
+    poolStepPhysics(poolPractice.balls, dt);
+    poolPracticeRedraw();
+    poolPractice.rafId = requestAnimationFrame(poolPracticeTick);
+  }
+
+  function poolPracticeOnResize(){
+    if(!poolPractice) return;
+    poolResizeCanvas(poolPractice.canvas, poolPractice.view);
+    poolPracticeRedraw();
+  }
+
+  function poolPracticeRack(){
+    if(!poolPractice) return;
+    poolPractice.balls = poolRackBalls();
+    poolPracticeRedraw();
+  }
+
+  function renderPoolPracticeEntry(){
+    var root = document.getElementById('poolPracticeView');
+    root.innerHTML =
+      '<div class="pool-hud"><span class="bet-label">Modo práctica</span>' +
+        '<button class="btn btn-ghost btn-sm" id="poolRackBtn">🔄 Rackear de nuevo</button></div>' +
+      '<div class="pool-wrap"><canvas id="poolCanvas" style="display:block; width:100%; height:100%; cursor:crosshair;"></canvas></div>' +
+      '<p class="message-bar" style="margin-top:8px; text-align:center;">Arrastra desde la bola blanca hacia atrás y suelta para tirar</p>';
+    var canvas = document.getElementById('poolCanvas');
+    poolPractice = { active: true, balls: poolRackBalls(), aim: null, canvas: canvas, ctx: canvas.getContext('2d'),
+      view: { scale: 1, offX: 0, offY: 0 }, rafId: null, lastTs: null };
+    window.addEventListener('resize', poolPracticeOnResize);
+    canvas.addEventListener('pointerdown', poolPracticePointerDown);
+    canvas.addEventListener('pointermove', poolPracticePointerMove);
+    canvas.addEventListener('pointerup', poolPracticePointerUp);
+    document.getElementById('poolRackBtn').addEventListener('click', poolPracticeRack);
+    requestAnimationFrame(function(){
+      poolResizeCanvas(canvas, poolPractice.view);
+      poolPracticeRedraw();
+      poolPractice.rafId = requestAnimationFrame(poolPracticeTick);
+    });
+  }
+
+  function teardownPoolPractice(){
+    if(!poolPractice) return;
+    poolPractice.active = false;
+    if(poolPractice.rafId) cancelAnimationFrame(poolPractice.rafId);
+    window.removeEventListener('resize', poolPracticeOnResize);
+    var canvas = poolPractice.canvas;
+    if(canvas){
+      canvas.removeEventListener('pointerdown', poolPracticePointerDown);
+      canvas.removeEventListener('pointermove', poolPracticePointerMove);
+      canvas.removeEventListener('pointerup', poolPracticePointerUp);
+    }
+    poolPractice = null;
+  }
+
+  /* ================= BILLAR: en línea con tu liga ================= */
+  var currentPoolTableRef = null;
+  var currentPoolTableData = null;
+  var poolTableUnsub = null;
+  var poolLobbyUnsub = null;
+  var poolMsgTimer = null;
+  var poolOnlineEngine = null;
+
+  function poolMsg(text){
+    var el = document.getElementById('poolMsgBar');
+    if(!el) return;
+    el.textContent = text;
+    clearTimeout(poolMsgTimer);
+    poolMsgTimer = setTimeout(function(){ el.textContent = ''; }, 3500);
+  }
+
+  function poolMakeSeat(playerId, name, avatar, frame){
+    return { playerId: playerId, name: name, avatar: avatar || 'dado', frame: frame || 'none' };
+  }
+
+  function createPoolTable(){
+    if(!db || !state.leagueCode){ poolMsg('La liga no está disponible ahora'); return; }
+    if(!state.playerName){ poolMsg('Primero elige tu nombre en la liga'); return; }
+    ensurePlayerId();
+    var seats = [poolMakeSeat(state.playerId, state.playerName, state.activeAvatar, state.activeFrame), null];
+    var ref = db.collection('leagues/' + state.leagueCode + '/poolTables').doc();
+    ref.set({
+      createdAt: Date.now(), createdBy: state.playerId, hostId: state.playerId,
+      status: 'waiting', seats: seats, balls: poolRackBalls(), turnSeat: 0,
+      groups: [null, null], ballInHand: false, shotSeq: 0, winnerSeat: null,
+      log: ['Mesa creada por ' + state.playerName], updatedAt: Date.now()
+    }).then(function(){
+      state.currentPoolTable = { code: state.leagueCode, id: ref.id };
+      saveState();
+      renderPoolOnlineEntry();
+    }).catch(function(){ poolMsg('No se pudo crear la mesa'); });
+  }
+
+  function joinPoolTable(tableId){
+    if(!db || !state.leagueCode) return;
+    ensurePlayerId();
+    var ref = db.doc('leagues/' + state.leagueCode + '/poolTables/' + tableId);
+    ref.get().then(function(snap){
+      if(!snap.exists){ poolMsg('La mesa ya no existe'); return; }
+      var t = snap.data();
+      var idx = tableSeatIndex(t, state.playerId);
+      if(idx !== -1){
+        state.currentPoolTable = { code: state.leagueCode, id: tableId }; saveState(); renderPoolOnlineEntry();
+        return;
+      }
+      if(t.seats[0] && t.seats[1]){ poolMsg('La mesa ya tiene dos jugadores'); return; }
+      var seats = t.seats.slice();
+      var freeIdx = seats[0] ? 1 : 0;
+      seats[freeIdx] = poolMakeSeat(state.playerId, state.playerName, state.activeAvatar, state.activeFrame);
+      ref.set({ seats: seats, log: (t.log || []).concat([state.playerName + ' se unió a la mesa']) }, { merge: true }).then(function(){
+        state.currentPoolTable = { code: state.leagueCode, id: tableId };
+        saveState();
+        renderPoolOnlineEntry();
+      }).catch(function(){ poolMsg('No se pudo unir a la mesa'); });
+    }).catch(function(){ poolMsg('No se pudo unir a la mesa'); });
+  }
+
+  function teardownPoolOnlineEngine(){
+    if(!poolOnlineEngine) return;
+    if(poolOnlineEngine.rafId) cancelAnimationFrame(poolOnlineEngine.rafId);
+    if(poolOnlineEngine.resizeHandler) window.removeEventListener('resize', poolOnlineEngine.resizeHandler);
+    var canvas = poolOnlineEngine.canvas;
+    if(canvas){
+      canvas.removeEventListener('pointerdown', poolOnlinePointerDown);
+      canvas.removeEventListener('pointermove', poolOnlinePointerMove);
+      canvas.removeEventListener('pointerup', poolOnlinePointerUp);
+    }
+    poolOnlineEngine = null;
+  }
+
+  function teardownPoolListeners(){
+    if(poolTableUnsub){ poolTableUnsub(); poolTableUnsub = null; }
+    if(poolLobbyUnsub){ poolLobbyUnsub(); poolLobbyUnsub = null; }
+    teardownPoolOnlineEngine();
+    currentPoolTableRef = null; currentPoolTableData = null;
+  }
+
+  function poolMaybeAutoStart(t, ref){
+    if(t.status !== 'waiting' || !t.seats[0] || !t.seats[1]) return;
+    withTableLock(ref, function(fresh){
+      if(!fresh || fresh.status !== 'waiting') return null;
+      if(!fresh.seats[0] || !fresh.seats[1]) return null;
+      fresh.status = 'playing';
+      fresh.updatedAt = Date.now();
+      return fresh;
+    }).catch(function(){});
+  }
+
+  function openPoolTable(tableId){
+    teardownPoolListeners();
+    if(!db){ poolMsg('El billar en línea no está disponible ahora'); return; }
+    var ref = db.doc('leagues/' + state.leagueCode + '/poolTables/' + tableId);
+    currentPoolTableRef = ref;
+    poolTableUnsub = ref.onSnapshot(function(snap){
+      if(!snap.exists){
+        poolMsg('La mesa terminó');
+        state.currentPoolTable = null; saveState();
+        teardownPoolListeners();
+        renderPoolLobby();
+        return;
+      }
+      currentPoolTableData = snap.data();
+      poolMaybeAutoStart(currentPoolTableData, ref);
+      renderPoolOnlineTable(currentPoolTableData);
+    }, function(){ poolMsg('Conexión perdida con la mesa'); });
+  }
+
+  function renderPoolLobby(){
+    var tv = document.getElementById('poolTableView');
+    if(tv) tv.hidden = true;
+    document.getElementById('poolLobby').hidden = false;
+    subscribePoolLobby();
+  }
+
+  function subscribePoolLobby(){
+    if(poolLobbyUnsub){ poolLobbyUnsub(); poolLobbyUnsub = null; }
+    if(!db || !state.leagueCode) return;
+    poolLobbyUnsub = db.collection('leagues/' + state.leagueCode + '/poolTables')
+      .limit(20)
+      .onSnapshot(function(snap){ renderPoolLobbyList(snap); }, function(){ poolMsg('No se pudieron cargar las mesas'); });
+  }
+
+  function renderPoolLobbyList(snap){
+    var el = document.getElementById('poolLobbyList');
+    if(!el) return;
+    if(!snap || snap.empty){ el.innerHTML = '<p class="league-empty">Aún no hay mesas abiertas. ¡Crea la primera!</p>'; return; }
+    el.innerHTML = '';
+    snap.docs.forEach(function(doc){
+      var t = doc.data();
+      var seated = t.seats.filter(Boolean).length;
+      var iAmIn = tableSeatIndex(t, state.playerId) !== -1;
+      var full = seated >= 2;
+      var row = document.createElement('div');
+      row.className = 'poker-table-row';
+      row.innerHTML =
+        '<div class="poker-table-info">' +
+          '<span class="poker-table-stakes">Mesa 1 contra 1</span>' +
+          '<span class="poker-table-meta">' + seated + '/2 jugadores · ' + (t.status === 'playing' ? 'En juego' : (t.status === 'waiting' ? 'Esperando' : 'Terminada')) + '</span>' +
+        '</div>';
+      var btn = document.createElement('button');
+      btn.className = 'btn btn-sm ' + (iAmIn ? 'btn-gold' : 'btn-ghost');
+      btn.textContent = iAmIn ? 'Volver a la mesa' : (full ? 'Llena' : 'Unirme');
+      btn.disabled = !iAmIn && full;
+      btn.addEventListener('click', function(){
+        if(iAmIn){ state.currentPoolTable = { code: state.leagueCode, id: doc.id }; saveState(); renderPoolOnlineEntry(); }
+        else { joinPoolTable(doc.id); }
+      });
+      row.appendChild(btn);
+      el.appendChild(row);
+    });
+  }
+
+  function poolOnlineRedraw(balls){
+    var eng = poolOnlineEngine;
+    if(!eng) return;
+    poolDrawScene(eng.ctx, eng.view, balls, eng.aim);
+  }
+
+  function poolOnlinePointerDown(e){
+    var t = currentPoolTableData, eng = poolOnlineEngine;
+    if(!t || !eng || t.status !== 'playing' || eng.rafId) return;
+    var meIdx = tableSeatIndex(t, state.playerId);
+    if(meIdx === -1 || t.turnSeat !== meIdx) return;
+    if(!eng.workingBalls) eng.workingBalls = JSON.parse(JSON.stringify(t.balls));
+    var pt = poolPointFromClient(eng.canvas, eng.view, e.clientX, e.clientY);
+    var cue = eng.workingBalls[0];
+    if(t.ballInHand && !eng.placingDone){
+      cue.x = Math.max(POOL_LEFT + POOL_BALL_R, Math.min(POOL_RIGHT - POOL_BALL_R, pt.x));
+      cue.y = Math.max(POOL_TOP + POOL_BALL_R, Math.min(POOL_BOTTOM - POOL_BALL_R, pt.y));
+      cue.pocketed = false; cue.vx = 0; cue.vy = 0;
+      eng.placingDone = true;
+      poolOnlineRedraw(eng.workingBalls);
+      return;
+    }
+    if(cue.pocketed) return;
+    eng.aim = { start: pt, cur: pt };
+  }
+  function poolOnlinePointerMove(e){
+    var eng = poolOnlineEngine;
+    if(!eng || !eng.aim) return;
+    eng.aim.cur = poolPointFromClient(eng.canvas, eng.view, e.clientX, e.clientY);
+    poolOnlineRedraw(eng.workingBalls || currentPoolTableData.balls);
+  }
+  function poolOnlinePointerUp(){
+    var t = currentPoolTableData, eng = poolOnlineEngine;
+    if(!t || !eng || !eng.aim) return;
+    var aim = eng.aim; eng.aim = null;
+    var cue = eng.workingBalls[0];
+    var dx = aim.start.x - aim.cur.x, dy = aim.start.y - aim.cur.y;
+    var dist = Math.hypot(dx, dy);
+    if(dist < 6){ poolOnlineRedraw(eng.workingBalls); return; }
+    var power = Math.min(POOL_MAX_SPEED, dist * 6.5);
+    cue.vx = (dx / dist) * power; cue.vy = (dy / dist) * power;
+    poolOnlineRunShot(t, eng.workingBalls);
+  }
+
+  function poolOnlineRunShot(t, startBalls){
+    var eng = poolOnlineEngine;
+    var preBalls = JSON.parse(JSON.stringify(startBalls));
+    eng.shooterPending = true;
+    eng.lastTs = null;
+    function step(ts){
+      if(eng.lastTs == null) eng.lastTs = ts;
+      var dt = Math.min(0.032, (ts - eng.lastTs) / 1000);
+      eng.lastTs = ts;
+      poolStepPhysics(startBalls, dt);
+      poolOnlineRedraw(startBalls);
+      if(!poolAllStopped(startBalls)){ eng.rafId = requestAnimationFrame(step); }
+      else { eng.rafId = null; poolOnlineFinishShot(t, preBalls, startBalls); }
+    }
+    eng.rafId = requestAnimationFrame(step);
+  }
+
+  function poolOnlineFinishShot(t, preBalls, finalBalls){
+    var meIdx = tableSeatIndex(t, state.playerId);
+    var ref = currentPoolTableRef;
+    withTableLock(ref, function(fresh){
+      if(!fresh || fresh.status !== 'playing') return null;
+      var oppIdx = 1 - meIdx;
+      var newlyPocketed = finalBalls.filter(function(b, i){ return b.pocketed && !preBalls[i].pocketed; });
+      var cueBall = finalBalls[0];
+      var scratch = cueBall.pocketed;
+      var pottedEight = newlyPocketed.some(function(b){ return b.type === 'eight'; });
+      var myGroup = fresh.groups[meIdx];
+      if(!myGroup){
+        var firstGroupBall = newlyPocketed.filter(function(b){ return b.type === 'solid' || b.type === 'stripe'; })[0];
+        if(firstGroupBall){
+          myGroup = firstGroupBall.type;
+          fresh.groups[meIdx] = myGroup;
+          fresh.groups[oppIdx] = myGroup === 'solid' ? 'stripe' : 'solid';
+        }
+      }
+      var winnerSeat = null, legalContinue = false, logMsg;
+      if(pottedEight){
+        var myRemaining = myGroup
+          ? finalBalls.some(function(b){ return !b.pocketed && b.type === myGroup; })
+          : finalBalls.some(function(b){ return !b.pocketed && (b.type === 'solid' || b.type === 'stripe'); });
+        if(myRemaining || scratch){ winnerSeat = oppIdx; logMsg = 'metió la bola 8 antes de tiempo'; }
+        else { winnerSeat = meIdx; logMsg = '¡metió la bola 8 y gana la partida!'; }
+      } else if(scratch){
+        logMsg = 'falta: la bola blanca cayó';
+      } else if(myGroup && newlyPocketed.some(function(b){ return b.type === myGroup; })){
+        legalContinue = true;
+        logMsg = 'metió una propia y sigue tirando';
+      } else {
+        logMsg = 'no metió ninguna propia, turno para el rival';
+      }
+      if(scratch){
+        cueBall.pocketed = false;
+        cueBall.x = POOL_W * 0.25; cueBall.y = POOL_H / 2;
+      }
+      finalBalls.forEach(function(b){ b.vx = 0; b.vy = 0; });
+      fresh.balls = finalBalls;
+      fresh.shotSeq = (fresh.shotSeq || 0) + 1;
+      var sname = (fresh.seats[meIdx] && fresh.seats[meIdx].name) || 'Jugador';
+      fresh.log = (fresh.log || []).concat([sname + ' ' + logMsg]);
+      if(winnerSeat != null){
+        fresh.status = 'finished'; fresh.winnerSeat = winnerSeat; fresh.ballInHand = false;
+      } else {
+        fresh.ballInHand = scratch;
+        fresh.turnSeat = legalContinue ? meIdx : oppIdx;
+      }
+      fresh.updatedAt = Date.now();
+      return fresh;
+    }).catch(function(){ poolMsg('No se pudo registrar el tiro'); });
+
+    var eng = poolOnlineEngine;
+    if(eng){ eng.workingBalls = null; eng.placingDone = false; }
+  }
+
+  function poolOnlineStartLerp(fromBalls, toBalls){
+    var eng = poolOnlineEngine;
+    if(!eng) return;
+    eng.lastTs = null;
+    var t0 = 0;
+    function step(ts){
+      if(eng.lastTs == null) eng.lastTs = ts;
+      var dt = (ts - eng.lastTs) / 1000;
+      eng.lastTs = ts;
+      t0 += dt / 0.9;
+      var k = Math.min(1, t0);
+      var ek = 1 - Math.pow(1 - k, 3);
+      var frame = [];
+      toBalls.forEach(function(tb, i){
+        var fb = fromBalls[i] || tb;
+        if(fb.pocketed && tb.pocketed) return;
+        if(tb.pocketed && !fb.pocketed && k >= 0.92) return;
+        frame.push({ num: tb.num, type: tb.type, color: tb.color, pocketed: false,
+          x: fb.x + (tb.x - fb.x) * ek, y: fb.y + (tb.y - fb.y) * ek });
+      });
+      poolOnlineRedraw(frame);
+      if(k < 1){ eng.rafId = requestAnimationFrame(step); }
+      else { eng.rafId = null; poolOnlineRedraw(toBalls); }
+    }
+    eng.rafId = requestAnimationFrame(step);
+  }
+
+  function poolOnlineSyncBoard(t){
+    var eng = poolOnlineEngine;
+    if(!eng) return;
+    var meIdx = tableSeatIndex(t, state.playerId);
+    var oppIdx = 1 - meIdx;
+    var myGroup = t.groups ? t.groups[meIdx] : null;
+    var oppGroup = t.groups ? t.groups[oppIdx] : null;
+    var myDot = document.getElementById('poolMyGroupDot');
+    var oppDot = document.getElementById('poolOppGroupDot');
+    if(myDot) myDot.className = 'pool-group-dot' + (myGroup ? ' ' + myGroup : '');
+    if(oppDot) oppDot.className = 'pool-group-dot' + (oppGroup ? ' ' + oppGroup : '');
+    var myLabel = document.getElementById('poolMyGroupLabel');
+    var oppLabel = document.getElementById('poolOppGroupLabel');
+    if(myLabel) myLabel.textContent = ((t.seats[meIdx] && t.seats[meIdx].name) || 'Tú') + (myGroup ? (myGroup === 'solid' ? ' · Lisas' : ' · Rayadas') : '');
+    if(oppLabel) oppLabel.textContent = ((t.seats[oppIdx] && t.seats[oppIdx].name) || 'Rival') + (oppGroup ? (oppGroup === 'solid' ? ' · Lisas' : ' · Rayadas') : '');
+
+    var banner = document.getElementById('poolTurnBanner');
+    var resultPanel = document.getElementById('poolResultPanel');
+    var msgEl = document.getElementById('poolOnlineMsg');
+
+    if(t.status === 'finished'){
+      if(eng.rafId){ cancelAnimationFrame(eng.rafId); eng.rafId = null; }
+      if(banner) banner.textContent = '';
+      if(resultPanel){
+        resultPanel.hidden = false;
+        var won = t.winnerSeat === meIdx;
+        document.getElementById('poolResultTitle').textContent = won ? '¡Ganaste la partida!' : 'Perdiste la partida';
+      }
+      poolOnlineRedraw(t.balls);
+      eng.lastSeenShotSeq = t.shotSeq; eng.lastSeenBalls = t.balls;
+      return;
+    }
+    if(resultPanel) resultPanel.hidden = true;
+
+    var myTurn = meIdx !== -1 && t.turnSeat === meIdx;
+    if(msgEl) msgEl.textContent = (t.ballInHand && myTurn) ? 'Falta: toca la mesa para colocar la bola blanca' : '';
+    if(banner){
+      banner.className = 'pool-turn-banner' + (myTurn ? ' mine' : '');
+      banner.textContent = myTurn ? '¡Tu turno! Arrastra desde la bola blanca hacia atrás y suelta' : 'Turno de ' + ((t.seats[oppIdx] && t.seats[oppIdx].name) || 'tu rival') + '…';
+    }
+
+    if(eng.lastSeenShotSeq === -1){
+      eng.lastSeenShotSeq = t.shotSeq || 0;
+      eng.lastSeenBalls = t.balls;
+      poolOnlineRedraw(t.balls);
+      return;
+    }
+    if((t.shotSeq || 0) !== eng.lastSeenShotSeq){
+      var wasMine = eng.shooterPending;
+      eng.shooterPending = false;
+      var fromBalls = eng.lastSeenBalls;
+      eng.lastSeenShotSeq = t.shotSeq;
+      eng.lastSeenBalls = t.balls;
+      if(wasMine){ poolOnlineRedraw(t.balls); }
+      else { poolOnlineStartLerp(fromBalls, t.balls); }
+    } else if(!eng.rafId && !eng.aim){
+      poolOnlineRedraw(t.balls);
+    }
+  }
+
+  function renderPoolOnlineTable(t){
+    document.getElementById('poolLobby').hidden = true;
+    var tableView = document.getElementById('poolTableView');
+    tableView.hidden = false;
+
+    if(t.status === 'waiting'){
+      teardownPoolOnlineEngine();
+      tableView.innerHTML =
+        '<div class="league-card ornate" style="margin-bottom:12px;">' +
+          '<p class="league-card-title">Sala de espera</p>' +
+          '<div class="poker-lobby-list" id="poolWaitingSeats" style="margin-top:8px;"></div>' +
+        '</div>' +
+        '<button class="btn btn-ghost btn-block" id="leavePoolBtn">Salir de la mesa</button>';
+      var seatsEl = document.getElementById('poolWaitingSeats');
+      seatsEl.innerHTML = t.seats.filter(Boolean).map(function(s){
+        return '<div class="poker-table-row"><div class="poker-table-info"><span class="poker-table-stakes">' +
+          '<span class="profile-avatar sm ' + profileFrameCls(s.frame) + '" style="margin-right:6px; vertical-align:middle;">' + profileAvatarIcon(s.avatar) + '</span>' +
+          escapeHtml(s.name) + (s.playerId === t.hostId ? ' (anfitrión)' : '') + '</span></div></div>';
+      }).join('') + (t.seats.filter(Boolean).length < 2 ? '<p class="poker-empty-hint">Esperando a que se una un rival…</p>' : '<p class="poker-empty-hint">¡Listos! Empezando…</p>');
+      document.getElementById('leavePoolBtn').addEventListener('click', leavePoolTable);
+      return;
+    }
+
+    var canvas = document.getElementById('poolOnlineCanvas');
+    if(!canvas){
+      tableView.innerHTML =
+        '<div class="pool-hud">' +
+          '<div class="pool-hud-side"><span class="pool-group-dot" id="poolMyGroupDot"></span><span id="poolMyGroupLabel">Tú</span></div>' +
+          '<button class="btn btn-ghost btn-sm" id="leavePoolBtn">Salir</button>' +
+          '<div class="pool-hud-side"><span id="poolOppGroupLabel">Rival</span><span class="pool-group-dot" id="poolOppGroupDot"></span></div>' +
+        '</div>' +
+        '<p class="pool-turn-banner" id="poolTurnBanner"></p>' +
+        '<div class="pool-wrap"><canvas id="poolOnlineCanvas" style="display:block; width:100%; height:100%; cursor:crosshair;"></canvas></div>' +
+        '<p class="message-bar" id="poolOnlineMsg" style="margin-top:8px; text-align:center;"></p>' +
+        '<div class="league-card ornate" id="poolResultPanel" hidden style="margin-top:14px; text-align:center;">' +
+          '<p class="league-card-title" id="poolResultTitle"></p>' +
+          '<button class="btn btn-primary btn-block" id="poolRematchBtn">Jugar otra mesa</button>' +
+          '<button class="btn btn-ghost btn-block" id="poolLeaveBtn2" style="margin-top:8px;">Salir</button>' +
+        '</div>';
+      canvas = document.getElementById('poolOnlineCanvas');
+      poolOnlineEngine = { canvas: canvas, ctx: canvas.getContext('2d'), view: { scale: 1, offX: 0, offY: 0 },
+        aim: null, workingBalls: null, placingDone: false, rafId: null, lastTs: null,
+        shooterPending: false, lastSeenShotSeq: -1, lastSeenBalls: null, resizeHandler: null };
+      var onResize = function(){
+        poolResizeCanvas(canvas, poolOnlineEngine.view);
+        poolOnlineRedraw(currentPoolTableData ? currentPoolTableData.balls : t.balls);
+      };
+      poolOnlineEngine.resizeHandler = onResize;
+      window.addEventListener('resize', onResize);
+      canvas.addEventListener('pointerdown', poolOnlinePointerDown);
+      canvas.addEventListener('pointermove', poolOnlinePointerMove);
+      canvas.addEventListener('pointerup', poolOnlinePointerUp);
+      document.getElementById('leavePoolBtn').addEventListener('click', leavePoolTable);
+      document.getElementById('poolLeaveBtn2').addEventListener('click', leavePoolTable);
+      document.getElementById('poolRematchBtn').addEventListener('click', poolRematch);
+      requestAnimationFrame(function(){ poolResizeCanvas(canvas, poolOnlineEngine.view); poolOnlineSyncBoard(t); });
+      return;
+    }
+    poolOnlineSyncBoard(t);
+  }
+
+  function renderPoolOnlineEntry(){
+    var msgBar = document.getElementById('poolMsgBar');
+    if(msgBar) msgBar.textContent = '';
+    var noLeague = document.getElementById('poolNoLeague');
+    var lobby = document.getElementById('poolLobby');
+    var tableView = document.getElementById('poolTableView');
+    var offlinePanel = document.getElementById('poolOfflinePanel');
+    if(!noLeague) return;
+
+    if(!db){
+      noLeague.hidden = true; lobby.hidden = true; tableView.hidden = true;
+      if(dbReady){ offlinePanel.hidden = false; } else { offlinePanel.hidden = true; }
+      return;
+    }
+    offlinePanel.hidden = true;
+    if(!state.leagueCode || !state.playerName){
+      noLeague.hidden = false; lobby.hidden = true; tableView.hidden = true;
+      teardownPoolListeners();
+      return;
+    }
+    noLeague.hidden = true;
+    if(state.currentPoolTable && state.currentPoolTable.code === state.leagueCode){
+      lobby.hidden = true; tableView.hidden = false;
+      openPoolTable(state.currentPoolTable.id);
+    } else {
+      teardownPoolListeners();
+      tableView.hidden = true; lobby.hidden = false;
+      subscribePoolLobby();
+    }
+  }
+
+  function leavePoolTable(){
+    teardownPoolListeners();
+    state.currentPoolTable = null; saveState();
+    renderPoolOnlineEntry();
+  }
+
+  function poolRematch(){
+    var ref = currentPoolTableRef;
+    if(!ref) return;
+    withTableLock(ref, function(t){
+      if(!t || t.status !== 'finished') return null;
+      if(!t.seats[0] || !t.seats[1]) return null;
+      t.status = 'waiting'; t.balls = poolRackBalls(); t.turnSeat = 0; t.groups = [null, null];
+      t.ballInHand = false; t.winnerSeat = null;
+      t.log = (t.log || []).concat(['Revancha']);
+      t.updatedAt = Date.now();
+      return t;
+    }).catch(function(){ poolMsg('No se pudo iniciar la revancha'); });
+  }
+
+  /* ================= BILLAR: selector de pestaña práctica/en línea ================= */
+  function poolSelectTab(tab){
+    document.getElementById('poolTabPractice').classList.toggle('active', tab === 'practice');
+    document.getElementById('poolTabOnline').classList.toggle('active', tab === 'online');
+    document.getElementById('poolPracticeView').hidden = tab !== 'practice';
+    document.getElementById('poolOnlineView').hidden = tab !== 'online';
+    if(tab === 'practice'){
+      teardownPoolListeners();
+      renderPoolPracticeEntry();
+    } else {
+      teardownPoolPractice();
+      renderPoolOnlineEntry();
+    }
+  }
+
+  function renderPoolEntry(){ poolSelectTab('practice'); }
+
+  document.getElementById('poolTabPractice').addEventListener('click', function(){ poolSelectTab('practice'); });
+  document.getElementById('poolTabOnline').addEventListener('click', function(){ poolSelectTab('online'); });
+  document.getElementById('createPoolTableBtn').addEventListener('click', createPoolTable);
+  document.getElementById('poolOfflineRetryBtn').addEventListener('click', function(){ initDb(); renderPoolOnlineEntry(); });
 
   /* ================= INIT ================= */
   applyTheme(state.activeTheme);
