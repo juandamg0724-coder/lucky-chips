@@ -812,19 +812,19 @@
   .avatar-swatch.locked{ opacity:.5; }
   .avatar-swatch-price{ color:var(--text-faint); font-size:.6rem; }
 
-  /* ---------- personaje (forma de maní, con camiseta/pantalón/gorra) ---------- */
-  .char-sprite{ position:relative; width:46px; height:68px; display:inline-block; flex-shrink:0; }
-  .char-sprite.sm{ width:34px; height:50px; }
-  .char-sprite.lg{ width:88px; height:132px; margin:0 auto; }
+  /* ---------- personaje (bola estilo countryball, con camiseta/pantalón/gorra) ---------- */
+  .char-sprite{ position:relative; width:52px; height:52px; display:inline-block; flex-shrink:0; }
+  .char-sprite.sm{ width:36px; height:36px; }
+  .char-sprite.lg{ width:104px; height:104px; margin:0 auto; }
   .char-sprite .char-body{
-    position:absolute; top:4%; left:50%; transform:translateX(-50%);
-    width:72%; height:96%; z-index:2;
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:92%; aspect-ratio:1/1; z-index:2;
   }
   .char-sprite .char-body svg{ width:100%; height:100%; display:block; overflow:visible; }
-  .char-sprite .char-body .peanut-outline{ fill:none; stroke:#000; stroke-width:3; stroke-linejoin:round; }
+  .char-sprite .char-body .ball-outline{ fill:none; stroke:#000; stroke-width:3; }
   .char-sprite .char-cap{
-    position:absolute; top:-8%; left:50%; transform:translateX(-50%);
-    width:46%; height:18%; background:var(--cap); border:2px solid #000; border-radius:50% 50% 10% 10%; z-index:4;
+    position:absolute; top:-6%; left:50%; transform:translateX(-50%);
+    width:52%; height:22%; background:var(--cap); border:2px solid #000; border-radius:50% 50% 10% 10%; z-index:4;
   }
   .char-sprite.no-cap .char-cap{ display:none; }
   .char-swatch{
@@ -1241,7 +1241,7 @@
   }
 
   /* ---------- tanda de penales ---------- */
-  .char-sprite.md{ width:60px; height:90px; }
+  .char-sprite.md{ width:72px; height:72px; }
   .pen-score-row{ display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:12px; flex-wrap:wrap; }
   .pen-score-side{ display:flex; flex-direction:column; align-items:center; gap:4px; min-width:90px; }
   .pen-score-name{ font-size:.72rem; font-weight:700; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1262,6 +1262,9 @@
     box-shadow:0 0 0 3px #000, var(--shadow);
     overflow:hidden; margin:0 auto;
   }
+  .pen-goal::before, .pen-goal::after{ content:""; position:absolute; background:rgba(255,232,120,.85); box-shadow:0 0 6px rgba(255,232,120,.6); z-index:1; }
+  .pen-goal::before{ left:50%; top:3%; bottom:3%; width:3px; transform:translateX(-50%); }
+  .pen-goal::after{ top:50%; left:3%; right:3%; height:3px; transform:translateY(-50%); }
   .pen-keeper{ position:absolute; left:50%; top:55%; transform:translate(-50%,-50%); transition:left .35s cubic-bezier(.3,.6,.3,1), top .35s cubic-bezier(.3,.6,.3,1); z-index:5; }
   .pen-ball{
     position:absolute; left:50%; top:122%; transform:translate(-50%,-50%);
@@ -4899,7 +4902,6 @@
   /* ================= PERSONAJE (camiseta / pantalón / gorra) ================= */
   var CHAR_COLORS = ['#ff2d55','#2f6bff','#30e860','#ffd500','#a633ff','#ff8800','#00e5ff','#ffffff','#1c1c3c','#ff2d9e'];
 
-  var CHAR_PEANUT_PATH = 'M22,2 C30,2 36,9 36,18 C36,25 32,30 26,32 C33,35 41,42 41,52 C41,63 33,68 22,68 C11,68 3,63 3,52 C3,42 11,35 18,32 C12,30 8,25 8,18 C8,9 14,2 22,2 Z';
   var charSpriteSeq = 0;
 
   function charSpriteHtml(opts, sizeCls){
@@ -4908,15 +4910,16 @@
     var pants = opts.pants || '#1c1c3c';
     var cap = opts.cap || '#ff2d55';
     var capOn = opts.capOn !== false;
-    var clipId = 'peanutClip' + (charSpriteSeq++);
-    var svg = '<svg viewBox="0 0 44 70">' +
-      '<defs><clipPath id="' + clipId + '"><path d="' + CHAR_PEANUT_PATH + '"/></clipPath></defs>' +
+    var clipId = 'ballClip' + (charSpriteSeq++);
+    var svg = '<svg viewBox="0 0 50 50">' +
+      '<defs><clipPath id="' + clipId + '"><circle cx="25" cy="25" r="22"/></clipPath></defs>' +
       '<g clip-path="url(#' + clipId + ')">' +
-        '<rect x="0" y="0" width="44" height="26" fill="#d9a05f"/>' +
-        '<rect x="0" y="26" width="44" height="26" fill="' + jersey + '"/>' +
-        '<rect x="0" y="52" width="44" height="18" fill="' + pants + '"/>' +
+        '<rect x="0" y="0" width="50" height="37" fill="' + jersey + '"/>' +
+        '<rect x="0" y="37" width="50" height="13" fill="' + pants + '"/>' +
       '</g>' +
-      '<path class="peanut-outline" d="' + CHAR_PEANUT_PATH + '"/>' +
+      '<circle class="ball-outline" cx="25" cy="25" r="22"/>' +
+      '<circle cx="17.5" cy="21" r="2.6" fill="#000"/>' +
+      '<circle cx="32.5" cy="21" r="2.6" fill="#000"/>' +
       '</svg>';
     return '<div class="char-sprite' + (sizeCls ? ' ' + sizeCls : '') + (capOn ? '' : ' no-cap') +
       '" style="--jersey:' + jersey + ';--pants:' + pants + ';--cap:' + cap + ';">' +
@@ -10131,9 +10134,9 @@
 
   function penMaybeBecomeHost(ref, t){
     if(!t || t.status === 'finished' || t.hostId === state.playerId) return;
-    var stale = (Date.now() - (t.updatedAt || 0)) > 20000;
+    var stale = (Date.now() - (t.updatedAt || 0)) > 6000;
     if(!stale || tableSeatIndex(t, state.playerId) === -1) return;
-    ref.acquire({ holder: state.playerId, ttlMs: 15000, data: { hostId: state.playerId, updatedAt: Date.now() } }).catch(function(){});
+    ref.acquire({ holder: state.playerId, ttlMs: 8000, data: { hostId: state.playerId, updatedAt: Date.now() } }).catch(function(){});
   }
 
   function penaltyTick(){
@@ -10141,7 +10144,10 @@
     if(!ref || !t) return;
     if(t.status === 'playing') renderPenTable(t);
     penMaybeBecomeHost(ref, t);
-    if(t.hostId !== state.playerId) return;
+    // Cualquier jugador sentado puede avanzar la tanda (no solo el "anfitrión"):
+    // si el que inició la mesa minimiza la app o se queda sin señal, el otro
+    // jugador sigue pudiendo resolver patadas y avanzar de ronda.
+    if(tableSeatIndex(t, state.playerId) === -1) return;
     if(t.status === 'waiting'){
       if(t.seats[0] && t.seats[1]){
         withTableLock(ref, function(fresh){
@@ -10166,6 +10172,11 @@
     }
   }
 
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) penaltyTick();
+  });
+  window.addEventListener('focus', penaltyTick);
+
   function openPenTable(tableId){
     teardownPenaltyListeners();
     penAnimatedRound = -1;
@@ -10182,6 +10193,7 @@
       }
       currentPenTableData = snap.data();
       renderPenTable(currentPenTableData);
+      penaltyTick();
     }, function(){ penMsg('Conexión perdida con la tanda'); });
   }
 
