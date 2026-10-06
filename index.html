@@ -943,14 +943,10 @@
     flex-shrink:0;
     transition:transform .18s cubic-bezier(.34,1.56,.64,1);
   }
-  .icon-badge.icon-ruby{ background-color:var(--ruby); }
-  .icon-badge.icon-cyan{ background-color:var(--neon-cyan); }
-  .icon-badge.icon-purple{ background-color:var(--neon-purple); }
-  .icon-badge.icon-green{ background-color:var(--neon-green); }
-  .icon-badge.icon-orange{ background-color:var(--neon-orange); }
-  .icon-badge.icon-pink{ background-color:var(--neon-pink); }
-  .icon-badge.icon-blue{ background-color:#4aa8ff; }
-  .icon-badge.icon-lime{ background-color:#9fe830; }
+  .icon-badge.icon-ruby, .icon-badge.icon-cyan, .icon-badge.icon-purple, .icon-badge.icon-green,
+  .icon-badge.icon-orange, .icon-badge.icon-pink, .icon-badge.icon-blue, .icon-badge.icon-lime{
+    background-color:var(--accent);
+  }
   .icon-badge img{ width:50px; height:50px; object-fit:contain; display:block; filter:drop-shadow(0 2px 4px rgba(0,0,0,.25)); }
 
   .tile-arrow{
@@ -1477,7 +1473,7 @@
       </div>
 
       <button class="league-banner ornate" data-goto="league" style="margin-top:16px;">
-        <span class="icon-badge icon-pink">👥</span>
+        <span class="icon-badge icon-pink"><img src="icons/league.webp" alt=""></span>
         <span class="league-banner-text">
           <span class="league-banner-title">Liga de Amigos</span>
           <span class="league-banner-sub" id="leagueTileMeta">Únete con un código</span>
