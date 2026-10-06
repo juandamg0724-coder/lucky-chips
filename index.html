@@ -817,13 +817,17 @@
   /* ---------- profile avatar & frames ---------- */
   .profile-row{ display:flex; align-items:center; gap:10px; }
   .profile-avatar{
-    width:44px; height:44px; flex-shrink:0;
+    width:44px; height:44px; flex-shrink:0; position:relative; overflow:hidden;
     display:flex; align-items:center; justify-content:center;
     font-size:1.4rem; background:var(--bg-elevated); border:1px solid var(--line);
     border-radius:12px; box-shadow:var(--shadow-sm);
   }
   .profile-avatar.sm{ width:30px; height:30px; font-size:1.05rem; border-radius:8px; }
   .profile-avatar.md{ width:60px; height:60px; font-size:1.9rem; border-radius:14px; }
+  .profile-avatar.xl{ width:96px; height:96px; font-size:3rem; border-radius:22px; }
+  .avatar-img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .avatar-accessory{ width:100%; height:100%; pointer-events:none; display:block; }
+  .profile-avatar .avatar-img, .profile-avatar .avatar-accessory{ position:absolute; inset:0; }
   .profile-avatar.frame-bronce{ box-shadow:var(--shadow-sm), 0 0 0 2px #cd7f32; }
   .profile-avatar.frame-plata{ box-shadow:var(--shadow-sm), 0 0 0 2px #c9d3dc, 0 0 10px -2px #c9d3dc; }
   .profile-avatar.frame-oro{ box-shadow:var(--shadow-sm), 0 0 0 2px var(--accent-bright), 0 0 12px -2px var(--accent-bright); }
@@ -840,6 +844,7 @@
     padding:10px 4px 8px; cursor:pointer; color:var(--text); font-size:.64rem; text-align:center;
   }
   .avatar-swatch .avatar-swatch-icon{ font-size:1.5rem; }
+  .avatar-swatch .avatar-swatch-icon img{ width:34px; height:34px; border-radius:9px; object-fit:cover; display:block; }
   .avatar-swatch.active{ border-color:var(--neon-cyan-bright); box-shadow:0 0 0 1px var(--neon-cyan-bright) inset; }
   .avatar-swatch.locked{ opacity:.5; }
   .avatar-swatch-price{ color:var(--text-faint); font-size:.6rem; }
@@ -946,6 +951,7 @@
   .icon-badge.icon-pink{ background-color:var(--neon-pink); }
   .icon-badge.icon-blue{ background-color:#4aa8ff; }
   .icon-badge.icon-lime{ background-color:#9fe830; }
+  .icon-badge img{ width:50px; height:50px; object-fit:contain; display:block; filter:drop-shadow(0 2px 4px rgba(0,0,0,.25)); }
 
   .tile-arrow{
     position:absolute; bottom:14px; right:14px;
@@ -1482,20 +1488,20 @@
       <p class="hub-section-title">🎮 Juegos offline</p>
       <div class="game-grid">
         <button class="game-tile ornate" data-goto="slots">
-          <span class="icon-badge icon-pink">🎰</span>
+          <span class="icon-badge icon-pink"><img src="icons/slots.webp" alt=""></span>
           <span class="game-name">Tragamonedas</span>
           <span class="game-meta">Desde 10 fichas</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile ornate" data-goto="blackjack">
-          <span class="icon-badge icon-cyan">🂡</span>
+          <span class="icon-badge icon-cyan"><img src="icons/blackjack.webp" alt=""></span>
           <span class="game-name">Blackjack</span>
           <span class="game-meta">Solo o en línea con tu liga</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile wide ornate" data-goto="roulette">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-ruby">🎡</span>
+            <span class="icon-badge icon-ruby"><img src="icons/roulette.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Ruleta</span>
               <span class="game-meta">Europea · desde 10 fichas</span>
@@ -1504,32 +1510,32 @@
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile ornate" data-goto="shells">
-          <span class="icon-badge icon-purple">🥤</span>
+          <span class="icon-badge icon-purple"><img src="icons/shells.webp" alt=""></span>
           <span class="game-name">Sigue la Bola</span>
           <span class="game-meta">Desde 10 fichas</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile ornate" data-goto="mines">
-          <span class="icon-badge icon-orange">💣</span>
+          <span class="icon-badge icon-orange"><img src="icons/mines.webp" alt=""></span>
           <span class="game-name">Minas</span>
           <span class="game-meta">Desde 10 fichas</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile ornate" data-goto="watersort">
-          <span class="icon-badge icon-green">🧪</span>
+          <span class="icon-badge icon-green"><img src="icons/watersort.webp" alt=""></span>
           <span class="game-name">Rellenar Botellas</span>
           <span class="game-meta">20 niveles · sin apuesta</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile ornate" data-goto="snake">
-          <span class="icon-badge icon-cyan">🐍</span>
+          <span class="icon-badge icon-cyan"><img src="icons/snake.webp" alt=""></span>
           <span class="game-name">Snake</span>
           <span class="game-meta">Teclado o control PS4</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile wide ornate" data-goto="racing">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-blue">🏎️</span>
+            <span class="icon-badge icon-blue"><img src="icons/racing.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Carreras</span>
               <span class="game-meta">Arcade top-down · control PS4 o teclado</span>
@@ -1538,14 +1544,14 @@
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile ornate" data-goto="flappy">
-          <span class="icon-badge icon-cyan">🐦</span>
+          <span class="icon-badge icon-cyan"><img src="icons/flappy.webp" alt=""></span>
           <span class="game-name">Flappy Bird</span>
           <span class="game-meta">Toca para volar</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile wide ornate" data-goto="airwings">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-blue">✈️</span>
+            <span class="icon-badge icon-blue"><img src="icons/airwings.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Air Wings</span>
               <span class="game-meta">Arcade de avión · control PS4 o teclado</span>
@@ -1555,7 +1561,7 @@
         </button>
         <button class="game-tile wide ornate" data-goto="pool">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-purple">🎱</span>
+            <span class="icon-badge icon-purple"><img src="icons/pool.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Billar</span>
               <span class="game-meta">Modo práctica o en línea con tu liga</span>
@@ -1565,7 +1571,7 @@
         </button>
         <button class="game-tile wide ornate" data-goto="match">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-green">⚽</span>
+            <span class="icon-badge icon-green"><img src="icons/match.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Apuestas Deportivas</span>
               <span class="game-meta" id="matchTileMeta">Cargando próximo partido…</span>
@@ -1575,7 +1581,7 @@
         </button>
         <button class="game-tile wide ornate" data-goto="trivia">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-purple">🧠</span>
+            <span class="icon-badge icon-purple"><img src="icons/trivia.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Preguntados</span>
               <span class="game-meta">5 temáticas · 10 preguntas por partida</span>
@@ -1584,13 +1590,13 @@
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile ornate" data-goto="crossword">
-          <span class="icon-badge icon-cyan">📝</span>
+          <span class="icon-badge icon-cyan"><img src="icons/crossword.webp" alt=""></span>
           <span class="game-name">Crucigrama</span>
           <span class="game-meta">Varios niveles · sin apuesta</span>
           <span class="tile-arrow">→</span>
         </button>
         <button class="game-tile ornate" data-goto="bomberman">
-          <span class="icon-badge icon-orange">💥</span>
+          <span class="icon-badge icon-orange"><img src="icons/bomberman.webp" alt=""></span>
           <span class="game-name">Bomberman</span>
           <span class="game-meta">Teclado o control PS4</span>
           <span class="tile-arrow">→</span>
@@ -1601,7 +1607,7 @@
       <div class="game-grid">
         <button class="game-tile wide ornate" data-goto="poker">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-orange">🃏</span>
+            <span class="icon-badge icon-orange"><img src="icons/poker.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Poker en Línea</span>
               <span class="game-meta" id="pokerTileMeta">Juega con tu liga</span>
@@ -2182,16 +2188,22 @@
         <h2 class="gold-text">Tu perfil</h2>
         <span style="width:36px;"></span>
       </div>
-      <p class="hub-sub">Elige tu avatar y el marco que lo rodea. Así te verán tus amigos en la Liga.</p>
+      <p class="hub-sub">Elige tu avatar, su ropa y el marco que lo rodea. Así te verán tus amigos en la Liga.</p>
       <div class="league-card ornate profile-row" style="margin-bottom:14px;">
-        <span class="profile-avatar" id="profilePreviewAvatar"></span>
+        <span class="profile-avatar xl" id="profilePreviewAvatar"></span>
         <div style="flex:1; min-width:0;">
           <p class="league-card-title" id="profilePreviewName">Tu perfil</p>
-          <p class="league-card-sub">Vista previa de tu avatar y marco</p>
+          <p class="league-card-sub">Vista previa de tu avatar, ropa y marco</p>
         </div>
       </div>
       <p class="paytable-title">Avatares</p>
       <div class="avatar-grid" id="avatarGrid"></div>
+      <p class="paytable-title" style="margin-top:14px;">Sombreros</p>
+      <div class="avatar-grid" id="headGrid"></div>
+      <p class="paytable-title" style="margin-top:14px;">Rostro</p>
+      <div class="avatar-grid" id="faceGrid"></div>
+      <p class="paytable-title" style="margin-top:14px;">Ropa</p>
+      <div class="avatar-grid" id="bodyGrid"></div>
       <p class="paytable-title" style="margin-top:14px;">Marcos</p>
       <div class="avatar-grid" id="frameGrid"></div>
     </section>
@@ -3152,6 +3164,7 @@
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1,
       ownedAvatars:['dado'], activeAvatar:'dado', ownedFrames:['none'], activeFrame:'none',
+      ownedAccessories:['none'], activeAccessory:'none', activeHead:'none', activeFace:'none', activeBody:'none',
       playerId:'', playerName:'', leagueCode:'', leagueName:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, currentPenaltyTable:null, currentPoolTable:null, chessElo:1200,
       racingLevel:1, waterSortLevel:1 };
   }
@@ -3231,7 +3244,7 @@
 
     if(name === 'hub'){ refreshHub(); dailyTimerId = setInterval(refreshHub, 1000); }
     if(name === 'store'){ renderStore(); }
-    if(name === 'profile'){ renderAvatarGrid(); renderFrameGrid(); renderProfilePreview(); }
+    if(name === 'profile'){ renderAvatarGrid(); renderFrameGrid(); renderAccessoryGrids(); renderProfilePreview(); }
     if(name === 'match'){ renderMatch(); matchTimerId = setInterval(renderMatch, 1000); }
     if(name === 'slots'){ refreshSlotBoostUI(); }
     if(name === 'league'){ renderLeague(); leagueTimerId = setInterval(function(){ if(state.leagueCode) syncLeagueMember(); }, 20000); }
@@ -5105,17 +5118,21 @@
   /* ================= SOBRES DE LA FORTUNA ================= */
   var AVATARS = {
     dado:      { name:'Dado',      icon:'🎲', price:0 },
-    carta:     { name:'As',        icon:'🂡', price:150 },
-    trebol:    { name:'Trébol',    icon:'🍀', price:150 },
-    corona:    { name:'Corona',    icon:'👑', price:300 },
-    rayo:      { name:'Rayo',      icon:'⚡', price:300 },
-    fuego:     { name:'Fuego',     icon:'🔥', price:300 },
-    robot:     { name:'Robot',     icon:'🤖', price:450 },
-    fantasma:  { name:'Fantasma',  icon:'👻', price:450 },
-    tiburon:   { name:'Tiburón',   icon:'🦈', price:450 },
-    diamante:  { name:'Diamante',  icon:'💎', price:600 },
-    alien:     { name:'Alien',     icon:'👽', price:600 },
-    unicornio: { name:'Unicornio', icon:'🦄', price:800 }
+    zorro:     { name:'Zorro',     img:'avatars/fox.webp',    price:0 },
+    oso:       { name:'Oso',       img:'avatars/bear.webp',   price:0 },
+    tigre:     { name:'Tigre',     img:'avatars/tiger.webp',  price:0 },
+    mono:      { name:'Mono',      img:'avatars/monkey.webp', price:0 },
+    carta:     { name:'As',        img:'avatars/carta.webp',    price:150 },
+    trebol:    { name:'Trébol',    img:'avatars/trebol.webp',   price:150 },
+    corona:    { name:'Corona',    img:'avatars/corona.webp',   price:300 },
+    rayo:      { name:'Rayo',      img:'avatars/rayo.webp',     price:300 },
+    fuego:     { name:'Fuego',     img:'avatars/fuego.webp',    price:300 },
+    robot:     { name:'Robot',     img:'avatars/robot.webp',    price:450 },
+    fantasma:  { name:'Fantasma',  img:'avatars/fantasma.webp', price:450 },
+    tiburon:   { name:'Tiburón',   img:'avatars/tiburon.webp',  price:450 },
+    diamante:  { name:'Diamante',  img:'avatars/diamante.webp', price:600 },
+    alien:     { name:'Alien',     img:'avatars/alien.webp',    price:600 },
+    unicornio: { name:'Unicornio', img:'avatars/unicornio.webp',price:800 }
   };
 
   var FRAME_DEFS = {
@@ -5127,8 +5144,119 @@
     diamante: { name:'Marco Diamante',price:3000, cls:'frame-diamante' }
   };
 
-  function profileAvatarIcon(id){ return (AVATARS[id] || AVATARS.dado).icon; }
+  /* Prendas: superpuestas en el avatar vía SVG, coordenadas en % para encajar
+     con el encuadre consistente de los avatares (cuello ~55-60%, ojos ~35-45%).
+     Se equipan por categoría (cabeza / rostro / ropa) para poder combinarlas. */
+  var ACC_HEAD = {
+    none:   { name:'Sin sombrero', price:0, svg:'' },
+    gorra:  { name:'Gorra', price:0, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<ellipse cx="50" cy="19" rx="23" ry="9" fill="#171310"/>' +
+        '<path d="M27 19 Q50 3 73 19 Q73 10 50 8 Q27 10 27 19 Z" fill="#f4c94f"/>' +
+        '<ellipse cx="50" cy="19" rx="23" ry="7.5" fill="#f4c94f"/>' +
+        '<path d="M50 11 A8 8 0 0 1 58 19 L42 19 A8 8 0 0 1 50 11 Z" fill="#171310"/>' +
+      '</svg>' },
+    corona: { name:'Corona', price:250, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<path d="M28 21 L31 6 L41 17 L50 4 L59 17 L69 6 L72 21 Z" fill="#f4c94f" stroke="#b8860b" stroke-width="1"/>' +
+        '<rect x="28" y="20" width="44" height="6" rx="2" fill="#f4c94f" stroke="#b8860b" stroke-width="1"/>' +
+        '<circle cx="31" cy="10" r="2.2" fill="#9b1c2e"/>' +
+        '<circle cx="50" cy="8" r="2.6" fill="#2e8b57"/>' +
+        '<circle cx="69" cy="10" r="2.2" fill="#9b1c2e"/>' +
+      '</svg>' },
+    visera: { name:'Visera de crupier', price:150, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<path d="M24 19 Q50 6 76 19 L76 24 Q50 13 24 24 Z" fill="#1d7a46"/>' +
+        '<ellipse cx="50" cy="21" rx="26" ry="3" fill="#145c35"/>' +
+      '</svg>' }
+  };
+  var ACC_FACE = {
+    none:   { name:'Sin gafas', price:0, svg:'' },
+    gafas:  { name:'Gafas de sol', price:0, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<rect x="29" y="36" width="18" height="13" rx="5" fill="#15110c" stroke="#f4c94f" stroke-width="1.4"/>' +
+        '<rect x="53" y="36" width="18" height="13" rx="5" fill="#15110c" stroke="#f4c94f" stroke-width="1.4"/>' +
+        '<path d="M47 41 Q50 38 53 41" fill="none" stroke="#f4c94f" stroke-width="1.4"/>' +
+      '</svg>' },
+    antifaz: { name:'Antifaz', price:200, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<path fill-rule="evenodd" d="M24 35 Q50 24 76 35 Q78 46 64 47 Q58 47 55 42 Q53 40 50 40 Q47 40 45 42 Q42 47 36 47 Q22 46 24 35 Z ' +
+          'M33 36 Q38 33 43 36 Q43 41 38 42 Q33 41 33 36 Z M57 36 Q62 33 67 36 Q67 41 62 42 Q57 41 57 36 Z" fill="#171310" stroke="#f4c94f" stroke-width="1"/>' +
+      '</svg>' }
+  };
+  var ACC_BODY = {
+    none:    { name:'Sin ropa', price:0, svg:'' },
+    pajarita: { name:'Pajarita', price:0, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<path d="M50 58 L36 51 L36 65 Z" fill="#9b1c2e"/>' +
+        '<path d="M50 58 L64 51 L64 65 Z" fill="#9b1c2e"/>' +
+        '<circle cx="50" cy="58" r="4" fill="#f4c94f"/>' +
+      '</svg>' },
+    camiseta: { name:'Camiseta', price:150, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<path d="M33 54 L42 50 L50 56 L58 50 L67 54 L70 62 L63 65 L63 95 L37 95 L37 65 L30 62 Z" fill="#9b1c2e"/>' +
+        '<path d="M42 50 L50 56 L58 50 L54 58 L50 55 L46 58 Z" fill="#f4e9d8"/>' +
+      '</svg>' },
+    chaleco: { name:'Chaleco de crupier', price:300, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<path d="M35 55 L50 60 L65 55 L68 64 L63 95 L37 95 L32 64 Z" fill="#f4e9d8"/>' +
+        '<path d="M35 55 L44 58 L41 95 L30 95 L30 63 Z" fill="#171310"/>' +
+        '<path d="M65 55 L56 58 L59 95 L70 95 L70 63 Z" fill="#171310"/>' +
+        '<path d="M50 60 L44 57 L44 63 Z" fill="#9b1c2e"/>' +
+        '<path d="M50 60 L56 57 L56 63 Z" fill="#9b1c2e"/>' +
+        '<circle cx="50" cy="70" r="1.6" fill="#f4c94f"/>' +
+        '<circle cx="50" cy="78" r="1.6" fill="#f4c94f"/>' +
+      '</svg>' },
+    chaqueta: { name:'Esmoquin', price:500, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<path d="M30 56 L42 51 L50 58 L58 51 L70 56 L72 66 L66 95 L34 95 L28 66 Z" fill="#171310"/>' +
+        '<path d="M42 51 L50 58 L46 72 L38 60 Z" fill="#f4c94f" opacity=".9"/>' +
+        '<path d="M58 51 L50 58 L54 72 L62 60 Z" fill="#f4c94f" opacity=".9"/>' +
+        '<path d="M50 58 L47 95 L53 95 Z" fill="#0d0b08"/>' +
+      '</svg>' },
+    cadena: { name:'Cadena de oro', price:350, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<path d="M38 56 Q50 72 62 56" fill="none" stroke="#f4c94f" stroke-width="2" stroke-dasharray="2.4 2"/>' +
+        '<circle cx="50" cy="73" r="4" fill="#f4c94f" stroke="#b8860b" stroke-width="1"/>' +
+        '<circle cx="50" cy="73" r="1.6" fill="#9b1c2e"/>' +
+      '</svg>' },
+    bufanda: { name:'Bufanda', price:180, svg:
+      '<svg class="avatar-accessory" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">' +
+        '<path d="M34 54 Q50 64 66 54 L66 60 Q50 70 34 60 Z" fill="#9b1c2e" stroke="#f4e9d8" stroke-width="1" stroke-dasharray="3 3"/>' +
+        '<path d="M42 62 L38 90 L46 90 L48 63 Z" fill="#9b1c2e" stroke="#f4e9d8" stroke-width="1" stroke-dasharray="2 3"/>' +
+      '</svg>' }
+  };
+  /* ACCESSORIES: mapa plano de compatibilidad (ids únicos entre las 3 categorías) */
+  var ACCESSORIES = Object.assign({}, ACC_HEAD, ACC_FACE, ACC_BODY);
+  function accessoryCategory(id){
+    if(ACC_HEAD[id]) return ACC_HEAD;
+    if(ACC_FACE[id]) return ACC_FACE;
+    if(ACC_BODY[id]) return ACC_BODY;
+    return null;
+  }
+  // Migra el guardado anterior (una sola prenda "activeAccessory") al nuevo esquema de 3 ranuras.
+  (function migrateAccessorySlots(){
+    var legacy = state.activeAccessory;
+    if(!legacy || legacy === 'none') return;
+    if(ACC_HEAD[legacy] && state.activeHead === 'none') state.activeHead = legacy;
+    else if(ACC_FACE[legacy] && state.activeFace === 'none') state.activeFace = legacy;
+    else if(ACC_BODY[legacy] && state.activeBody === 'none') state.activeBody = legacy;
+  })();
+
+  function avatarOwned(id){ var a = AVATARS[id]; return !!a && (a.price === 0 || (state.ownedAvatars.indexOf(id) !== -1)); }
+  function avatarBodyHtml(id){
+    var a = AVATARS[id] || AVATARS.dado;
+    return a.img ? '<img class="avatar-img" src="' + a.img + '" alt="">' : a.icon;
+  }
+  function profileAvatarIcon(id){ return avatarBodyHtml(id); }
   function profileFrameCls(id){ var f = FRAME_DEFS[id]; return (f && f.cls) ? f.cls : ''; }
+  function profileAvatarFullHtml(avatarId, headId, faceId, bodyId){
+    var body = ACC_BODY[bodyId], face = ACC_FACE[faceId], head = ACC_HEAD[headId];
+    return avatarBodyHtml(avatarId) +
+      (body ? body.svg : '') +
+      (face ? face.svg : '') +
+      (head ? head.svg : '');
+  }
 
   /* ================= STORE ================= */
   Array.prototype.slice.call(document.querySelectorAll('.store-tab-btn')).forEach(function(btn){
@@ -5194,16 +5322,17 @@
 
   /* ================= PERFIL: AVATAR Y MARCO ================= */
   function renderProfilePreview(){
+    var fullHtml = profileAvatarFullHtml(state.activeAvatar, state.activeHead, state.activeFace, state.activeBody);
     var icon = profileAvatarIcon(state.activeAvatar);
     var frameCls = profileFrameCls(state.activeFrame);
     var preview = document.getElementById('profilePreviewAvatar');
-    if(preview){ preview.textContent = icon; preview.className = 'profile-avatar ' + frameCls; }
+    if(preview){ preview.innerHTML = fullHtml; preview.className = 'profile-avatar xl ' + frameCls; }
     var previewName = document.getElementById('profilePreviewName');
     if(previewName) previewName.textContent = state.playerName || 'Tu perfil';
     var nameFieldAvatar = document.getElementById('nameFieldAvatar');
-    if(nameFieldAvatar){ nameFieldAvatar.textContent = icon; nameFieldAvatar.className = 'profile-avatar sm ' + frameCls; }
+    if(nameFieldAvatar){ nameFieldAvatar.innerHTML = icon; nameFieldAvatar.className = 'profile-avatar sm ' + frameCls; }
     var leagueAvatar = document.getElementById('leagueProfileAvatar');
-    if(leagueAvatar){ leagueAvatar.textContent = icon; leagueAvatar.className = 'profile-avatar ' + frameCls; }
+    if(leagueAvatar){ leagueAvatar.innerHTML = fullHtml; leagueAvatar.className = 'profile-avatar ' + frameCls; }
     var leagueName = document.getElementById('leagueProfileName');
     if(leagueName) leagueName.textContent = state.playerName || 'Tú';
     renderHubProfile();
@@ -5214,10 +5343,10 @@
     if(!card) return;
     if(!state.playerName){ card.hidden = true; return; }
     card.hidden = false;
-    var icon = profileAvatarIcon(state.activeAvatar);
+    var fullHtml = profileAvatarFullHtml(state.activeAvatar, state.activeHead, state.activeFace, state.activeBody);
     var frameCls = profileFrameCls(state.activeFrame);
     var avatarEl = document.getElementById('hubProfileAvatar');
-    avatarEl.textContent = icon;
+    avatarEl.innerHTML = fullHtml;
     avatarEl.className = 'profile-avatar ' + frameCls;
     document.getElementById('hubProfileName').textContent = state.playerName;
     document.getElementById('hubProfileLeague').textContent = state.leagueCode ? (state.leagueName || 'Liga sin nombre') : 'Sin liga — toca para unirte';
@@ -5229,23 +5358,23 @@
     grid.innerHTML = '';
     Object.keys(AVATARS).forEach(function(id){
       var a = AVATARS[id];
-      var owned = id === 'dado' || state.ownedAvatars.indexOf(id) !== -1;
+      var owned = avatarOwned(id);
       var active = state.activeAvatar === id;
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'avatar-swatch' + (active ? ' active' : '') + (owned ? '' : ' locked');
-      btn.innerHTML = '<span class="avatar-swatch-icon">' + a.icon + '</span><span>' + a.name + '</span>' +
+      btn.innerHTML = '<span class="avatar-swatch-icon">' + avatarBodyHtml(id) + '</span><span>' + a.name + '</span>' +
         (active ? '<span class="avatar-swatch-price">Equipado</span>' : (owned ? '' : '<span class="avatar-swatch-price">' + a.price.toLocaleString('es-CO') + '</span>'));
       btn.addEventListener('click', function(){
         if(owned){
           state.activeAvatar = id; saveState(); scheduleLeagueSync();
-          renderAvatarGrid(); renderFrameGrid(); renderProfilePreview();
+          renderAvatarGrid(); renderFrameGrid(); renderAccessoryGrids(); renderProfilePreview();
         } else if(state.balance >= a.price){
           addBalance(-a.price);
           state.ownedAvatars.push(id);
           state.activeAvatar = id;
           saveState(); scheduleLeagueSync();
-          renderAvatarGrid(); renderFrameGrid(); renderProfilePreview();
+          renderAvatarGrid(); renderFrameGrid(); renderAccessoryGrids(); renderProfilePreview();
         } else {
           leagueMsg('Fichas insuficientes para este avatar');
         }
@@ -5283,6 +5412,47 @@
       });
       grid.appendChild(btn);
     });
+  }
+
+  function previewWithSlot(slotKey, id){
+    var slots = { head: state.activeHead, face: state.activeFace, body: state.activeBody };
+    slots[slotKey] = id;
+    return profileAvatarFullHtml(state.activeAvatar, slots.head, slots.face, slots.body);
+  }
+  function renderAccessorySlotGrid(categoryMap, gridId, stateKey){
+    var grid = document.getElementById(gridId);
+    if(!grid) return;
+    grid.innerHTML = '';
+    Object.keys(categoryMap).forEach(function(id){
+      var acc = categoryMap[id];
+      var owned = id === 'none' || state.ownedAccessories.indexOf(id) !== -1;
+      var active = state[stateKey] === id;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'avatar-swatch' + (active ? ' active' : '') + (owned ? '' : ' locked');
+      btn.innerHTML = '<span class="profile-avatar sm" style="pointer-events:none;">' + previewWithSlot(gridId === 'headGrid' ? 'head' : (gridId === 'faceGrid' ? 'face' : 'body'), id) + '</span><span>' + acc.name + '</span>' +
+        (active ? '<span class="avatar-swatch-price">Equipado</span>' : (owned ? '' : '<span class="avatar-swatch-price">' + acc.price.toLocaleString('es-CO') + '</span>'));
+      btn.addEventListener('click', function(){
+        if(owned){
+          state[stateKey] = active ? 'none' : id; saveState(); scheduleLeagueSync();
+          renderAccessoryGrids(); renderProfilePreview();
+        } else if(state.balance >= acc.price){
+          addBalance(-acc.price);
+          state.ownedAccessories.push(id);
+          state[stateKey] = id;
+          saveState(); scheduleLeagueSync();
+          renderAccessoryGrids(); renderProfilePreview();
+        } else {
+          leagueMsg('Fichas insuficientes para esta prenda');
+        }
+      });
+      grid.appendChild(btn);
+    });
+  }
+  function renderAccessoryGrids(){
+    renderAccessorySlotGrid(ACC_HEAD, 'headGrid', 'activeHead');
+    renderAccessorySlotGrid(ACC_FACE, 'faceGrid', 'activeFace');
+    renderAccessorySlotGrid(ACC_BODY, 'bodyGrid', 'activeBody');
   }
 
   /* ================= MULTIJUGADOR: BASE DE DATOS (Firebase) ================= */
@@ -5450,7 +5620,7 @@
     if(!db || !state.leagueCode || !state.playerName) return;
     db.doc('leagues/' + state.leagueCode + '/members/' + ensurePlayerId()).set({
       name: state.playerName, coins: state.balance, chessElo: state.chessElo || 1200, lastActive: Date.now(),
-      avatar: state.activeAvatar || 'dado', frame: state.activeFrame || 'none'
+      avatar: state.activeAvatar || 'dado', frame: state.activeFrame || 'none', head: state.activeHead || 'none', face: state.activeFace || 'none', body: state.activeBody || 'none'
     }).catch(function(){});
   }
 
