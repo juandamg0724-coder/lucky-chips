@@ -792,6 +792,7 @@
     border-radius:12px; box-shadow:var(--shadow-sm);
   }
   .profile-avatar.sm{ width:30px; height:30px; font-size:1.05rem; border-radius:8px; }
+  .profile-avatar.md{ width:60px; height:60px; font-size:1.9rem; border-radius:14px; }
   .profile-avatar.frame-bronce{ box-shadow:var(--shadow-sm), 0 0 0 2px #cd7f32; }
   .profile-avatar.frame-plata{ box-shadow:var(--shadow-sm), 0 0 0 2px #c9d3dc, 0 0 10px -2px #c9d3dc; }
   .profile-avatar.frame-oro{ box-shadow:var(--shadow-sm), 0 0 0 2px var(--accent-bright), 0 0 12px -2px var(--accent-bright); }
@@ -812,38 +813,6 @@
   .avatar-swatch.locked{ opacity:.5; }
   .avatar-swatch-price{ color:var(--text-faint); font-size:.6rem; }
 
-  /* ---------- personaje (bola estilo countryball, con camiseta/pantalón/gorra) ---------- */
-  .char-sprite{ position:relative; width:52px; height:52px; display:inline-block; flex-shrink:0; }
-  .char-sprite.sm{ width:36px; height:36px; }
-  .char-sprite.lg{ width:104px; height:104px; margin:0 auto; }
-  .char-sprite .char-body{
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:92%; aspect-ratio:1/1; z-index:2;
-  }
-  .char-sprite .char-body svg{ width:100%; height:100%; display:block; overflow:visible; }
-  .char-sprite .char-body .ball-outline{ fill:none; stroke:#000; stroke-width:3; }
-  .char-sprite .char-cap{
-    position:absolute; top:-6%; left:50%; transform:translateX(-50%);
-    width:52%; height:22%; background:var(--cap); border:2px solid #000; border-radius:50% 50% 10% 10%; z-index:4;
-  }
-  .char-sprite.no-cap .char-cap{ display:none; }
-  .char-swatch{
-    width:36px; height:36px; border-radius:50%; border:3px solid #000; cursor:pointer;
-    box-shadow:var(--shadow-sm); flex-shrink:0;
-  }
-  .char-swatch.active{ box-shadow:0 0 0 2px var(--neon-cyan-bright), var(--shadow-sm); transform:scale(1.1); }
-  .char-swatch-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
-  .char-customizer-card{
-    background:var(--bg-elevated); border:1px solid var(--line); border-radius:var(--radius-lg);
-    padding:16px; margin-top:14px;
-  }
-  .char-preview-row{ display:flex; align-items:center; justify-content:center; padding:10px 0 4px; }
-  .char-field-label{ font-size:.76rem; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:.8px; margin-top:14px; }
-  .char-cap-toggle{ display:flex; align-items:center; gap:8px; margin-top:12px; font-size:.84rem; }
-  .char-style-btn.active{
-    background:var(--neon-cyan);
-    color:var(--accent-ink); border-color:transparent; box-shadow:0 0 14px -3px var(--neon-purple);
-  }
 
   /* ---------- store ---------- */
   .theme-grid{ display:flex; flex-direction:column; gap:12px; }
@@ -1245,7 +1214,6 @@
   }
 
   /* ---------- tanda de penales ---------- */
-  .char-sprite.md{ width:72px; height:72px; }
   .pen-score-row{ display:flex; align-items:center; justify-content:center; gap:18px; margin-bottom:12px; flex-wrap:wrap; }
   .pen-score-side{ display:flex; flex-direction:column; align-items:center; gap:4px; min-width:90px; }
   .pen-score-name{ font-size:.72rem; font-weight:700; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1354,8 +1322,7 @@
         <div class="hub-title-row">
           <h1 class="gold-text">Bienvenido de vuelta</h1>
           <button class="hub-profile-chip" id="hubProfileCard" data-goto="league" hidden>
-            <span class="profile-avatar sm" id="hubProfileAvatar" hidden></span>
-            <span id="hubProfileChar"></span>
+            <span class="profile-avatar sm" id="hubProfileAvatar"></span>
             <span class="hub-profile-info">
               <span class="hub-profile-name" id="hubProfileName">Tu nombre</span>
               <span class="hub-profile-league" id="hubProfileLeague">Sin liga</span>
@@ -2064,51 +2031,30 @@
       <div class="hub-hero" style="padding-top:10px;">
         <p class="eyebrow">Tienda</p>
         <h1 class="gold-text" style="font-size:1.5rem;">Tienda Lucky Chips</h1>
-        <p class="hub-sub">Temas de color y personalización, todo con las fichas que ganes jugando.</p>
+        <p class="hub-sub">Temas de color, todo con las fichas que ganes jugando.</p>
       </div>
+      <div class="theme-grid" id="themeGrid"></div>
+    </section>
 
-      <div class="match-toolbar">
-        <button class="btn btn-ghost btn-sm store-tab-btn active" data-store-tab="temas">🎨 Temas</button>
-        <button class="btn btn-ghost btn-sm store-tab-btn" data-store-tab="perfil">🧑‍🎤 Perfil</button>
+    <!-- PROFILE -->
+    <section class="view" data-view="profile" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back>←</button>
+        <h2 class="gold-text">Tu perfil</h2>
+        <span style="width:36px;"></span>
       </div>
-
-      <div class="store-tab-panel" data-store-panel="temas">
-        <div class="theme-grid" id="themeGrid"></div>
-      </div>
-
-      <div class="store-tab-panel" data-store-panel="perfil" hidden>
-        <p class="hub-sub">Elige tu avatar y el marco que lo rodea. Así te verán tus amigos en la Liga.</p>
-        <div class="league-card ornate profile-row" style="margin-bottom:14px;">
-          <span class="profile-avatar" id="profilePreviewAvatar"></span>
-          <div style="flex:1; min-width:0;">
-            <p class="league-card-title" id="profilePreviewName">Tu perfil</p>
-            <p class="league-card-sub">Vista previa de tu avatar y marco</p>
-          </div>
-        </div>
-        <p class="paytable-title">Avatares</p>
-        <div class="avatar-grid" id="avatarGrid"></div>
-        <p class="paytable-title" style="margin-top:14px;">Marcos</p>
-        <div class="avatar-grid" id="frameGrid"></div>
-
-        <div class="char-customizer-card">
-          <p class="paytable-title">Tu personaje</p>
-          <p class="hub-sub">Personalízalo con camiseta, pantalón y gorra. Así se te verá en Tanda de Penales y en tu tarjeta de Inicio.</p>
-          <div class="char-preview-row" id="charPreview"></div>
-          <div class="match-toolbar">
-            <button type="button" class="btn btn-ghost btn-sm char-style-btn" data-char-style="ball">⚪ Clásico</button>
-            <button type="button" class="btn btn-ghost btn-sm char-style-btn" data-char-style="capsula">💊 Cápsula</button>
-          </div>
-          <p class="char-field-label">Camiseta</p>
-          <div class="char-swatch-grid" id="charJerseyGrid"></div>
-          <p class="char-field-label">Pantalón</p>
-          <div class="char-swatch-grid" id="charPantsGrid"></div>
-          <p class="char-field-label">Gorra</p>
-          <div class="char-swatch-grid" id="charCapGrid"></div>
-          <label class="char-cap-toggle">
-            <input type="checkbox" id="charCapToggle"> Usar gorra
-          </label>
+      <p class="hub-sub">Elige tu avatar y el marco que lo rodea. Así te verán tus amigos en la Liga.</p>
+      <div class="league-card ornate profile-row" style="margin-bottom:14px;">
+        <span class="profile-avatar" id="profilePreviewAvatar"></span>
+        <div style="flex:1; min-width:0;">
+          <p class="league-card-title" id="profilePreviewName">Tu perfil</p>
+          <p class="league-card-sub">Vista previa de tu avatar y marco</p>
         </div>
       </div>
+      <p class="paytable-title">Avatares</p>
+      <div class="avatar-grid" id="avatarGrid"></div>
+      <p class="paytable-title" style="margin-top:14px;">Marcos</p>
+      <div class="avatar-grid" id="frameGrid"></div>
     </section>
 
     <!-- LEAGUE (multiplayer) -->
@@ -2135,7 +2081,7 @@
           <input class="text-input" id="playerNameInput" type="text" maxlength="18" placeholder="Tu nombre">
           <button class="btn btn-gold btn-sm" id="playerNameSaveBtn">Guardar</button>
         </div>
-        <button class="btn btn-ghost btn-sm" data-goto="store" data-store-tab="perfil" style="margin-top:10px;">Elegir avatar y marco</button>
+        <button class="btn btn-ghost btn-sm" data-goto="profile" style="margin-top:10px;">Elegir avatar y marco</button>
       </div>
 
       <div id="leagueJoinPanels" hidden>
@@ -2162,7 +2108,7 @@
             <p class="league-card-title" id="leagueProfileName">Tú</p>
             <p class="league-card-sub">Tu perfil en esta liga</p>
           </div>
-          <button class="btn btn-ghost btn-sm" data-goto="store" data-store-tab="perfil">Editar</button>
+          <button class="btn btn-ghost btn-sm" data-goto="profile">Editar</button>
         </div>
         <div class="league-card ornate" style="margin-bottom:12px;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
@@ -2946,6 +2892,8 @@
   <nav class="bottomnav">
     <button class="navbtn active" data-nav="hub"><span>🏠</span><span>Inicio</span></button>
     <button class="navbtn" data-nav="store"><span>🛍️</span><span>Tienda</span></button>
+    <button class="navbtn" data-nav="league"><span>🏆</span><span>Liga</span></button>
+    <button class="navbtn" data-nav="profile"><span>🧑‍🎤</span><span>Perfil</span></button>
   </nav>
 </div>
 
@@ -3043,7 +2991,6 @@
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1,
       ownedAvatars:['dado'], activeAvatar:'dado', ownedFrames:['none'], activeFrame:'none',
-      charJersey:'#2f6bff', charPants:'#1c1c3c', charCap:'#ff2d55', charCapOn:true, charStyle:'ball',
       playerId:'', playerName:'', leagueCode:'', leagueName:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, currentPenaltyTable:null, currentPoolTable:null, chessElo:1200,
       racingLevel:1, waterSortLevel:1 };
   }
@@ -3120,7 +3067,8 @@
     if(name !== 'pool') teardownPoolPractice();
 
     if(name === 'hub'){ refreshHub(); dailyTimerId = setInterval(refreshHub, 1000); }
-    if(name === 'store'){ renderStore(); renderAvatarGrid(); renderFrameGrid(); renderProfilePreview(); }
+    if(name === 'store'){ renderStore(); }
+    if(name === 'profile'){ renderAvatarGrid(); renderFrameGrid(); renderProfilePreview(); }
     if(name === 'match'){ renderMatch(); matchTimerId = setInterval(renderMatch, 1000); }
     if(name === 'slots'){ refreshSlotBoostUI(); }
     if(name === 'league'){ renderLeague(); leagueTimerId = setInterval(function(){ if(state.leagueCode) syncLeagueMember(); }, 20000); }
@@ -3140,16 +3088,9 @@
     if(name === 'pool'){ renderPoolEntry(); }
   }
 
-  function selectStoreTab(tab){
-    var btn = document.querySelector('.store-tab-btn[data-store-tab="' + tab + '"]');
-    if(btn) btn.click();
-  }
-
   document.querySelectorAll('[data-goto]').forEach(function(btn){
     btn.addEventListener('click', function(){
       showView(btn.getAttribute('data-goto'));
-      var tab = btn.getAttribute('data-store-tab');
-      if(tab) selectStoreTab(tab);
     });
   });
   document.querySelectorAll('[data-nav]').forEach(function(btn){
@@ -5024,115 +4965,6 @@
   function profileAvatarIcon(id){ return (AVATARS[id] || AVATARS.dado).icon; }
   function profileFrameCls(id){ var f = FRAME_DEFS[id]; return (f && f.cls) ? f.cls : ''; }
 
-  /* ================= PERSONAJE (camiseta / pantalón / gorra) ================= */
-  var CHAR_COLORS = ['#ff2d55','#2f6bff','#30e860','#ffd500','#a633ff','#ff8800','#00e5ff','#ffffff','#1c1c3c','#ff2d9e'];
-
-  var charSpriteSeq = 0;
-
-  function charBallSvg(jersey, pants, clipId){
-    return '<svg viewBox="0 0 50 50">' +
-      '<defs><clipPath id="' + clipId + '"><circle cx="25" cy="25" r="22"/></clipPath></defs>' +
-      '<g clip-path="url(#' + clipId + ')">' +
-        '<rect x="0" y="0" width="50" height="37" fill="' + jersey + '"/>' +
-        '<rect x="0" y="37" width="50" height="13" fill="' + pants + '"/>' +
-      '</g>' +
-      '<circle class="ball-outline" cx="25" cy="25" r="22"/>' +
-      '<circle cx="17.5" cy="21" r="2.6" fill="#000"/>' +
-      '<circle cx="32.5" cy="21" r="2.6" fill="#000"/>' +
-      '</svg>';
-  }
-
-  function charCapsulaSvg(jersey, pants, clipId){
-    var bodyRect = '<rect x="13" y="2" width="24" height="41" rx="12"/>';
-    return '<svg viewBox="0 0 50 50">' +
-      '<defs><clipPath id="' + clipId + '">' + bodyRect + '</clipPath></defs>' +
-      '<rect x="4" y="13" width="7" height="24" rx="3.5" fill="' + jersey + '" stroke="#000" stroke-width="2.2"/>' +
-      '<rect x="39" y="13" width="7" height="24" rx="3.5" fill="' + jersey + '" stroke="#000" stroke-width="2.2"/>' +
-      '<ellipse cx="19" cy="44.5" rx="4.3" ry="3.6" fill="' + pants + '" stroke="#000" stroke-width="2.2"/>' +
-      '<ellipse cx="31" cy="44.5" rx="4.3" ry="3.6" fill="' + pants + '" stroke="#000" stroke-width="2.2"/>' +
-      '<g fill="' + jersey + '" stroke="#000" stroke-width="2.2">' + bodyRect + '</g>' +
-      '<g clip-path="url(#' + clipId + ')">' +
-        '<ellipse cx="18" cy="13" rx="7" ry="9" fill="#fff" opacity=".2"/>' +
-        '<ellipse cx="31" cy="32" rx="8" ry="11" fill="#000" opacity=".12"/>' +
-      '</g>' +
-      '<circle cx="25" cy="16" r="10" fill="#fff" stroke="#000" stroke-width="1.6"/>' +
-      '<ellipse cx="20.5" cy="15" rx="1.7" ry="2.6" fill="#000"/>' +
-      '<ellipse cx="29.5" cy="15" rx="1.7" ry="2.6" fill="#000"/>' +
-      '<circle cx="21.1" cy="13.6" r="0.6" fill="#fff"/>' +
-      '<circle cx="30.1" cy="13.6" r="0.6" fill="#fff"/>' +
-      '<path d="M 20.5 21 Q 25 23.5 29.5 21" fill="none" stroke="#000" stroke-width="1.2" stroke-linecap="round"/>' +
-      '</svg>';
-  }
-
-  function charSpriteHtml(opts, sizeCls){
-    opts = opts || {};
-    var jersey = opts.jersey || '#2f6bff';
-    var pants = opts.pants || '#1c1c3c';
-    var cap = opts.cap || '#ff2d55';
-    var capOn = opts.capOn !== false;
-    var style = opts.style || 'ball';
-    var clipId = 'ballClip' + (charSpriteSeq++);
-    var svg = style === 'capsula' ? charCapsulaSvg(jersey, pants, clipId) : charBallSvg(jersey, pants, clipId);
-    return '<div class="char-sprite' + (sizeCls ? ' ' + sizeCls : '') + (capOn ? '' : ' no-cap') +
-      '" style="--jersey:' + jersey + ';--pants:' + pants + ';--cap:' + cap + ';">' +
-      '<div class="char-cap"></div>' +
-      '<div class="char-body">' + svg + '</div>' +
-      '</div>';
-  }
-
-  function myCharOpts(){
-    return { jersey: state.charJersey, pants: state.charPants, cap: state.charCap, capOn: state.charCapOn, avatar: state.activeAvatar, style: state.charStyle || 'ball' };
-  }
-
-  function renderCharSwatches(gridId, field, onPick){
-    var grid = document.getElementById(gridId);
-    if(!grid) return;
-    grid.innerHTML = '';
-    CHAR_COLORS.forEach(function(color){
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'char-swatch' + (state[field] === color ? ' active' : '');
-      btn.style.background = color;
-      btn.addEventListener('click', function(){
-        state[field] = color; saveState(); scheduleLeagueSync();
-        if(onPick) onPick();
-        renderCharCustomizer();
-      });
-      grid.appendChild(btn);
-    });
-  }
-
-  function renderCharCustomizer(){
-    var preview = document.getElementById('charPreview');
-    if(!preview) return;
-    preview.innerHTML = charSpriteHtml(myCharOpts(), 'lg');
-    renderCharSwatches('charJerseyGrid', 'charJersey');
-    renderCharSwatches('charPantsGrid', 'charPants');
-    renderCharSwatches('charCapGrid', 'charCap');
-    var capToggle = document.getElementById('charCapToggle');
-    if(capToggle) capToggle.checked = state.charCapOn !== false;
-    Array.prototype.slice.call(document.querySelectorAll('.char-style-btn')).forEach(function(b){
-      b.classList.toggle('active', b.getAttribute('data-char-style') === (state.charStyle || 'ball'));
-    });
-    var hubChar = document.getElementById('hubProfileChar');
-    if(hubChar) hubChar.innerHTML = charSpriteHtml(myCharOpts(), 'sm');
-  }
-
-  var charCapToggleEl = document.getElementById('charCapToggle');
-  if(charCapToggleEl){
-    charCapToggleEl.addEventListener('change', function(){
-      state.charCapOn = this.checked; saveState(); scheduleLeagueSync();
-      renderCharCustomizer();
-    });
-  }
-
-  Array.prototype.slice.call(document.querySelectorAll('.char-style-btn')).forEach(function(btn){
-    btn.addEventListener('click', function(){
-      state.charStyle = btn.getAttribute('data-char-style'); saveState(); scheduleLeagueSync();
-      renderCharCustomizer();
-    });
-  });
-
   /* ================= STORE ================= */
   Array.prototype.slice.call(document.querySelectorAll('.store-tab-btn')).forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -5210,7 +5042,6 @@
     var leagueName = document.getElementById('leagueProfileName');
     if(leagueName) leagueName.textContent = state.playerName || 'Tú';
     renderHubProfile();
-    renderCharCustomizer();
   }
 
   function renderHubProfile(){
@@ -5225,8 +5056,6 @@
     avatarEl.className = 'profile-avatar ' + frameCls;
     document.getElementById('hubProfileName').textContent = state.playerName;
     document.getElementById('hubProfileLeague').textContent = state.leagueCode ? (state.leagueName || 'Liga sin nombre') : 'Sin liga — toca para unirte';
-    var hubChar = document.getElementById('hubProfileChar');
-    if(hubChar) hubChar.innerHTML = charSpriteHtml(myCharOpts(), 'sm');
   }
 
   function renderAvatarGrid(){
@@ -10109,10 +9938,7 @@
   var PEN_REVEAL_MS = 2600;
 
   function penMakeSeat(playerId, name, avatar, frame){
-    return {
-      playerId: playerId, name: name, avatar: avatar || 'dado', frame: frame || 'none',
-      jersey: state.charJersey, pants: state.charPants, cap: state.charCap, capOn: state.charCapOn !== false, style: state.charStyle || 'ball'
-    };
+    return { playerId: playerId, name: name, avatar: avatar || 'dado', frame: frame || 'none' };
   }
 
   function createPenaltyTable(){
@@ -10289,7 +10115,7 @@
     ensurePlayerId();
     if(penCpuMoveTimer){ clearTimeout(penCpuMoveTimer); penCpuMoveTimer = null; }
     var meSeat = penMakeSeat(state.playerId, state.playerName || 'Tú', state.activeAvatar, state.activeFrame);
-    var cpuSeat = { playerId: 'cpu', name: 'CPU', avatar: 'robot', frame: 'none', jersey: '#ff2d55', pants: '#1c1c3c', cap: '#00e5ff', capOn: true };
+    var cpuSeat = { playerId: 'cpu', name: 'CPU', avatar: 'robot', frame: 'none' };
     penLocalState = {
       status: 'waiting', seats: [meSeat, cpuSeat], round: 0, kickerSeat: 0,
       kicksTaken: [0, 0], goals: [0, 0], history: [], shotZone: null, saveZone: null,
@@ -10594,11 +10420,11 @@
 
     var kickerRow = document.getElementById('penKickerRow');
     if(kickerSeat){
-      kickerRow.innerHTML = charSpriteHtml(kickerSeat, 'md') +
+      kickerRow.innerHTML = '<span class="profile-avatar md ' + profileFrameCls(kickerSeat.frame) + '">' + profileAvatarIcon(kickerSeat.avatar) + '</span>' +
         '<p style="text-align:center; font-size:.76rem; margin-top:4px;">' + escapeHtml(kickerSeat.name) + ' patea</p>';
     }
     var keeperEl = document.getElementById('penKeeper');
-    if(keeperEl && keeperSeat) keeperEl.innerHTML = charSpriteHtml(keeperSeat, 'md');
+    if(keeperEl && keeperSeat) keeperEl.innerHTML = '<span class="profile-avatar md ' + profileFrameCls(keeperSeat.frame) + '">' + profileAvatarIcon(keeperSeat.avatar) + '</span>';
 
     var ballEl = document.getElementById('penBall');
     var phaseMsg = document.getElementById('penPhaseMsg');
