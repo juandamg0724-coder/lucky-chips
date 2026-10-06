@@ -1617,7 +1617,7 @@
         </button>
         <button class="game-tile wide ornate" data-goto="chess">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-ruby">♞</span>
+            <span class="icon-badge icon-ruby"><img src="icons/chess.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Ajedrez con Apuestas</span>
               <span class="game-meta">Contra la CPU o tu liga</span>
@@ -1627,7 +1627,7 @@
         </button>
         <button class="game-tile wide ornate" data-goto="domino">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-lime">🎲</span>
+            <span class="icon-badge icon-lime"><img src="icons/domino.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Dominó con Apuestas</span>
               <span class="game-meta">Contra la CPU o tu liga · 2 a 4 jugadores</span>
@@ -1637,7 +1637,7 @@
         </button>
         <button class="game-tile wide ornate" data-goto="tictactoe">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-pink">❌</span>
+            <span class="icon-badge icon-pink"><img src="icons/tictactoe.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Tres en Raya</span>
               <span class="game-meta">Contra la CPU o tu liga</span>
@@ -1647,7 +1647,7 @@
         </button>
         <button class="game-tile wide ornate" data-goto="impostor">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-purple">🕵️</span>
+            <span class="icon-badge icon-purple"><img src="icons/impostor.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Impostor</span>
               <span class="game-meta">Con tu liga · mínimo 3 jugadores</span>
@@ -1657,7 +1657,7 @@
         </button>
         <button class="game-tile wide ornate" data-goto="penalties">
           <span style="display:flex; align-items:center; gap:12px;">
-            <span class="icon-badge icon-green">🥅</span>
+            <span class="icon-badge icon-green"><img src="icons/penalties.webp" alt=""></span>
             <span>
               <span class="game-name" style="display:block;">Tanda de Penales</span>
               <span class="game-meta">Contra la CPU o 1 contra 1 con tu liga</span>
@@ -10758,8 +10758,7 @@
 
     var kickerRow = document.getElementById('penKickerRow');
     if(kickerSeat){
-      kickerRow.innerHTML = '<span class="profile-avatar md ' + profileFrameCls(kickerSeat.frame) + '">' + profileAvatarIcon(kickerSeat.avatar) + '</span>' +
-        '<p style="text-align:center; font-size:.76rem; margin-top:4px;">' + escapeHtml(kickerSeat.name) + ' patea</p>';
+      kickerRow.innerHTML = '<span class="profile-avatar md ' + profileFrameCls(kickerSeat.frame) + '">' + profileAvatarIcon(kickerSeat.avatar) + '</span>';
     }
     var keeperEl = document.getElementById('penKeeper');
     if(keeperEl && keeperSeat) keeperEl.innerHTML = '<span class="profile-avatar md ' + profileFrameCls(keeperSeat.frame) + '">' + profileAvatarIcon(keeperSeat.avatar) + '</span>';
