@@ -840,6 +840,10 @@
   .char-preview-row{ display:flex; align-items:center; justify-content:center; padding:10px 0 4px; }
   .char-field-label{ font-size:.76rem; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:.8px; margin-top:14px; }
   .char-cap-toggle{ display:flex; align-items:center; gap:8px; margin-top:12px; font-size:.84rem; }
+  .char-style-btn.active{
+    background:var(--neon-cyan);
+    color:var(--accent-ink); border-color:transparent; box-shadow:0 0 14px -3px var(--neon-purple);
+  }
 
   /* ---------- store ---------- */
   .theme-grid{ display:flex; flex-direction:column; gap:12px; }
@@ -2090,6 +2094,10 @@
           <p class="paytable-title">Tu personaje</p>
           <p class="hub-sub">Personalízalo con camiseta, pantalón y gorra. Así se te verá en Tanda de Penales y en tu tarjeta de Inicio.</p>
           <div class="char-preview-row" id="charPreview"></div>
+          <div class="match-toolbar">
+            <button type="button" class="btn btn-ghost btn-sm char-style-btn" data-char-style="ball">⚪ Clásico</button>
+            <button type="button" class="btn btn-ghost btn-sm char-style-btn" data-char-style="capsula">💊 Cápsula</button>
+          </div>
           <p class="char-field-label">Camiseta</p>
           <div class="char-swatch-grid" id="charJerseyGrid"></div>
           <p class="char-field-label">Pantalón</p>
@@ -3035,7 +3043,7 @@
     return { balance:1000, lastDaily:0, lastComp:0, ownedThemes:['escarlata'], activeTheme:'escarlata', match:null, matchSchedule:[], matchHistory:[], leagueStandings:{},
       freeSpins:0, pendingSlotMultiplier:1,
       ownedAvatars:['dado'], activeAvatar:'dado', ownedFrames:['none'], activeFrame:'none',
-      charJersey:'#2f6bff', charPants:'#1c1c3c', charCap:'#ff2d55', charCapOn:true,
+      charJersey:'#2f6bff', charPants:'#1c1c3c', charCap:'#ff2d55', charCapOn:true, charStyle:'ball',
       playerId:'', playerName:'', leagueCode:'', leagueName:'', currentPokerTable:null, currentChessMatch:null, currentDominoTable:null, currentTttMatch:null, currentImpostorTable:null, currentBjTable:null, currentPenaltyTable:null, currentPoolTable:null, chessElo:1200,
       racingLevel:1, waterSortLevel:1 };
   }
@@ -5021,14 +5029,8 @@
 
   var charSpriteSeq = 0;
 
-  function charSpriteHtml(opts, sizeCls){
-    opts = opts || {};
-    var jersey = opts.jersey || '#2f6bff';
-    var pants = opts.pants || '#1c1c3c';
-    var cap = opts.cap || '#ff2d55';
-    var capOn = opts.capOn !== false;
-    var clipId = 'ballClip' + (charSpriteSeq++);
-    var svg = '<svg viewBox="0 0 50 50">' +
+  function charBallSvg(jersey, pants, clipId){
+    return '<svg viewBox="0 0 50 50">' +
       '<defs><clipPath id="' + clipId + '"><circle cx="25" cy="25" r="22"/></clipPath></defs>' +
       '<g clip-path="url(#' + clipId + ')">' +
         '<rect x="0" y="0" width="50" height="37" fill="' + jersey + '"/>' +
@@ -5038,6 +5040,33 @@
       '<circle cx="17.5" cy="21" r="2.6" fill="#000"/>' +
       '<circle cx="32.5" cy="21" r="2.6" fill="#000"/>' +
       '</svg>';
+  }
+
+  function charCapsulaSvg(jersey, pants){
+    return '<svg viewBox="0 0 50 50">' +
+      '<ellipse cx="9" cy="27" rx="5.5" ry="11" fill="' + jersey + '" stroke="#000" stroke-width="2.5"/>' +
+      '<ellipse cx="41" cy="27" rx="5.5" ry="11" fill="' + jersey + '" stroke="#000" stroke-width="2.5"/>' +
+      '<ellipse cx="19" cy="44" rx="5.2" ry="4.6" fill="' + pants + '" stroke="#000" stroke-width="2.5"/>' +
+      '<ellipse cx="31" cy="44" rx="5.2" ry="4.6" fill="' + pants + '" stroke="#000" stroke-width="2.5"/>' +
+      '<rect x="14" y="3" width="22" height="40" rx="11" fill="' + jersey + '" stroke="#000" stroke-width="2.5"/>' +
+      '<ellipse cx="25" cy="19" rx="9.2" ry="10" fill="#fff" stroke="#000" stroke-width="1.6"/>' +
+      '<ellipse cx="21" cy="18" rx="1.9" ry="2.8" fill="#000"/>' +
+      '<ellipse cx="29" cy="18" rx="1.9" ry="2.8" fill="#000"/>' +
+      '<circle cx="21.6" cy="16.6" r="0.6" fill="#fff"/>' +
+      '<circle cx="29.6" cy="16.6" r="0.6" fill="#fff"/>' +
+      '<path d="M 21 24 Q 25 27 29 24" fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round"/>' +
+      '</svg>';
+  }
+
+  function charSpriteHtml(opts, sizeCls){
+    opts = opts || {};
+    var jersey = opts.jersey || '#2f6bff';
+    var pants = opts.pants || '#1c1c3c';
+    var cap = opts.cap || '#ff2d55';
+    var capOn = opts.capOn !== false;
+    var style = opts.style || 'ball';
+    var clipId = 'ballClip' + (charSpriteSeq++);
+    var svg = style === 'capsula' ? charCapsulaSvg(jersey, pants) : charBallSvg(jersey, pants, clipId);
     return '<div class="char-sprite' + (sizeCls ? ' ' + sizeCls : '') + (capOn ? '' : ' no-cap') +
       '" style="--jersey:' + jersey + ';--pants:' + pants + ';--cap:' + cap + ';">' +
       '<div class="char-cap"></div>' +
@@ -5046,7 +5075,7 @@
   }
 
   function myCharOpts(){
-    return { jersey: state.charJersey, pants: state.charPants, cap: state.charCap, capOn: state.charCapOn, avatar: state.activeAvatar };
+    return { jersey: state.charJersey, pants: state.charPants, cap: state.charCap, capOn: state.charCapOn, avatar: state.activeAvatar, style: state.charStyle || 'ball' };
   }
 
   function renderCharSwatches(gridId, field, onPick){
@@ -5076,6 +5105,9 @@
     renderCharSwatches('charCapGrid', 'charCap');
     var capToggle = document.getElementById('charCapToggle');
     if(capToggle) capToggle.checked = state.charCapOn !== false;
+    Array.prototype.slice.call(document.querySelectorAll('.char-style-btn')).forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-char-style') === (state.charStyle || 'ball'));
+    });
     var hubChar = document.getElementById('hubProfileChar');
     if(hubChar) hubChar.innerHTML = charSpriteHtml(myCharOpts(), 'sm');
   }
@@ -5087,6 +5119,13 @@
       renderCharCustomizer();
     });
   }
+
+  Array.prototype.slice.call(document.querySelectorAll('.char-style-btn')).forEach(function(btn){
+    btn.addEventListener('click', function(){
+      state.charStyle = btn.getAttribute('data-char-style'); saveState(); scheduleLeagueSync();
+      renderCharCustomizer();
+    });
+  });
 
   /* ================= STORE ================= */
   Array.prototype.slice.call(document.querySelectorAll('.store-tab-btn')).forEach(function(btn){
@@ -10066,7 +10105,7 @@
   function penMakeSeat(playerId, name, avatar, frame){
     return {
       playerId: playerId, name: name, avatar: avatar || 'dado', frame: frame || 'none',
-      jersey: state.charJersey, pants: state.charPants, cap: state.charCap, capOn: state.charCapOn !== false
+      jersey: state.charJersey, pants: state.charPants, cap: state.charCap, capOn: state.charCapOn !== false, style: state.charStyle || 'ball'
     };
   }
 
