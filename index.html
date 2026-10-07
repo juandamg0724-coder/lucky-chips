@@ -1402,6 +1402,35 @@
   }
   .bomber-bomb-btn:active{ transform:scale(.9); }
   .bomber-hearts{ color:var(--ruby-bright); }
+
+  /* ================= FUTBOL 5 ================= */
+  .fb-teams-row{ display:flex; gap:10px; margin-top:12px; }
+  .fb-team-col{ flex:1; border-radius:14px; padding:12px; border:1px solid var(--line); background:var(--bg-panel); }
+  .fb-team-blue{ border-color:#2563eb; box-shadow:0 0 14px -6px #2563eb inset; }
+  .fb-team-red{ border-color:#dc2626; box-shadow:0 0 14px -6px #dc2626 inset; }
+  .fb-team-title{ font-weight:700; margin-bottom:8px; }
+  .fb-team-list{ display:flex; flex-direction:column; gap:6px; min-height:28px; }
+  .fb-team-slot{ font-size:.9rem; padding:6px 8px; border-radius:8px; background:var(--bg-panel-2); display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .fb-team-slot.me{ outline:1px solid var(--neon-cyan-bright); }
+  .fb-team-slot .fb-ready-dot{ width:8px; height:8px; border-radius:50%; background:var(--line); flex-shrink:0; }
+  .fb-team-slot.ready .fb-ready-dot{ background:var(--neon-green-bright); box-shadow:0 0 6px var(--neon-green-bright); }
+  #fbStage{ position:relative; width:100%; aspect-ratio:16/10; border-radius:16px; overflow:hidden; background:#0a2412; box-shadow:var(--shadow-sm); }
+  #fbCanvas{ display:block; width:100%; height:100%; touch-action:none; }
+  #fbHud{ position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:10px 12px; }
+  .fb-hud-top{ display:flex; align-items:center; justify-content:center; gap:14px; }
+  .fb-score{ font-size:1.4rem; font-weight:800; padding:4px 12px; border-radius:10px; background:rgba(10,10,20,.55); backdrop-filter:blur(2px); }
+  .fb-score-blue{ color:#7fb4ff; }
+  .fb-score-red{ color:#ff8f8f; }
+  .fb-hud-mid{ font-size:1.05rem; font-weight:700; padding:4px 10px; border-radius:10px; background:rgba(10,10,20,.55); color:var(--accent-bright); min-width:64px; text-align:center; }
+  .fb-countdown-banner{ position:absolute; top:42%; left:50%; transform:translate(-50%,-50%); font-size:4rem; font-weight:800; color:var(--accent-bright); text-shadow:0 0 22px rgba(0,0,0,.7); }
+  .fb-goal-banner{ position:absolute; top:40%; left:50%; transform:translate(-50%,-50%); font-size:2.2rem; font-weight:800; color:var(--accent-bright); text-shadow:0 0 18px rgba(0,0,0,.6); animation:fb-goal-pop .6s ease both; }
+  @keyframes fb-goal-pop{ 0%{ transform:translate(-50%,-50%) scale(.4); opacity:0; } 60%{ transform:translate(-50%,-50%) scale(1.12); opacity:1; } 100%{ transform:translate(-50%,-50%) scale(1); opacity:1; } }
+  .fb-hud-bottom{ display:flex; flex-direction:column; gap:6px; align-items:center; }
+  .fb-bar{ width:140px; height:8px; border-radius:6px; background:rgba(10,10,20,.55); overflow:hidden; }
+  .fb-bar-fill{ height:100%; width:100%; border-radius:6px; transition:width .08s linear; }
+  .fb-stamina .fb-bar-fill{ background:linear-gradient(90deg, var(--neon-cyan), var(--neon-cyan-bright)); }
+  .fb-power .fb-bar-fill{ background:linear-gradient(90deg, var(--neon-orange), #ff4d4d); width:0%; }
+  @media (prefers-reduced-motion: reduce){ .fb-goal-banner{ animation:none; } }
 </style>
 </head>
 <body>
@@ -1595,6 +1624,20 @@
           <span class="icon-badge icon-orange"><img src="icons/bomberman.webp" alt=""></span>
           <span class="game-name">Bomberman</span>
           <span class="game-meta">Teclado o control PS4</span>
+          <span class="tile-arrow">→</span>
+        </button>
+      </div>
+
+      <p class="hub-section-title">⚽ Fútbol multijugador</p>
+      <div class="game-grid">
+        <button class="game-tile wide ornate" data-goto="football">
+          <span style="display:flex; align-items:center; gap:12px;">
+            <span class="icon-badge icon-green"><img src="icons/football.webp" alt=""></span>
+            <span>
+              <span class="game-name">Fútbol 5</span>
+              <span class="game-meta">Online 1v1/2v2/3v3 o contra la CPU</span>
+            </span>
+          </span>
           <span class="tile-arrow">→</span>
         </button>
       </div>
@@ -3056,6 +3099,109 @@
       <div id="bomberRoot"></div>
     </section>
 
+    <!-- FUTBOL 5 (online 1v1/2v2/3v3 o contra CPU) -->
+    <section class="view" data-view="football" hidden>
+      <div class="view-header">
+        <button class="btn-back" data-back id="fbBackBtn">←</button>
+        <h2 class="gold-text">Fútbol 5</h2>
+        <span style="width:36px;"></span>
+      </div>
+
+      <p class="league-msg" id="fbMsgBar"></p>
+
+      <div id="fbMenu">
+        <div class="league-card ornate" style="text-align:center;">
+          <p class="league-card-title">⚽ Arcade rápido, cámara de jugador</p>
+          <p class="league-card-sub">Fútbol 5 con física de balón, sprint, pases y tiros. Partidas cortas de 2-5 minutos.</p>
+        </div>
+        <button class="btn btn-primary btn-block" id="fbPlayOnlineBtn" style="margin-top:14px;">Jugar online</button>
+        <button class="btn btn-gold btn-block" id="fbPlayBotBtn" style="margin-top:10px;">Jugar contra la CPU</button>
+      </div>
+
+      <div id="fbOnlineSetup" hidden>
+        <div class="league-card ornate" id="fbOfflinePanel" hidden>
+          <p class="league-card-title">No se pudo conectar</p>
+          <p class="league-card-sub">No logramos conectar con el servidor. Revisa tu conexión e intenta de nuevo.</p>
+          <button class="btn btn-primary btn-block" id="fbOfflineRetryBtn">Reintentar</button>
+        </div>
+        <div id="fbOnlineChoices">
+          <div class="league-card ornate">
+            <p class="league-card-title">Crear partida</p>
+            <p class="league-card-sub">Elige el modo y comparte el código con tus amigos.</p>
+            <div class="choice-row" id="fbModeChips">
+              <button class="choice-btn active" data-mode="1">1 vs 1</button>
+              <button class="choice-btn" data-mode="2">2 vs 2</button>
+              <button class="choice-btn" data-mode="3">3 vs 3</button>
+            </div>
+            <div class="choice-row" id="fbDurationChips" style="margin-top:8px;">
+              <button class="choice-btn" data-dur="120">2 min</button>
+              <button class="choice-btn active" data-dur="180">3 min</button>
+              <button class="choice-btn" data-dur="300">5 min</button>
+              <button class="choice-btn" data-goals="5">5 goles</button>
+            </div>
+            <button class="btn btn-primary btn-block" id="fbCreateMatchBtn" style="margin-top:10px;">Crear partida</button>
+          </div>
+          <div class="league-card ornate" style="margin-top:12px;">
+            <p class="league-card-title">Unirse con código</p>
+            <div class="field-row">
+              <input class="text-input" id="fbJoinCodeInput" type="text" maxlength="5" placeholder="CÓDIGO" style="text-transform:uppercase; letter-spacing:3px;">
+              <button class="btn btn-gold btn-sm" id="fbJoinMatchBtn">Unirse</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fbLobby" hidden>
+        <div class="league-card ornate" style="text-align:center;">
+          <p class="league-card-sub">Código de partida</p>
+          <p class="league-card-title" id="fbLobbyCode" style="font-size:28px; letter-spacing:4px;">-----</p>
+        </div>
+        <div class="fb-teams-row">
+          <div class="fb-team-col fb-team-blue">
+            <p class="fb-team-title">🔵 Equipo azul</p>
+            <div id="fbTeamBlueList" class="fb-team-list"></div>
+          </div>
+          <div class="fb-team-col fb-team-red">
+            <p class="fb-team-title">🔴 Equipo rojo</p>
+            <div id="fbTeamRedList" class="fb-team-list"></div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-block" id="fbSwitchTeamBtn" style="margin-top:10px;">Cambiar de equipo</button>
+        <button class="btn btn-primary btn-block" id="fbReadyBtn" style="margin-top:8px;">Listo</button>
+        <button class="btn btn-ghost btn-block" id="fbLeaveLobbyBtn" style="margin-top:8px;">Salir de la sala</button>
+      </div>
+
+      <div id="fbMatchScreen" hidden>
+        <div id="fbStage">
+          <canvas id="fbCanvas"></canvas>
+          <div id="fbHud">
+            <div class="fb-hud-top">
+              <span class="fb-score fb-score-blue" id="fbScoreBlue">0</span>
+              <span class="fb-hud-mid">
+                <span id="fbClock">03:00</span>
+              </span>
+              <span class="fb-score fb-score-red" id="fbScoreRed">0</span>
+            </div>
+            <div class="fb-goal-banner" id="fbGoalBanner" hidden>⚽ ¡GOL!</div>
+            <div class="fb-countdown-banner" id="fbCountdown" hidden>3</div>
+            <div class="fb-hud-bottom">
+              <div class="fb-bar fb-stamina"><div class="fb-bar-fill" id="fbStaminaFill"></div></div>
+              <div class="fb-bar fb-power" id="fbPowerWrap" hidden><div class="fb-bar-fill" id="fbPowerFill"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fbResultScreen" hidden>
+        <div class="league-card ornate" style="text-align:center;">
+          <p class="league-card-title" id="fbResultTitle">¡Partido terminado!</p>
+          <p class="league-card-sub" id="fbResultScore" style="font-size:22px;">🔵 0 - 0 🔴</p>
+        </div>
+        <button class="btn btn-primary btn-block" id="fbReplayBtn" style="margin-top:12px;">Volver a jugar</button>
+        <button class="btn btn-ghost btn-block" id="fbExitBtn" style="margin-top:8px;">Salir</button>
+      </div>
+    </section>
+
   </main>
 
   <nav class="bottomnav">
@@ -3229,6 +3375,7 @@
     teardownBjoListeners();
     teardownPenaltyListeners();
     teardownPoolListeners();
+    if(name !== 'football') teardownFootball();
     if(name !== 'racing') teardownRacing();
     if(name !== 'trivia') teardownTrivia();
     if(name !== 'snake') teardownSnake();
@@ -3260,6 +3407,7 @@
     if(name === 'pool'){ renderPoolEntry(); }
     if(name === 'crossword'){ renderCrosswordEntry(); }
     if(name === 'bomberman'){ renderBombermanEntry(); }
+    if(name === 'football'){ renderFootballEntry(); }
   }
 
   document.querySelectorAll('[data-goto]').forEach(function(btn){
@@ -13174,6 +13322,1315 @@
     document.getElementById('bomberBombBtn').addEventListener('pointerdown', function(e){ e.preventDefault(); bmHandlePrimaryAction(); });
     startBomberman();
   }
+
+  /* ---------- Fisica y constantes ---------- */
+  var FB_FIELD_W = 20, FB_FIELD_L = 32;
+  var FB_GOAL_W = 5, FB_GOAL_H = 2.2, FB_GOAL_DEPTH = 1.3;
+  var FB_PLAYER_R = 0.42, FB_BALL_R = 0.22;
+  var FB_PLAYER_SPEED = 5.6;
+
+  function fbLerpAngle(a, b, t){
+    var diff = ((b - a + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    return a + diff * t;
+  }
+
+  function fbSlotPos(team, idx, teamSize){
+    var sign = team === 'blue' ? -1 : 1;
+    var rows = [[0], [-2.2, 2.2], [-3.4, 0, 3.4]];
+    var xs = rows[teamSize - 1] || [0];
+    var x = xs[idx] != null ? xs[idx] : 0;
+    var z = sign * (4 + idx * 2.1);
+    var rotY = team === 'blue' ? 0 : Math.PI;
+    return { x: x, y: 0, z: z, rotY: rotY };
+  }
+
+  function fbBallStep(ball, dt, players, onGoal){
+    ball.vy -= 9.8 * dt;
+    ball.x += ball.vx * dt;
+    ball.y += ball.vy * dt;
+    ball.z += ball.vz * dt;
+    if(ball.y <= FB_BALL_R){
+      ball.y = FB_BALL_R;
+      if(ball.vy < 0) ball.vy = -ball.vy * 0.42;
+      if(Math.abs(ball.vy) < 0.6) ball.vy = 0;
+      var fric = Math.pow(0.90, dt * 60);
+      ball.vx *= fric; ball.vz *= fric;
+    }
+    var halfW = FB_FIELD_W / 2;
+    if(ball.x < -halfW + FB_BALL_R){ ball.x = -halfW + FB_BALL_R; ball.vx = Math.abs(ball.vx) * 0.6; }
+    if(ball.x > halfW - FB_BALL_R){ ball.x = halfW - FB_BALL_R; ball.vx = -Math.abs(ball.vx) * 0.6; }
+    var halfL = FB_FIELD_L / 2;
+    var inGoalMouth = Math.abs(ball.x) < FB_GOAL_W / 2 - FB_BALL_R;
+    if(!inGoalMouth){
+      if(ball.z < -halfL + FB_BALL_R){ ball.z = -halfL + FB_BALL_R; ball.vz = Math.abs(ball.vz) * 0.6; }
+      if(ball.z > halfL - FB_BALL_R){ ball.z = halfL - FB_BALL_R; ball.vz = -Math.abs(ball.vz) * 0.6; }
+    } else {
+      if(ball.z <= -halfL && ball.y < FB_GOAL_H){ onGoal('red'); return; }
+      if(ball.z >= halfL && ball.y < FB_GOAL_H){ onGoal('blue'); return; }
+      var backZ = halfL + FB_GOAL_DEPTH;
+      if(ball.z < -backZ){ ball.z = -backZ; ball.vz = Math.abs(ball.vz) * 0.3; }
+      if(ball.z > backZ){ ball.z = backZ; ball.vz = -Math.abs(ball.vz) * 0.3; }
+    }
+    var posts = [[-FB_GOAL_W/2,-halfL],[FB_GOAL_W/2,-halfL],[-FB_GOAL_W/2,halfL],[FB_GOAL_W/2,halfL]];
+    for(var i=0;i<posts.length;i++){
+      var px=posts[i][0], pz=posts[i][1];
+      var dx=ball.x-px, dz=ball.z-pz;
+      var d=Math.sqrt(dx*dx+dz*dz);
+      var minD=FB_BALL_R+0.09;
+      if(d<minD && d>0.0001){
+        var nx=dx/d, nz=dz/d;
+        ball.x=px+nx*minD; ball.z=pz+nz*minD;
+        var vn=ball.vx*nx+ball.vz*nz;
+        ball.vx -= 1.7*vn*nx; ball.vz -= 1.7*vn*nz;
+      }
+    }
+    for(var j=0;j<players.length;j++){
+      var p=players[j];
+      var bx=ball.x-p.pos.x, bz=ball.z-p.pos.z;
+      var bd=Math.sqrt(bx*bx+bz*bz);
+      var minPD=FB_BALL_R+FB_PLAYER_R*0.8;
+      if(bd<minPD && bd>0.0001){
+        var bnx=bx/bd, bnz=bz/bd;
+        ball.x=p.pos.x+bnx*minPD; ball.z=p.pos.z+bnz*minPD;
+      }
+    }
+  }
+
+  /* ---------- Modelo de jugador (bajo poligonaje, sin rostro) ---------- */
+  function fbBuildPlayerMesh(teamColor){
+    var THREE = window.THREE;
+    var g = new THREE.Group();
+    var shirtMat = new THREE.MeshStandardMaterial({ color: teamColor, roughness: 0.75, metalness: 0.05 });
+    var shortsMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
+    var skinMat = new THREE.MeshStandardMaterial({ color: 0xe3b48c, roughness: 0.85 });
+    var shoeMat = new THREE.MeshStandardMaterial({ color: 0x202020, roughness: 0.5 });
+
+    var torso = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.3, 0.62, 8), shirtMat);
+    torso.position.y = 0.78;
+    g.add(torso);
+
+    var shorts = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.26, 0.26, 8), shortsMat);
+    shorts.position.y = 0.44;
+    g.add(shorts);
+
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), skinMat);
+    head.position.y = 1.2;
+    g.add(head);
+
+    function leg(sideSign){
+      var grp = new THREE.Group();
+      var thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.09, 0.42, 6), shortsMat);
+      thigh.position.y = -0.21;
+      grp.add(thigh);
+      var shoe = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.1, 0.22), shoeMat);
+      shoe.position.y = -0.46;
+      shoe.position.z = 0.04;
+      grp.add(shoe);
+      grp.position.set(sideSign * 0.12, 0.42, 0);
+      return grp;
+    }
+    var legL = leg(-1), legR = leg(1);
+    g.add(legL); g.add(legR);
+
+    function arm(sideSign){
+      var m = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.065, 0.46, 6), shirtMat);
+      m.position.set(sideSign * 0.34, 0.86, 0);
+      m.rotation.z = sideSign * 0.18;
+      return m;
+    }
+    var armL = arm(-1), armR = arm(1);
+    g.add(armL); g.add(armR);
+
+    g.userData.legL = legL; g.userData.legR = legR;
+    g.userData.armL = armL; g.userData.armR = armR;
+    g.traverse(function(o){ if(o.isMesh) o.castShadow = true; });
+    return g;
+  }
+
+  /* ---------- Motor principal ---------- */
+  function FbEngine(opts){
+    this.opts = opts;
+    this.mode = opts.mode;
+    this.teamSize = opts.teamSize;
+    this.durationSec = opts.durationSec;
+    this.goalLimit = opts.goalLimit;
+    this.myId = opts.myId;
+    this.isHost = opts.mode === 'bot' ? true : !!opts.isHost;
+    this.roomRef = opts.roomRef || null;
+    this.players = [];
+    this.ball = { x: 0, y: FB_BALL_R, z: 0, vx: 0, vy: 0, vz: 0 };
+    this.score = { blue: 0, red: 0 };
+    this.state = 'countdown';
+    this.elapsed = 0;
+    this.countdownT = 3.2;
+    this.input = {};
+    this.running = false;
+    this.chargeStart = null;
+    this._netTimer = 0;
+    this._lastGoalSeen = null;
+  }
+
+  FbEngine.prototype.start = function(){
+    var THREE = window.THREE;
+    var canvas = document.getElementById('fbCanvas');
+    this.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x0a1a2c);
+    this.scene.fog = new THREE.Fog(0x0a1a2c, 24, 46);
+    this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+    this._lookTarget = new THREE.Vector3(0, 0.9, 0);
+
+    this.buildSky();
+    this.buildLights();
+    this.buildField();
+    this.buildGoal(-1);
+    this.buildGoal(1);
+    this.ballMesh = this.buildBall();
+
+    this.setupPlayers();
+    this.resize();
+
+    var self = this;
+    this._resizeHandler = function(){ self.resize(); };
+    this._keydown = function(e){ self.onKeyDown(e); };
+    this._keyup = function(e){ self.onKeyUp(e); };
+    window.addEventListener('resize', this._resizeHandler);
+    window.addEventListener('keydown', this._keydown);
+    window.addEventListener('keyup', this._keyup);
+
+    this.running = true;
+    this.clock = new THREE.Clock();
+    this.showCountdown(true);
+    this._loopBound = function(){ self.loop(); };
+    this._raf = requestAnimationFrame(this._loopBound);
+  };
+
+  FbEngine.prototype.resize = function(){
+    var stage = document.getElementById('fbStage');
+    var w = stage.clientWidth, h = stage.clientHeight;
+    if(!w || !h || !this.renderer) return;
+    this.renderer.setSize(w, h, false);
+    this.camera.aspect = w / h;
+    this.camera.updateProjectionMatrix();
+  };
+
+  FbEngine.prototype.buildSky = function(){
+    var THREE = window.THREE;
+    var c = document.createElement('canvas');
+    c.width = 8; c.height = 256;
+    var ctx = c.getContext('2d');
+    var grad = ctx.createLinearGradient(0, 0, 0, c.height);
+    grad.addColorStop(0, '#040b14');
+    grad.addColorStop(0.45, '#0a1f33');
+    grad.addColorStop(1, '#173a52');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, c.width, c.height);
+    var tex = new THREE.CanvasTexture(c);
+    var geo = new THREE.SphereGeometry(70, 16, 12);
+    var mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false });
+    var sky = new THREE.Mesh(geo, mat);
+    this.scene.add(sky);
+  };
+
+  FbEngine.prototype.buildLights = function(){
+    var THREE = window.THREE;
+    var hemi = new THREE.HemisphereLight(0x9fc4e8, 0x15301f, 0.65);
+    this.scene.add(hemi);
+    var sun = new THREE.DirectionalLight(0xfff2d8, 1.05);
+    sun.position.set(9, 15, 7);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1536, 1536);
+    sun.shadow.camera.left = -19; sun.shadow.camera.right = 19;
+    sun.shadow.camera.top = 19; sun.shadow.camera.bottom = -19;
+    sun.shadow.camera.far = 40;
+    sun.shadow.bias = -0.0015;
+    sun.shadow.radius = 2.5;
+    this.scene.add(sun);
+    var fill = new THREE.DirectionalLight(0x6fa8ff, 0.28);
+    fill.position.set(-10, 8, -8);
+    this.scene.add(fill);
+
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(s){
+      var spot = new THREE.SpotLight(0xfff6dd, 0.55, 42, Math.PI / 5, 0.6, 1.4);
+      spot.position.set(s[0] * (FB_FIELD_W / 2 + 1.6), 7.6, s[1] * (FB_FIELD_L / 2 + 1.2));
+      spot.target.position.set(0, 0, s[1] * -4);
+      this.scene.add(spot);
+      this.scene.add(spot.target);
+    }, this);
+  };
+
+  FbEngine.prototype.buildField = function(){
+    var THREE = window.THREE;
+    var c = document.createElement('canvas');
+    c.width = 1024; c.height = 1640;
+    var ctx = c.getContext('2d');
+    var mowBands = 14;
+    for(var i = 0; i < mowBands; i++){
+      ctx.fillStyle = i % 2 === 0 ? '#2fa64b' : '#2a9544';
+      ctx.fillRect(0, i * (c.height / mowBands), c.width, c.height / mowBands + 1);
+    }
+    // subtle blade/grain noise for a less flat look
+    for(var n = 0; n < 5200; n++){
+      var nx = Math.random() * c.width, ny = Math.random() * c.height;
+      var shade = Math.random();
+      ctx.fillStyle = shade > 0.5 ? 'rgba(10,40,18,0.10)' : 'rgba(170,230,160,0.07)';
+      ctx.fillRect(nx, ny, 2.4, 2.4);
+    }
+    // soft worn patches near goal mouths and center
+    function wornPatch(cx, cy, r){
+      var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, 'rgba(120,90,40,0.10)');
+      g.addColorStop(1, 'rgba(120,90,40,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    }
+    wornPatch(c.width / 2, c.height / 2, 140);
+    wornPatch(c.width / 2, 120, 150);
+    wornPatch(c.width / 2, c.height - 120, 150);
+
+    var scaleX = c.width / (FB_FIELD_W + 2), scaleY = c.height / (FB_FIELD_L + 2);
+    var ox = c.width / 2, oy = c.height / 2;
+    function pt(x, z){ return [ox + x * scaleX, oy + z * scaleY]; }
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.88)';
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 3;
+    ctx.lineWidth = 5;
+    var tl = pt(-FB_FIELD_W / 2, -FB_FIELD_L / 2), br = pt(FB_FIELD_W / 2, FB_FIELD_L / 2);
+    ctx.strokeRect(tl[0], tl[1], br[0] - tl[0], br[1] - tl[1]);
+    ctx.beginPath(); ctx.moveTo(tl[0], oy); ctx.lineTo(br[0], oy); ctx.stroke();
+    ctx.beginPath(); ctx.arc(ox, oy, 1.8 * scaleX, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(ox, oy, 7, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fill();
+    [-1, 1].forEach(function(sign){
+      var areaW = FB_GOAL_W + 3, areaD = 4.2;
+      var p0 = pt(-areaW / 2, sign * FB_FIELD_L / 2);
+      var p1 = pt(areaW / 2, sign * FB_FIELD_L / 2 - sign * areaD);
+      ctx.strokeRect(Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]), Math.abs(p1[0] - p0[0]), Math.abs(p1[1] - p0[1]));
+      var spot = pt(0, sign * FB_FIELD_L / 2 - sign * 3.2);
+      ctx.beginPath(); ctx.arc(spot[0], spot[1], 6, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.88)'; ctx.fill();
+      var arcC = pt(0, sign * FB_FIELD_L / 2 - sign * 3.2);
+      ctx.beginPath(); ctx.arc(arcC[0], arcC[1], 1.1 * scaleX, Math.PI * (sign > 0 ? 1.18 : 0.18), Math.PI * (sign > 0 ? 1.82 : 0.82)); ctx.stroke();
+      [-1, 1].forEach(function(cs){
+        var cx = pt(cs * FB_FIELD_W / 2, sign * FB_FIELD_L / 2);
+        ctx.beginPath(); ctx.arc(cx[0], cx[1], 22, 0, Math.PI * 2); ctx.stroke();
+      });
+    });
+    ctx.shadowBlur = 0;
+
+    var tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 4;
+    var mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, metalness: 0 });
+    var geo = new THREE.PlaneGeometry(FB_FIELD_W + 2, FB_FIELD_L + 2);
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.receiveShadow = true;
+    this.scene.add(mesh);
+
+    // advertising kickboards
+    var adCanvas = document.createElement('canvas');
+    adCanvas.width = 1024; adCanvas.height = 64;
+    var actx = adCanvas.getContext('2d');
+    var adColors = ['#1f6fb2', '#d9a62e', '#1f6fb2', '#c23b3b', '#1f6fb2', '#2f9e55'];
+    var segW = adCanvas.width / adColors.length;
+    adColors.forEach(function(col, idx){
+      actx.fillStyle = col;
+      actx.fillRect(idx * segW, 0, segW, adCanvas.height);
+    });
+    actx.fillStyle = 'rgba(255,255,255,0.88)';
+    actx.font = 'bold 30px sans-serif';
+    actx.textAlign = 'center'; actx.textBaseline = 'middle';
+    for(var ai = 0; ai < adColors.length; ai++){
+      actx.fillText('LUCKY CHIPS', ai * segW + segW / 2, adCanvas.height / 2);
+    }
+    var adTex = new THREE.CanvasTexture(adCanvas);
+    adTex.wrapS = THREE.RepeatWrapping; adTex.repeat.x = (FB_FIELD_L + 2) / 14;
+    var boardMat = new THREE.MeshStandardMaterial({ map: adTex, roughness: 0.6, metalness: 0.1 });
+    var boardBackMat = new THREE.MeshStandardMaterial({ color: 0x10241a, roughness: 0.9 });
+    [-1, 1].forEach(function(s){
+      var b = new window.THREE.Mesh(new window.THREE.BoxGeometry(0.12, 0.62, FB_FIELD_L + 2), [boardMat, boardMat, boardBackMat, boardBackMat, boardBackMat, boardBackMat]);
+      b.position.set(s * (FB_FIELD_W / 2 + 0.55), 0.31, 0);
+      b.castShadow = true;
+      this.scene.add(b);
+    }, this);
+
+    // tiered stands with a crowd-pattern texture
+    var crowdCanvas = document.createElement('canvas');
+    crowdCanvas.width = 256; crowdCanvas.height = 64;
+    var cctx = crowdCanvas.getContext('2d');
+    cctx.fillStyle = '#20293a'; cctx.fillRect(0, 0, crowdCanvas.width, crowdCanvas.height);
+    var crowdColors = ['#e8c07d', '#8a97ad', '#c75c5c', '#5c8bc7', '#d8d8d8', '#7b6a53'];
+    for(var cy = 0; cy < crowdCanvas.height; cy += 7){
+      for(var cx = 0; cx < crowdCanvas.width; cx += 6){
+        if(Math.random() < 0.78){
+          cctx.fillStyle = crowdColors[(Math.random() * crowdColors.length) | 0];
+          cctx.fillRect(cx + (Math.random() * 2 - 1), cy + (Math.random() * 2 - 1), 3.4, 3.4);
+        }
+      }
+    }
+    var crowdTex = new THREE.CanvasTexture(crowdCanvas);
+    crowdTex.wrapS = THREE.RepeatWrapping; crowdTex.repeat.x = (FB_FIELD_L * 0.85) / 10;
+    var standMat = new THREE.MeshStandardMaterial({ map: crowdTex, roughness: 0.95 });
+    var standRoofMat = new THREE.MeshStandardMaterial({ color: 0x1b2433, roughness: 0.7 });
+    [-1, 1].forEach(function(s){
+      var grp = new window.THREE.Group();
+      for(var tier = 0; tier < 3; tier++){
+        var row = new window.THREE.Mesh(new window.THREE.BoxGeometry(0.75, 0.55, FB_FIELD_L * 0.85), standMat);
+        row.position.set(s * (FB_FIELD_W / 2 + 1.9 + tier * 0.7), 0.5 + tier * 0.58, 0);
+        row.castShadow = false; row.receiveShadow = true;
+        grp.add(row);
+      }
+      var roof = new window.THREE.Mesh(new window.THREE.BoxGeometry(2.6, 0.08, FB_FIELD_L * 0.9), standRoofMat);
+      roof.position.set(s * (FB_FIELD_W / 2 + 2.6), 2.35, 0);
+      roof.rotation.z = s * -0.06;
+      grp.add(roof);
+      this.scene.add(grp);
+    }, this);
+
+    var poleMat = new THREE.MeshStandardMaterial({ color: 0x8a8f96, roughness: 0.5, metalness: 0.4 });
+    var lampMat = new THREE.MeshStandardMaterial({ color: 0xfff6cc, emissive: 0xfff2b0, emissiveIntensity: 1.6, roughness: 0.3 });
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(s){
+      var pole = new window.THREE.Mesh(new window.THREE.CylinderGeometry(0.1, 0.12, 7.2, 8), poleMat);
+      pole.position.set(s[0] * (FB_FIELD_W / 2 + 1.6), 3.6, s[1] * (FB_FIELD_L / 2 + 1.2));
+      pole.castShadow = true;
+      this.scene.add(pole);
+      var rig = new window.THREE.Mesh(new window.THREE.BoxGeometry(1.1, 0.55, 0.14), lampMat);
+      rig.position.set(pole.position.x, 7.3, pole.position.z);
+      rig.lookAt(0, 2, 0);
+      this.scene.add(rig);
+    }, this);
+  };
+
+  FbEngine.prototype.buildGoal = function(sign){
+    var THREE = window.THREE;
+    var g = new THREE.Group();
+    var postMat = new THREE.MeshStandardMaterial({ color: 0xf6f6f6, roughness: 0.35, metalness: 0.15 });
+    var halfW = FB_GOAL_W / 2;
+    function post(x){
+      var m = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, FB_GOAL_H, 10), postMat);
+      m.position.set(x, FB_GOAL_H / 2, 0);
+      m.castShadow = true;
+      return m;
+    }
+    g.add(post(-halfW)); g.add(post(halfW));
+    var bar = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, FB_GOAL_W, 10), postMat);
+    bar.rotation.z = Math.PI / 2;
+    bar.position.set(0, FB_GOAL_H, 0);
+    bar.castShadow = true;
+    g.add(bar);
+
+    var netMat = new THREE.LineBasicMaterial({ color: 0xe8e8e8, transparent: true, opacity: 0.55 });
+    function netPanel(w, h, segX, segY, build){
+      var pts = [];
+      for(var ix = 0; ix <= segX; ix++){
+        var lx = -w / 2 + (w * ix) / segX;
+        var a = build(lx, -h / 2), b = build(lx, h / 2);
+        pts.push(a.x, a.y, a.z, b.x, b.y, b.z);
+      }
+      for(var iy = 0; iy <= segY; iy++){
+        var ly = -h / 2 + (h * iy) / segY;
+        var c1 = build(-w / 2, ly), c2 = build(w / 2, ly);
+        pts.push(c1.x, c1.y, c1.z, c2.x, c2.y, c2.z);
+      }
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+      return new THREE.LineSegments(geo, netMat);
+    }
+    // back net (vertical plane at the rear of the goal)
+    var back = netPanel(FB_GOAL_W, FB_GOAL_H, 10, 6, function(lx, ly){
+      return new THREE.Vector3(lx, FB_GOAL_H / 2 + ly, sign * FB_GOAL_DEPTH);
+    });
+    g.add(back);
+    // side nets (trapezoid approximated as a slanted plane)
+    [-1, 1].forEach(function(side){
+      var panel = netPanel(FB_GOAL_DEPTH, FB_GOAL_H, 6, 6, function(lx, ly){
+        return new THREE.Vector3(side * halfW, FB_GOAL_H / 2 + ly, sign * (lx + FB_GOAL_DEPTH / 2));
+      });
+      g.add(panel);
+    });
+    // top net (roof slanting down to the back)
+    var top = netPanel(FB_GOAL_W, FB_GOAL_DEPTH, 10, 4, function(lx, lz){
+      return new THREE.Vector3(lx, FB_GOAL_H, sign * (lz + FB_GOAL_DEPTH / 2));
+    });
+    g.add(top);
+
+    g.position.z = sign * (FB_FIELD_L / 2);
+    this.scene.add(g);
+    return g;
+  };
+
+  FbEngine.prototype.buildBall = function(){
+    var THREE = window.THREE;
+    var c = document.createElement('canvas'); c.width = 256; c.height = 256;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#f4f4f0'; ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = 'rgba(40,40,40,0.5)';
+    ctx.lineWidth = 2;
+    function pentagon(cx, cy, r, rot){
+      ctx.beginPath();
+      for(var i = 0; i < 5; i++){
+        var a = rot + (i / 5) * Math.PI * 2 - Math.PI / 2;
+        var x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+        if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = '#1c1c1c';
+      ctx.fill();
+      ctx.stroke();
+    }
+    var spots = [[64, 64], [192, 64], [64, 192], [192, 192], [128, 128], [20, 128], [236, 128], [128, 20], [128, 236]];
+    spots.forEach(function(s, i){ pentagon(s[0], s[1], 26, i * 0.7); });
+    for(var gy = 0; gy <= 256; gy += 32){ ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(256, gy); ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.stroke(); }
+    var tex = new THREE.CanvasTexture(c);
+    var mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45, metalness: 0.02 });
+    var mesh = new THREE.Mesh(new THREE.SphereGeometry(FB_BALL_R, 20, 16), mat);
+    mesh.castShadow = true;
+    this.scene.add(mesh);
+    return mesh;
+  };
+
+  FbEngine.prototype.setupPlayers = function(){
+    var self = this;
+    var list = [];
+    if(this.mode === 'bot'){
+      for(var i = 0; i < this.teamSize; i++) list.push({ id: 'blue' + i, team: 'blue', isLocal: i === 0, isBot: i > 0 });
+      for(var j = 0; j < this.teamSize; j++) list.push({ id: 'red' + j, team: 'red', isLocal: false, isBot: true });
+    } else {
+      var playersMap = (this.opts.roomData && this.opts.roomData.players) || {};
+      var blueIdx = 0, redIdx = 0;
+      Object.keys(playersMap).forEach(function(id){
+        var p = playersMap[id];
+        var idx = p.team === 'blue' ? blueIdx++ : redIdx++;
+        list.push({ id: id, team: p.team, isLocal: id === self.myId, isBot: false, isRemote: id !== self.myId, name: p.name, slotIdx: idx });
+      });
+    }
+    this.players = list.map(function(p){
+      var slot = fbSlotPos(p.team, p.slotIdx || 0, self.teamSize);
+      var color = p.team === 'blue' ? 0x2563eb : 0xdc2626;
+      var mesh = fbBuildPlayerMesh(color);
+      self.scene.add(mesh);
+      return {
+        id: p.id, team: p.team, isLocal: !!p.isLocal, isBot: !!p.isBot, isRemote: !!p.isRemote, name: p.name,
+        pos: { x: slot.x, y: 0, z: slot.z }, home: { x: slot.x, z: slot.z },
+        vel: { x: 0, z: 0 }, facing: slot.rotY, sprinting: false, stamina: 100,
+        mesh: mesh, animPhase: 0, kickT: 0, tackleCd: 0, botActionCd: 0, actionSeq: 0, lastSeenSeq: -1,
+        remotePos: { x: slot.x, y: 0, z: slot.z }, remoteVel: { x: 0, z: 0 }, remoteT: 0
+      };
+    });
+    this.localPlayer = this.players.filter(function(p){ return p.isLocal; })[0];
+    this.resetFormation();
+  };
+
+  FbEngine.prototype.resetFormation = function(){
+    this.players.forEach(function(p){
+      p.pos.x = p.home.x; p.pos.y = 0; p.pos.z = p.home.z;
+      p.vel.x = 0; p.vel.z = 0;
+    });
+    this.ball.x = 0; this.ball.y = FB_BALL_R; this.ball.z = 0;
+    this.ball.vx = 0; this.ball.vy = 0; this.ball.vz = 0;
+  };
+
+  var FB_KEYMAP = { 'KeyW':'w','KeyA':'a','KeyS':'s','KeyD':'d','ShiftLeft':'shift','ShiftRight':'shift','Space':'space','KeyJ':'j','KeyK':'k','KeyL':'l','KeyE':'e' };
+
+  FbEngine.prototype.onKeyDown = function(e){
+    var k = FB_KEYMAP[e.code];
+    if(!k) return;
+    if(['space','j','k','e','l'].indexOf(k) !== -1) e.preventDefault();
+    if(!this.input[k]){
+      if(k === 'k') this.doShot(0.45);
+      if(k === 'j') this.doPass();
+      if(k === 'e') this.doTackle();
+      if(k === 'l'){
+        this.chargeStart = performance.now();
+        var pw = document.getElementById('fbPowerWrap'); if(pw) pw.hidden = false;
+      }
+      if(k === 'space') this.doJuke();
+    }
+    this.input[k] = true;
+  };
+  FbEngine.prototype.onKeyUp = function(e){
+    var k = FB_KEYMAP[e.code];
+    if(!k) return;
+    if(k === 'l' && this.input.l) this.releasePowerShot();
+    this.input[k] = false;
+  };
+
+  FbEngine.prototype.ballDistTo = function(p){
+    var dx = this.ball.x - p.pos.x, dz = this.ball.z - p.pos.z;
+    return Math.sqrt(dx * dx + dz * dz);
+  };
+  FbEngine.prototype.hasControl = function(p){ return this.ballDistTo(p) < 0.95; };
+
+  FbEngine.prototype.kickImpulse = function(p, speed, lift, dir){
+    var d = dir || { x: Math.sin(p.facing), z: Math.cos(p.facing) };
+    this.ball.vx = d.x * speed; this.ball.vz = d.z * speed; this.ball.vy = lift;
+    this.ball.y = Math.max(this.ball.y, FB_BALL_R + 0.03);
+    if(this.mode === 'online' && !this.isHost){
+      p.actionSeq++;
+      this.pendingAction = { seq: p.actionSeq, dx: d.x, dz: d.z, speed: speed, lift: lift };
+    }
+  };
+
+  FbEngine.prototype.doShot = function(power){
+    var p = this.localPlayer;
+    if(!p || !this.hasControl(p) || this.state !== 'playing') return;
+    this.kickImpulse(p, 9 + power * 9, 1.6 + power * 1.4);
+    p.kickT = 1;
+  };
+  FbEngine.prototype.releasePowerShot = function(){
+    if(this.chargeStart == null) return;
+    var held = Math.min(1.3, (performance.now() - this.chargeStart) / 1000) / 1.3;
+    this.chargeStart = null;
+    var pw = document.getElementById('fbPowerWrap'); if(pw) pw.hidden = true;
+    var fill = document.getElementById('fbPowerFill'); if(fill) fill.style.width = '0%';
+    var p = this.localPlayer;
+    if(p && this.hasControl(p) && this.state === 'playing'){
+      this.kickImpulse(p, 13 + held * 9, 2.2 + held * 2.6);
+      p.kickT = 1;
+    }
+  };
+  FbEngine.prototype.findPassTarget = function(p){
+    var best = null, bestScore = -1;
+    this.players.forEach(function(o){
+      if(o === p || o.team !== p.team) return;
+      var dx = o.pos.x - p.pos.x, dz = o.pos.z - p.pos.z;
+      var d = Math.sqrt(dx * dx + dz * dz);
+      if(d < 1 || d > 16) return;
+      var fx = Math.sin(p.facing), fz = Math.cos(p.facing);
+      var dot = (dx / d) * fx + (dz / d) * fz;
+      if(dot < 0.3) return;
+      var score = dot - d * 0.02;
+      if(score > bestScore){ bestScore = score; best = o; }
+    });
+    return best;
+  };
+  FbEngine.prototype.doPass = function(){
+    var p = this.localPlayer;
+    if(!p || !this.hasControl(p) || this.state !== 'playing') return;
+    var mate = this.findPassTarget(p);
+    var dir;
+    if(mate){
+      var dx = mate.pos.x - p.pos.x, dz = mate.pos.z - p.pos.z;
+      var d = Math.sqrt(dx * dx + dz * dz) || 1;
+      dir = { x: dx / d, z: dz / d };
+    } else {
+      dir = { x: Math.sin(p.facing), z: Math.cos(p.facing) };
+    }
+    this.kickImpulse(p, 8.5, 0.9, dir);
+    p.kickT = 1;
+  };
+  FbEngine.prototype.doTackle = function(){
+    var p = this.localPlayer;
+    if(!p || p.tackleCd > 0 || this.state !== 'playing') return;
+    p.tackleCd = 0.7;
+    if(this.ballDistTo(p) < 1.15){
+      var d = { x: Math.sin(p.facing), z: Math.cos(p.facing) };
+      this.kickImpulse(p, 5.5, 0.4, d);
+    }
+  };
+  FbEngine.prototype.doJuke = function(){
+    var p = this.localPlayer;
+    if(!p) return;
+    var right = p.team === 'blue' ? { x: 1, z: 0 } : { x: -1, z: 0 };
+    var side = (this.input.d && !this.input.a) ? 1 : -1;
+    p.vel.x += right.x * side * 3.2;
+    p.vel.z += right.z * side * 3.2;
+  };
+
+  FbEngine.prototype.updateLocalMovement = function(p, dt){
+    var fwd = p.team === 'blue' ? { x: 0, z: 1 } : { x: 0, z: -1 };
+    var right = p.team === 'blue' ? { x: 1, z: 0 } : { x: -1, z: 0 };
+    var ix = 0, iz = 0;
+    if(this.input.w){ ix += fwd.x; iz += fwd.z; }
+    if(this.input.s){ ix -= fwd.x; iz -= fwd.z; }
+    if(this.input.d){ ix += right.x; iz += right.z; }
+    if(this.input.a){ ix -= right.x; iz -= right.z; }
+    var len = Math.sqrt(ix * ix + iz * iz);
+    var moving = len > 0.001;
+    if(moving){ ix /= len; iz /= len; }
+    var sprint = this.input.shift && p.stamina > 4;
+    p.sprinting = !!(sprint && moving);
+    var maxSpeed = FB_PLAYER_SPEED * (p.sprinting ? 1.55 : 1);
+    var targetVx = ix * maxSpeed, targetVz = iz * maxSpeed;
+    var accel = moving ? 14 : 10;
+    p.vel.x += (targetVx - p.vel.x) * Math.min(1, accel * dt);
+    p.vel.z += (targetVz - p.vel.z) * Math.min(1, accel * dt);
+    if(moving){
+      var targetFacing = Math.atan2(ix, iz);
+      p.facing = fbLerpAngle(p.facing, targetFacing, Math.min(1, 10 * dt));
+    }
+    if(p.sprinting) p.stamina = Math.max(0, p.stamina - 22 * dt);
+    else p.stamina = Math.min(100, p.stamina + 12 * dt);
+    this.applyMoveAndCollide(p, dt);
+  };
+
+  FbEngine.prototype.applyMoveAndCollide = function(p, dt){
+    p.pos.x += p.vel.x * dt;
+    p.pos.z += p.vel.z * dt;
+    var halfW = FB_FIELD_W / 2 - FB_PLAYER_R, halfL = FB_FIELD_L / 2 - FB_PLAYER_R + 1.0;
+    p.pos.x = Math.max(-halfW, Math.min(halfW, p.pos.x));
+    p.pos.z = Math.max(-halfL, Math.min(halfL, p.pos.z));
+    var all = this.players;
+    for(var i = 0; i < all.length; i++){
+      var o = all[i];
+      if(o === p) continue;
+      var dx = p.pos.x - o.pos.x, dz = p.pos.z - o.pos.z;
+      var d = Math.sqrt(dx * dx + dz * dz);
+      var minD = FB_PLAYER_R * 1.9;
+      if(d > 0.0001 && d < minD){
+        var push = (minD - d) / 2;
+        var nx = dx / d, nz = dz / d;
+        p.pos.x += nx * push; p.pos.z += nz * push;
+      }
+    }
+  };
+
+  FbEngine.prototype.updateBot = function(p, dt){
+    var self = this;
+    var ballDist = this.ballDistTo(p);
+    var closestOwn = this.players.filter(function(q){ return q.team === p.team; }).reduce(function(best, q){
+      return (!best || self.ballDistTo(q) < self.ballDistTo(best)) ? q : best;
+    }, null);
+    var isChaser = closestOwn === p;
+    var fwdSign = p.team === 'blue' ? 1 : -1;
+    var targetX, targetZ;
+    if(isChaser && ballDist < 9){
+      targetX = this.ball.x; targetZ = this.ball.z;
+    } else {
+      targetX = p.home.x * 0.6 + this.ball.x * 0.25;
+      targetZ = p.home.z + fwdSign * Math.max(-3, Math.min(3, (this.ball.z - p.home.z) * 0.3));
+    }
+    var dx = targetX - p.pos.x, dz = targetZ - p.pos.z;
+    var d = Math.sqrt(dx * dx + dz * dz);
+    if(d > 0.3){
+      var sp = FB_PLAYER_SPEED * 0.92;
+      p.vel.x += (dx / d * sp - p.vel.x) * Math.min(1, 8 * dt);
+      p.vel.z += (dz / d * sp - p.vel.z) * Math.min(1, 8 * dt);
+      p.facing = fbLerpAngle(p.facing, Math.atan2(dx, dz), Math.min(1, 8 * dt));
+    } else {
+      p.vel.x *= 0.8; p.vel.z *= 0.8;
+    }
+    this.applyMoveAndCollide(p, dt);
+
+    p.botActionCd = Math.max(0, (p.botActionCd || 0) - dt);
+    if(isChaser && ballDist < 0.9 && p.botActionCd <= 0){
+      var goalZ = fwdSign * FB_FIELD_L / 2;
+      var distToGoal = Math.abs(goalZ - p.pos.z);
+      p.facing = Math.atan2(0, fwdSign);
+      if(distToGoal < 11 && Math.abs(p.pos.x) < 5){
+        this.ball.vx = 0; this.ball.vz = fwdSign * 14; this.ball.vy = 2.4;
+        this.ball.y = Math.max(this.ball.y, FB_BALL_R + 0.03);
+        p.kickT = 1; p.botActionCd = 1.2;
+      } else {
+        var mate = this.findPassTarget(p);
+        if(mate){
+          var dxp = mate.pos.x - p.pos.x, dzp = mate.pos.z - p.pos.z, dd = Math.sqrt(dxp*dxp+dzp*dzp) || 1;
+          this.ball.vx = dxp/dd*8; this.ball.vz = dzp/dd*8; this.ball.vy = 0.9;
+          this.ball.y = Math.max(this.ball.y, FB_BALL_R + 0.03);
+          p.kickT = 1; p.botActionCd = 0.9;
+        } else {
+          this.ball.vx = 0; this.ball.vz = fwdSign*6.5; this.ball.vy = 1.0;
+          this.ball.y = Math.max(this.ball.y, FB_BALL_R + 0.03);
+          p.kickT = 1; p.botActionCd = 0.6;
+        }
+      }
+    }
+  };
+
+  FbEngine.prototype.dribbleStep = function(dt){
+    var ball = this.ball;
+    var speed = Math.sqrt(ball.vx * ball.vx + ball.vz * ball.vz);
+    if(speed > 4.5) return;
+    var closest = null, bestD = 0.85;
+    this.players.forEach(function(p){
+      var dx = ball.x - p.pos.x, dz = ball.z - p.pos.z;
+      var d = Math.sqrt(dx * dx + dz * dz);
+      if(d < bestD){ bestD = d; closest = p; }
+    });
+    if(!closest) return;
+    var fx = Math.sin(closest.facing), fz = Math.cos(closest.facing);
+    var tx = closest.pos.x + fx * 0.5, tz = closest.pos.z + fz * 0.5;
+    ball.x += (tx - ball.x) * Math.min(1, 8 * dt);
+    ball.z += (tz - ball.z) * Math.min(1, 8 * dt);
+    if(ball.y > FB_BALL_R + 0.02) ball.vy -= 9.8 * dt;
+    else { ball.y = FB_BALL_R; ball.vy = 0; }
+    ball.vx *= 0.8; ball.vz *= 0.8;
+  };
+
+  FbEngine.prototype.updateCamera = function(dt){
+    var THREE = window.THREE;
+    var p = this.localPlayer;
+    if(!p) return;
+    var dist = 5.8 + (p.sprinting ? 0.6 : 0);
+    var height = 3.1;
+    var desired = new THREE.Vector3(
+      p.pos.x - Math.sin(p.facing) * dist,
+      height,
+      p.pos.z - Math.cos(p.facing) * dist
+    );
+    var camT = 1 - Math.pow(0.0005, dt);
+    this.camera.position.lerp(desired, Math.min(1, camT));
+    var lookTarget = new THREE.Vector3(
+      p.pos.x + Math.sin(p.facing) * 3.2,
+      0.7,
+      p.pos.z + Math.cos(p.facing) * 3.2
+    );
+    lookTarget.lerp(new THREE.Vector3(this.ball.x, 0.9, this.ball.z), 0.25);
+    this._lookTarget.lerp(lookTarget, Math.min(1, camT * 1.4));
+    this.camera.lookAt(this._lookTarget);
+  };
+
+  FbEngine.prototype.renderPlayers = function(dt, animate){
+    this.players.forEach(function(p){
+      p.mesh.position.set(p.pos.x, 0, p.pos.z);
+      p.mesh.rotation.y = p.facing;
+      var speed = Math.sqrt(p.vel.x * p.vel.x + p.vel.z * p.vel.z);
+      if(animate){
+        p.animPhase += dt * (4 + speed * 1.6);
+        var moving = speed > 0.3;
+        var amt = moving ? Math.min(1, speed / 6) * 0.6 : 0.08;
+        var swing = Math.sin(p.animPhase) * amt;
+        var ud = p.mesh.userData;
+        if(p.kickT > 0){
+          p.kickT = Math.max(0, p.kickT - dt * 4);
+          ud.legR.rotation.x = -1.1 * p.kickT;
+          ud.legL.rotation.x = swing * 0.3;
+        } else {
+          ud.legL.rotation.x = swing;
+          ud.legR.rotation.x = -swing;
+        }
+        ud.armL.rotation.x = -swing * 0.8;
+        ud.armR.rotation.x = swing * 0.8;
+      }
+    });
+    this.ballMesh.position.set(this.ball.x, this.ball.y, this.ball.z);
+  };
+
+  FbEngine.prototype.updateScoreUI = function(){
+    document.getElementById('fbScoreBlue').textContent = this.score.blue;
+    document.getElementById('fbScoreRed').textContent = this.score.red;
+  };
+  FbEngine.prototype.updateClockUI = function(){
+    var el = document.getElementById('fbClock');
+    if(this.goalLimit){ el.textContent = (this.score.blue + this.score.red) + '/' + this.goalLimit + ' goles'; return; }
+    var remain = Math.max(0, (this.durationSec || 0) - this.elapsed);
+    var m = Math.floor(remain / 60), s = Math.floor(remain % 60);
+    el.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  };
+  FbEngine.prototype.showCountdown = function(show){
+    var el = document.getElementById('fbCountdown');
+    el.hidden = !show;
+  };
+  FbEngine.prototype.updateCountdownUI = function(){
+    document.getElementById('fbCountdown').textContent = Math.max(1, Math.ceil(this.countdownT));
+  };
+  FbEngine.prototype.showGoalBanner = function(){
+    var el = document.getElementById('fbGoalBanner');
+    el.hidden = false;
+    clearTimeout(this._goalBannerT);
+    this._goalBannerT = setTimeout(function(){ el.hidden = true; }, 1500);
+  };
+  FbEngine.prototype.updateHud = function(){
+    var p = this.localPlayer;
+    if(p){ var sf = document.getElementById('fbStaminaFill'); if(sf) sf.style.width = p.stamina + '%'; }
+    if(this.chargeStart != null){
+      var held = Math.min(1.3, (performance.now() - this.chargeStart) / 1000) / 1.3;
+      var fill = document.getElementById('fbPowerFill'); if(fill) fill.style.width = (held * 100) + '%';
+    }
+  };
+
+  FbEngine.prototype.onGoalScored = function(team){
+    if(this.state !== 'playing') return;
+    this.state = 'goalFreeze';
+    this.goalFreezeT = 1.8;
+    this.score[team] = (this.score[team] || 0) + 1;
+    this.updateScoreUI();
+    this.showGoalBanner();
+    if(this.mode === 'online' && this.isHost && this.roomRef){
+      this.roomRef.update({ score: this.score, lastGoal: { team: team, t: Date.now() } }).catch(function(){});
+    }
+  };
+  FbEngine.prototype.afterGoalReset = function(){
+    this.resetFormation();
+    this.state = 'countdown';
+    this.countdownT = 1.6;
+    this.showCountdown(true);
+  };
+
+  FbEngine.prototype.checkMatchEnd = function(){
+    if(!this.isHost) return;
+    var done = false;
+    if(this.goalLimit){ if(this.score.blue >= this.goalLimit || this.score.red >= this.goalLimit) done = true; }
+    else if(this.durationSec){ if(this.elapsed >= this.durationSec) done = true; }
+    if(!done) return;
+    this.state = 'finished';
+    if(this.mode === 'online' && this.roomRef){
+      this.roomRef.update({ status: 'finished' }).catch(function(){});
+    } else {
+      this.stop();
+      fbShowResult(this.score.blue, this.score.red);
+    }
+  };
+
+  FbEngine.prototype.syncNetwork = function(dt){
+    if(this.mode !== 'online' || !this.roomRef) return;
+    this._netTimer += dt;
+    if(this._netTimer < 0.09) return;
+    this._netTimer = 0;
+    var p = this.localPlayer;
+    if(!p) return;
+    var patch = {};
+    patch['players.' + this.myId + '.pos'] = { x: p.pos.x, z: p.pos.z };
+    patch['players.' + this.myId + '.vel'] = { x: p.vel.x, z: p.vel.z };
+    patch['players.' + this.myId + '.rot'] = p.facing;
+    patch['players.' + this.myId + '.t'] = Date.now();
+    if(this.pendingAction){
+      patch['players.' + this.myId + '.action'] = this.pendingAction;
+      this.pendingAction = null;
+    }
+    if(this.isHost){
+      patch.ball = { x: this.ball.x, y: this.ball.y, z: this.ball.z, vx: this.ball.vx, vy: this.ball.vy, vz: this.ball.vz, t: Date.now() };
+    }
+    this.roomRef.update(patch).catch(function(){});
+  };
+
+  FbEngine.prototype.onRoomUpdate = function(data){
+    var self = this;
+    if(data.score) { this.score = data.score; this.updateScoreUI(); }
+    if(data.lastGoal && data.lastGoal.t !== this._lastGoalSeen){
+      this._lastGoalSeen = data.lastGoal.t;
+      if(this.state === 'playing' && !this.isHost){
+        this.state = 'goalFreeze';
+        this.goalFreezeT = 1.8;
+        this.showGoalBanner();
+      }
+    }
+    if(data.ball && !this.isHost) this.netBall = data.ball;
+    Object.keys(data.players || {}).forEach(function(id){
+      var pd = data.players[id];
+      var p = self.players.filter(function(q){ return q.id === id; })[0];
+      if(!p || p.isLocal || !pd || !pd.pos) return;
+      p.remotePos = { x: pd.pos.x, y: 0, z: pd.pos.z };
+      p.remoteVel = pd.vel || { x: 0, z: 0 };
+      p.remoteT = pd.t || Date.now();
+      if(pd.rot != null) p.facing = pd.rot;
+      if(pd.action && pd.action.seq !== p.lastSeenSeq){
+        p.lastSeenSeq = pd.action.seq;
+        if(self.isHost){
+          self.ball.vx = pd.action.dx * pd.action.speed;
+          self.ball.vz = pd.action.dz * pd.action.speed;
+          self.ball.vy = pd.action.lift;
+          self.ball.y = Math.max(self.ball.y, FB_BALL_R + 0.03);
+        }
+      }
+    });
+  };
+
+  FbEngine.prototype.update = function(dt){
+    if(this.state === 'countdown'){
+      this.countdownT -= dt;
+      this.updateCountdownUI();
+      if(this.countdownT <= 0){ this.state = 'playing'; this.showCountdown(false); }
+      this.updateCamera(dt);
+      this.renderPlayers(dt, true);
+      return;
+    }
+    if(this.state === 'goalFreeze'){
+      this.goalFreezeT -= dt;
+      if(this.goalFreezeT <= 0) this.afterGoalReset();
+      this.updateCamera(dt);
+      this.renderPlayers(dt, false);
+      return;
+    }
+    if(this.state !== 'playing') return;
+
+    this.elapsed += dt;
+    this.updateClockUI();
+
+    if(this.localPlayer){
+      this.updateLocalMovement(this.localPlayer, dt);
+      this.localPlayer.tackleCd = Math.max(0, this.localPlayer.tackleCd - dt);
+    }
+    this.players.forEach(function(p){ if(p.isBot) this.updateBot(p, dt); }, this);
+    this.players.forEach(function(p){
+      if(!p.isRemote) return;
+      var age = Math.min((Date.now() - p.remoteT) / 1000, 0.3);
+      var ex = p.remotePos.x + p.remoteVel.x * age;
+      var ez = p.remotePos.z + p.remoteVel.z * age;
+      p.pos.x += (ex - p.pos.x) * Math.min(1, 10 * dt);
+      p.pos.z += (ez - p.pos.z) * Math.min(1, 10 * dt);
+    }, this);
+
+    this.dribbleStep(dt);
+    if(this.isHost){
+      var self = this;
+      fbBallStep(this.ball, dt, this.players, function(team){ self.onGoalScored(team); });
+    } else if(this.netBall){
+      var age2 = Math.min((Date.now() - this.netBall.t) / 1000, 0.3);
+      var tx = this.netBall.x + this.netBall.vx * age2;
+      var tz = this.netBall.z + this.netBall.vz * age2;
+      var ty = Math.max(FB_BALL_R, this.netBall.y + this.netBall.vy * age2 - 4.9 * age2 * age2);
+      this.ball.x += (tx - this.ball.x) * Math.min(1, 6 * dt);
+      this.ball.z += (tz - this.ball.z) * Math.min(1, 6 * dt);
+      this.ball.y += (ty - this.ball.y) * Math.min(1, 6 * dt);
+    }
+
+    this.renderPlayers(dt, true);
+    this.updateCamera(dt);
+    this.updateHud();
+    this.syncNetwork(dt);
+    this.checkMatchEnd();
+  };
+
+  FbEngine.prototype.render = function(){
+    this.renderer.render(this.scene, this.camera);
+  };
+
+  FbEngine.prototype.loop = function(){
+    if(!this.running) return;
+    var dt = Math.min(0.05, this.clock.getDelta());
+    this.update(dt);
+    this.render();
+    this._raf = requestAnimationFrame(this._loopBound);
+  };
+
+  FbEngine.prototype.stop = function(){
+    this.running = false;
+    if(this._raf) cancelAnimationFrame(this._raf);
+    if(this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
+    if(this._keydown) window.removeEventListener('keydown', this._keydown);
+    if(this._keyup) window.removeEventListener('keyup', this._keyup);
+    if(this.renderer){
+      var scene = this.scene;
+      scene.traverse(function(o){
+        if(o.geometry) o.geometry.dispose();
+        if(o.material){
+          var mats = Array.isArray(o.material) ? o.material : [o.material];
+          mats.forEach(function(m){ if(m.map) m.map.dispose(); m.dispose(); });
+        }
+      });
+      this.renderer.dispose();
+    }
+    var pw = document.getElementById('fbPowerWrap'); if(pw) pw.hidden = true;
+    var cd = document.getElementById('fbCountdown'); if(cd) cd.hidden = true;
+  };
+  /* ================= FUTBOL 5 ================= */
+  var FB_THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
+  var fbThreeLoaded = false, fbThreeLoadCbs = [];
+  function fbLoadThree(cb){
+    if(window.THREE){ fbThreeLoaded = true; cb(); return; }
+    fbThreeLoadCbs.push(cb);
+    if(fbThreeLoaded === 'loading') return;
+    fbThreeLoaded = 'loading';
+    var s = document.createElement('script');
+    s.src = FB_THREE_URL;
+    s.onload = function(){
+      fbThreeLoaded = true;
+      var cbs = fbThreeLoadCbs; fbThreeLoadCbs = [];
+      cbs.forEach(function(f){ f(); });
+    };
+    document.head.appendChild(s);
+  }
+
+  var FB_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function fbGenCode(){
+    var s = '';
+    for(var i=0;i<5;i++) s += FB_CODE_CHARS[Math.floor(Math.random()*FB_CODE_CHARS.length)];
+    return s;
+  }
+
+  var fbView = 'menu';
+  var fbSelectedMode = 1;
+  var fbSelectedDuration = 180;
+  var fbSelectedGoalLimit = null;
+  var fbRoomCode = null;
+  var fbRoomRef = null;
+  var fbRoomUnsub = null;
+  var fbRoomData = null;
+  var fbIsHost = false;
+  var fbMatchStarting = false;
+  var fbEngine = null; // active running engine instance
+
+  function fbShowSub(name){
+    fbView = name;
+    document.getElementById('fbMenu').hidden = name !== 'menu';
+    document.getElementById('fbOnlineSetup').hidden = name !== 'onlineSetup';
+    document.getElementById('fbLobby').hidden = name !== 'lobby';
+    document.getElementById('fbMatchScreen').hidden = name !== 'match';
+    document.getElementById('fbResultScreen').hidden = name !== 'result';
+  }
+
+  function renderFootballEntry(){
+    ensurePlayerId();
+    fbShowSub('menu');
+  }
+
+  function fbRenderOnlineSetup(){
+    var offline = !dbReady || !db;
+    document.getElementById('fbOfflinePanel').hidden = !offline;
+    document.getElementById('fbOnlineChoices').hidden = offline;
+  }
+
+  /* ---------- Lobby / Firestore ---------- */
+  function fbTeamCounts(players){
+    var blue = 0, red = 0;
+    Object.keys(players || {}).forEach(function(id){
+      if(players[id].team === 'red') red++; else blue++;
+    });
+    return { blue: blue, red: red };
+  }
+
+  function fbCreateMatch(){
+    if(!db){ fbRenderOnlineSetup(); return; }
+    var code = fbGenCode();
+    var myId = ensurePlayerId();
+    var players = {};
+    players[myId] = { name: state.playerName || 'Jugador', team: 'blue', ready: false };
+    var data = {
+      hostId: myId,
+      teamSize: fbSelectedMode,
+      durationSec: fbSelectedGoalLimit ? null : fbSelectedDuration,
+      goalLimit: fbSelectedGoalLimit,
+      status: 'lobby',
+      createdAt: Date.now(),
+      players: players,
+      score: { blue: 0, red: 0 },
+      lastGoal: null,
+      ball: null
+    };
+    db.collection('footballMatches').doc(code).set(data).then(function(){
+      fbRoomCode = code;
+      fbIsHost = true;
+      fbShowSub('lobby');
+      fbSubscribeRoom(code);
+    }).catch(function(){
+      document.getElementById('fbOfflinePanel').hidden = false;
+    });
+  }
+
+  function fbJoinMatch(rawCode){
+    var code = (rawCode || '').trim().toUpperCase();
+    if(!code || !db) return;
+    var myId = ensurePlayerId();
+    var ref = db.collection('footballMatches').doc(code);
+    ref.get().then(function(snap){
+      if(!snap.exists){ fbShowToast('Código no encontrado'); return; }
+      var data = snap.data();
+      if(data.status !== 'lobby'){ fbShowToast('Esa partida ya comenzó'); return; }
+      var counts = fbTeamCounts(data.players);
+      var cap = data.teamSize;
+      if(counts.blue >= cap && counts.red >= cap){ fbShowToast('La sala está llena'); return; }
+      var team = counts.blue <= counts.red ? 'blue' : 'red';
+      var patch = {};
+      patch['players.' + myId] = { name: state.playerName || 'Jugador', team: team, ready: false };
+      ref.update(patch).then(function(){
+        fbRoomCode = code;
+        fbIsHost = (data.hostId === myId);
+        fbShowSub('lobby');
+        fbSubscribeRoom(code);
+      });
+    });
+  }
+
+  function fbShowToast(msg){
+    var bar = document.getElementById('fbMsgBar');
+    if(bar){ bar.textContent = msg; setTimeout(function(){ if(bar.textContent === msg) bar.textContent=''; }, 2500); }
+  }
+
+  function fbSubscribeRoom(code){
+    fbRoomRef = db.collection('footballMatches').doc(code);
+    fbRoomUnsub = fbRoomRef.onSnapshot(function(snap){
+      if(!snap.exists){ fbRoomData = null; return; }
+      fbRoomData = snap.data();
+      fbOnRoomUpdate();
+    });
+  }
+
+  function fbOnRoomUpdate(){
+    if(!fbRoomData) return;
+    if(fbView === 'lobby'){
+      fbRenderLobby();
+      if(fbIsHost && fbRoomData.status === 'lobby') fbMaybeStartMatch();
+      if(fbRoomData.status === 'playing' && !fbMatchStarting){
+        fbMatchStarting = true;
+        fbBeginOnlineMatch();
+      }
+    } else if(fbView === 'match'){
+      if(fbEngine) fbEngine.onRoomUpdate(fbRoomData);
+      if(fbRoomData.status === 'finished'){
+        fbFinishOnlineMatch();
+      }
+    }
+  }
+
+  function fbRenderLobby(){
+    document.getElementById('fbLobbyCode').textContent = fbRoomCode;
+    var myId = ensurePlayerId();
+    var players = fbRoomData.players || {};
+    var blueList = document.getElementById('fbTeamBlueList');
+    var redList = document.getElementById('fbTeamRedList');
+    blueList.innerHTML = ''; redList.innerHTML = '';
+    Object.keys(players).forEach(function(id){
+      var p = players[id];
+      var row = document.createElement('div');
+      row.className = 'fb-team-slot' + (p.ready ? ' ready' : '') + (id === myId ? ' me' : '');
+      row.innerHTML = '<span><span class="fb-ready-dot"></span> ' + escapeHtml(p.name || 'Jugador') + '</span>';
+      (p.team === 'red' ? redList : blueList).appendChild(row);
+    });
+    var me = players[myId];
+    var readyBtn = document.getElementById('fbReadyBtn');
+    readyBtn.textContent = (me && me.ready) ? 'Listo ✓' : 'Listo';
+  }
+
+  function fbSwitchTeam(){
+    if(!fbRoomData) return;
+    var myId = ensurePlayerId();
+    var me = fbRoomData.players[myId];
+    if(!me) return;
+    var newTeam = me.team === 'blue' ? 'red' : 'blue';
+    var patch = {};
+    patch['players.' + myId + '.team'] = newTeam;
+    fbRoomRef.update(patch);
+  }
+
+  function fbToggleReady(){
+    if(!fbRoomData) return;
+    var myId = ensurePlayerId();
+    var me = fbRoomData.players[myId];
+    if(!me) return;
+    var patch = {};
+    patch['players.' + myId + '.ready'] = !me.ready;
+    fbRoomRef.update(patch).then(function(){
+      if(fbIsHost) fbMaybeStartMatch();
+    });
+  }
+
+  function fbMaybeStartMatch(){
+    if(!fbIsHost || !fbRoomData) return;
+    var players = fbRoomData.players || {};
+    var ids = Object.keys(players);
+    if(ids.length < 2) return;
+    var allReady = ids.every(function(id){ return players[id].ready; });
+    var counts = fbTeamCounts(players);
+    if(!allReady || counts.blue < 1 || counts.red < 1) return;
+    var startAt = Date.now() + 3200;
+    fbRoomRef.update({
+      status: 'playing',
+      startAt: startAt,
+      ball: { x: 0, y: 0.22, z: 0, vx: 0, vy: 0, vz: 0, t: startAt },
+      score: { blue: 0, red: 0 },
+      lastGoal: null
+    });
+  }
+
+  function fbLeaveRoomAndGoMenu(){
+    fbLeaveRoom();
+    fbShowSub('menu');
+  }
+
+  function fbLeaveRoom(){
+    if(fbRoomUnsub){ fbRoomUnsub(); fbRoomUnsub = null; }
+    if(fbRoomRef){
+      var myId = ensurePlayerId();
+      var patch = {};
+      patch['players.' + myId] = firebase.firestore.FieldValue.delete();
+      fbRoomRef.update(patch).catch(function(){});
+    }
+    fbRoomRef = null; fbRoomData = null; fbRoomCode = null; fbIsHost = false; fbMatchStarting = false;
+  }
+
+  /* ---------- Match bootstrapping ---------- */
+  function fbStartBotMatch(){
+    fbShowSub('match');
+    fbLoadThree(function(){
+      fbEngine = new FbEngine({
+        mode: 'bot',
+        teamSize: fbSelectedMode,
+        durationSec: fbSelectedGoalLimit ? null : fbSelectedDuration,
+        goalLimit: fbSelectedGoalLimit,
+        myId: ensurePlayerId(),
+        myName: state.playerName || 'Jugador'
+      });
+      fbEngine.start();
+    });
+  }
+
+  function fbBeginOnlineMatch(){
+    fbShowSub('match');
+    var roomSnapshot = fbRoomData;
+    fbLoadThree(function(){
+      fbEngine = new FbEngine({
+        mode: 'online',
+        teamSize: roomSnapshot.teamSize,
+        durationSec: roomSnapshot.durationSec,
+        goalLimit: roomSnapshot.goalLimit,
+        myId: ensurePlayerId(),
+        myName: state.playerName || 'Jugador',
+        isHost: fbIsHost,
+        roomRef: fbRoomRef,
+        roomData: roomSnapshot
+      });
+      fbEngine.start();
+    });
+  }
+
+  function fbFinishOnlineMatch(){
+    if(!fbEngine) return;
+    var score = fbRoomData.score || { blue:0, red:0 };
+    fbEngine.stop();
+    fbEngine = null;
+    fbShowResult(score.blue, score.red);
+  }
+
+  function fbShowResult(blue, red){
+    fbShowSub('result');
+    var title = document.getElementById('fbResultTitle');
+    if(blue === red) title.textContent = 'Empate';
+    else title.textContent = (blue > red ? '🔵 Equipo azul gana' : '🔴 Equipo rojo gana');
+    document.getElementById('fbResultScore').textContent = '🔵 ' + blue + ' - ' + red + ' 🔴';
+  }
+
+  function teardownFootball(){
+    if(fbEngine){ fbEngine.stop(); fbEngine = null; }
+    fbLeaveRoom();
+    fbMatchStarting = false;
+  }
+
+  /* ---------- UI wiring (once) ---------- */
+  (function fbInitUI(){
+    document.getElementById('fbPlayBotBtn').addEventListener('click', fbStartBotMatch);
+    document.getElementById('fbPlayOnlineBtn').addEventListener('click', function(){
+      fbShowSub('onlineSetup');
+      fbRenderOnlineSetup();
+    });
+    document.getElementById('fbOfflineRetryBtn').addEventListener('click', function(){ initDb(); fbRenderOnlineSetup(); });
+    Array.prototype.slice.call(document.querySelectorAll('#fbModeChips .choice-btn')).forEach(function(btn){
+      btn.addEventListener('click', function(){
+        Array.prototype.slice.call(document.querySelectorAll('#fbModeChips .choice-btn')).forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        fbSelectedMode = parseInt(btn.getAttribute('data-mode'), 10);
+      });
+    });
+    Array.prototype.slice.call(document.querySelectorAll('#fbDurationChips .choice-btn')).forEach(function(btn){
+      btn.addEventListener('click', function(){
+        Array.prototype.slice.call(document.querySelectorAll('#fbDurationChips .choice-btn')).forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        if(btn.hasAttribute('data-dur')){ fbSelectedDuration = parseInt(btn.getAttribute('data-dur'), 10); fbSelectedGoalLimit = null; }
+        else { fbSelectedGoalLimit = parseInt(btn.getAttribute('data-goals'), 10); fbSelectedDuration = null; }
+      });
+    });
+    document.getElementById('fbCreateMatchBtn').addEventListener('click', fbCreateMatch);
+    document.getElementById('fbJoinMatchBtn').addEventListener('click', function(){
+      fbJoinMatch(document.getElementById('fbJoinCodeInput').value);
+    });
+    document.getElementById('fbSwitchTeamBtn').addEventListener('click', fbSwitchTeam);
+    document.getElementById('fbReadyBtn').addEventListener('click', fbToggleReady);
+    document.getElementById('fbLeaveLobbyBtn').addEventListener('click', fbLeaveRoomAndGoMenu);
+    document.getElementById('fbReplayBtn').addEventListener('click', function(){ fbShowSub('menu'); });
+    document.getElementById('fbExitBtn').addEventListener('click', function(){ showView('hub'); });
+  })();
 
   /* ================= INIT ================= */
   applyTheme(state.activeTheme);
